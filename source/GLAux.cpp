@@ -1,7 +1,7 @@
 #include "GLAux.h"
 #include "draw.h"
 
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_opengl.h>
@@ -359,7 +359,7 @@ Texture *GLAux::LoadTexture(char *filename) {
     GLuint retval;
     SDL_Surface *sdlimage;
     void *raw;
-    int w, h, i, j, bpp;
+    int w, h, bpp;
     Uint8 *srcPixel, *dstPixel;
     Uint32 truePixel;
     GLenum errorCode;
@@ -373,7 +373,7 @@ Texture *GLAux::LoadTexture(char *filename) {
         f = fopen("debug.txt", "w");
         fprintf(f, "SDL_Image load error: %s\n", IMG_GetError());
         fclose(f);
-        return NULL;
+        return nullptr;
     }
 
     w = sdlimage->w;
@@ -386,8 +386,8 @@ Texture *GLAux::LoadTexture(char *filename) {
 
     bpp = sdlimage->format->BytesPerPixel;
 
-    for (i = h - 1; i >= 0; i--) {
-        for (j = 0; j < w; j++) {
+    for (auto i = h - 1; i >= 0; i--) {
+        for (auto j = 0; j < w; j++) {
             srcPixel = (Uint8 *) sdlimage->pixels + i * sdlimage->pitch + j * bpp;
             switch (bpp) {
                 case 1:
@@ -415,7 +415,7 @@ Texture *GLAux::LoadTexture(char *filename) {
                     SDL_UnlockSurface(sdlimage);
                     SDL_FreeSurface(sdlimage);
                     free(raw);
-                    return NULL;
+                    return nullptr;
             }
 
             SDL_GetRGBA(truePixel, sdlimage->format, &(dstPixel[0]), &(dstPixel[1]), &(dstPixel[2]), &(dstPixel[3]));
@@ -444,14 +444,13 @@ Texture *GLAux::LoadTexture(char *filename) {
 
         glDeleteTextures(1, &retval);
         free(raw);
-        return NULL;
+        return nullptr;
     }
 
     //gluBuild2DMipmaps( GL_TEXTURE_2D, 4, w, h, GL_RGBA, GL_UNSIGNED_BYTE, (Uint8 *)raw);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, (Uint8 *) raw);
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-
-    Texture *texture = (Texture *) malloc(sizeof(Texture));
+    glGenerateMipmap(retval);
+    auto *texture = (Texture *) malloc(sizeof(Texture));
 
     texture->imageData = (int *) raw;
     texture->bpp = bpp;
@@ -596,37 +595,30 @@ void GLAux::ApplySurface(int x, int y, SDL_Surface *origem, SDL_Surface *destino
 }
 
 SDL_Surface *GLAux::LoadSurface(char *nome) {
-    SDL_Surface *nova_imagem = NULL;
-    SDL_Surface *ima_otimizada = NULL;
+    auto* newImage = IMG_Load(nome);
+    auto* newImageOptimized = SDL_ConvertSurface(newImage, newImage->format, 0);
 
-    nova_imagem = IMG_Load(nome);
-    ima_otimizada = SDL_DisplayFormat(nova_imagem);
     //Define a color key
-    Uint32 colorkey = SDL_MapRGB(ima_otimizada->format, 0, 0xFF, 0xFF);
-    //Torna transparente os pixel da colorkey na imagem.
-    SDL_SetColorKey(ima_otimizada, SDL_SRCCOLORKEY, colorkey);
+    Uint32 colorkey = SDL_MapRGB(newImageOptimized->format, 0, 0xFF, 0xFF);
+    SDL_SetColorKey(newImageOptimized, SDL_TRUE, colorkey);
 
-    SDL_FreeSurface(nova_imagem);
-
-    return ima_otimizada;
+    SDL_FreeSurface(newImage);
+    return newImageOptimized;
 }
 
 SDL_Surface *GLAux::LoadSurfaceAlpha(char *nome) {
-    SDL_Surface *nova_imagem = NULL;
-    SDL_Surface *ima_otimizada = NULL;
+    auto *newImage = IMG_Load(nome);
+    auto *newImageOptimized = SDL_ConvertSurfaceFormat(newImage, SDL_PIXELFORMAT_RGBA8888, 0);
 
-    nova_imagem = IMG_Load(nome);
-    ima_otimizada = SDL_DisplayFormatAlpha(nova_imagem);
+    SDL_FreeSurface(newImage);
 
-    SDL_FreeSurface(nova_imagem);
-
-    return ima_otimizada;
+    return newImageOptimized;
 }
 
 //Função que estabelece o intervalo entre os quadros.
 void GLAux::Timer(int tempo) {
-    int cont = 0;
-    cont = SDL_GetTicks();
+    auto cont = SDL_GetTicks();
+    //TODO: Change the way the FPS is controlled so the process is not interrupted
     while (SDL_GetTicks() - cont < tempo)
         ;
     //frame_cont++;
