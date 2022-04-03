@@ -1,9 +1,11 @@
 #include <iostream>
-#include <math.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
+#include <cmath>
+#include <SDL.h>
+#include <SDL_image.h>
+
+#include "glm.h" //.obj loader library
+
 #include <GL/gl.h>
-#include "glm.h"
 #include "GLAux.h"
 #include "lista.h"
 #include "lightsource.h"
@@ -14,7 +16,8 @@
 #include "draw.h"
 #include "collisionutil.h"
 #include "physicsutil.h"
-#include <time.h>
+
+#include <ctime>
 
 
 //Includes para o jogo
@@ -30,7 +33,7 @@ int main(int arg, char* argv[])
 
     GLAux::Init( true );
     bool quit = false;
-    srand(time(NULL));
+    srand(time(nullptr));
 /*
     Labirinto l;
     l.inicializar();
@@ -38,7 +41,7 @@ int main(int arg, char* argv[])
     l.ronald_lab();
     l.ronald_print();
 */
-    while(GLAux::quit == false)
+    while(!GLAux::quit)
     {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -51,7 +54,7 @@ int main(int arg, char* argv[])
 
 
         GLAux::Timer(120);
-        SDL_GL_SwapBuffers();
+        //SDL_GL_SwapBuffers();
     }
     liberar();
     return 0;

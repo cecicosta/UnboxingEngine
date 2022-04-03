@@ -15,11 +15,9 @@ add_executable(CatBoxEngine
         include/GLAux.h
         include/glm.h
         include/grafo.h
-        include/interface.h
         include/lightsource.h
         include/lista.h
         include/LU.h
-        include/mapa.h
         include/material.h
         include/mathUtil.h
         include/matrix.h
@@ -45,10 +43,8 @@ add_executable(CatBoxEngine
         source/GLAux.cpp
         source/glm.cpp
         source/grafo.cpp
-        source/interface.cpp
         source/lightsource.cpp
         source/LU.cpp
-        source/mapa.cpp
         source/material.cpp
         source/mathUtil.cpp
         source/matrix.cpp

@@ -12,7 +12,7 @@ class vector3D
 
     vector3D( float x, float y, float z );
 
-    vector3D( float vet[] );
+    explicit vector3D( float vet[] );
 
     vector3D( const vector3D &v );
 
