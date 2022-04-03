@@ -1,0 +1,69 @@
+cmake_minimum_required(VERSION 3.21)
+project(CatBoxEngine)
+
+set(CMAKE_CXX_STANDARD 14)
+
+include_directories(include)
+include_directories(third_party/SDL/include)
+include_directories(third_party/SDL_ttf)
+include_directories(third_party/SDL_image)
+
+add_executable(CatBoxEngine
+        include/boundingbox.h
+        include/collisionutil.h
+        include/draw.h
+        include/GLAux.h
+        include/glm.h
+        include/grafo.h
+        include/interface.h
+        include/lightsource.h
+        include/lista.h
+        include/LU.h
+        include/mapa.h
+        include/material.h
+        include/mathUtil.h
+        include/matrix.h
+        include/mazeGenerator.h
+        include/mazeUtil.h
+        include/meshbuffer.h
+        include/MyList.h
+        include/octree.h
+        include/physicsutil.h
+        include/quaternion.h
+        include/rect.h
+        include/region.h
+        include/resources.h
+        include/SceneElement.h
+        include/SceneElements.h
+        include/SELoader.h
+        include/sphere.h
+        include/texture.h
+        include/vector3D.h
+        source/boundingbox.cpp
+        source/collisionutil.cpp
+        source/draw.cpp
+        source/GLAux.cpp
+        source/glm.cpp
+        source/grafo.cpp
+        source/interface.cpp
+        source/lightsource.cpp
+        source/LU.cpp
+        source/mapa.cpp
+        source/material.cpp
+        source/mathUtil.cpp
+        source/matrix.cpp
+        source/mazeGenerator.cpp
+        source/mazeUtil.cpp
+        source/meshbuffer.cpp
+        source/octree.cpp
+        source/physicsutil.cpp
+        source/quaternion.cpp
+        source/rect.cpp
+        source/region.cpp
+        source/resources.cpp
+        source/SceneElement.cpp
+        source/SceneElements.cpp
+        source/SELoader.cpp
+        source/sphere.cpp
+        source/vector3D.cpp
+        main.cpp)

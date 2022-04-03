@@ -2,10 +2,10 @@
 #define GLAux_H
 
 #include <GL/gl.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_ttf.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#include <SDL_opengl.h>
 #include "vector3D.h"
 #include "quaternion.h"
 #include "matrix.h"
@@ -65,7 +65,7 @@ class GLAux
      static int WIDTH;
      static int HEIGHT;
      static int BPP;
-    //Configurações da matriz de perspectiva
+    //Configuraes da matriz de perspectiva
      static GLdouble xmin, xmax, ymin, ymax, fovy, zNear, zFar, aspect;
 
      static SDL_Surface *screen;
@@ -84,11 +84,11 @@ class GLAux
      static Texture *LoadTexture( char *filename );
     //Converte uma SDL_surface para uma textura opengl
      static Texture *CreateTextureFromSurface( SDL_Surface *sdlimage );
-    //Alterna entre a visão de perspectiva e a vião ortogonal
+    //Alterna entre a visï¿½o de perspectiva e a viï¿½o ortogonal
      static void OrthogonalView( bool ortho, float pos[3] );
     //Desenha um plano com uma textura
      static void draw2DObject( plane2D area, Texture *texture, float cor[4], float rect[4]  );
-    //Desenha esfera dada a posição e o raio
+    //Desenha esfera dada a posiï¿½ï¿½o e o raio
      static void drawSphere( vector3D position, double radius );
     //Retorna coordenadas de raio do mouse, dado o comprimento deste no eixo Z
      static void rayFromScreenCoord(int scr_x, int scr_y, vector3D &point, vector3D &dir);
