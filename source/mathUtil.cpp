@@ -1,5 +1,6 @@
 #include "mathUtil.h"
 #include <iostream>
+#include <vector>
 using namespace std;
 
 
@@ -47,18 +48,19 @@ bool MathUt::fatoracaoLU(Matrix m, Matrix &L, Matrix &U)
 }
 
 
-bool MathUt::GaussJordan(Matrix coef, Matrix tInd, Matrix &solucao)
+bool MathUt::GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao)
 {
 
     solucao = Matrix(tInd.size_i, tInd.size_j);
 
+    const int ordem = coef.order;
     for( int t=0; t<tInd.size_j; t++ )
     {
 
         Matrix copy;
-        int ordem = coef.order;
+
         copy = coef;
-        float b[ordem];
+        std::vector<float> b(ordem);
         for(int i=0;i<ordem;i++)
             b[i]=tInd.index(i,t);
 
@@ -70,7 +72,7 @@ bool MathUt::GaussJordan(Matrix coef, Matrix tInd, Matrix &solucao)
 
             if( pivo == 0 )
             {
-                if( pivot(copy, k) == false )
+                if(!pivot(copy, k))
                 {
                     cout << ">>> Resolver sistema por gauss jordan: o pivo a["<<k<<","<<k<<"] e ZERO!!!"<<endl;
                     return(false);

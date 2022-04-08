@@ -5,7 +5,7 @@
 namespace MathUt
 {
     bool fatoracaoLU(Matrix m, Matrix &L, Matrix &U);
-    bool GaussJordan(Matrix coef, Matrix tInd, Matrix &solucao);
+    bool GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao);
     bool pivot(Matrix &m, int i);
 }
 

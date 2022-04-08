@@ -22,7 +22,7 @@ bool Resources::loadResource(char *name, int type, int &id)
                 fprintf( f, "Arquivo '%s' no pode ser carregado\n", name );
                 fclose(f);
                 return false;
-            }
+      m      }
             else
             {
                 fclose(g);

@@ -23,6 +23,8 @@ class Matrix
     void create();
     //Retorna um elemento da Matrix dada a coordenada
     float &index(int i, int j);
+    float index(int i, int j) const;
+
     //Trocar linhas
     void switchLines(int i, int j);
     //Exibe em console a Matrix

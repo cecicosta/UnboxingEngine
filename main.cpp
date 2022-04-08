@@ -1,21 +1,11 @@
 #include <iostream>
 #include <cmath>
-#include <SDL.h>
-#include <SDL_image.h>
 
-#include "glm.h" //.obj loader library
-
-#include <GL/gl.h>
+//#include "glm.h" //.obj loader library
 #include "GLAux.h"
-#include "lista.h"
-#include "lightsource.h"
-#include "meshbuffer.h"
-#include "octree.h"
-#include "SceneElement.h"
-#include "resources.h"
-#include "draw.h"
-#include "collisionutil.h"
-#include "physicsutil.h"
+#include <GL/glew.h>
+
+//#include "draw.h"
 
 #include <ctime>
 
@@ -62,12 +52,12 @@ int main(int arg, char* argv[])
 
 void liberar()
 {
-    Resources::models.deleteAll();
-    Resources::textures.deleteAll();
-
-    collut::mesh.deleteAll();
-    collut::objects.deleteAll();
-    collut::SEObjects.deleteAll();
-
-    physicut::ph_objects.free();
+//    Resources::models.deleteAll();
+//    Resources::textures.deleteAll();
+//
+//    collut::mesh.deleteAll();
+//    collut::objects.deleteAll();
+//    collut::SEObjects.deleteAll();
+//
+//    physicut::ph_objects.free();
 }

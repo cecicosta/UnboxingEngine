@@ -157,6 +157,11 @@ float &Matrix::index(int i, int j)
     return A[j*order+i];
 }
 
+float Matrix::index(int i, int j) const
+{
+    return A[j*order+i];
+}
+
 void Matrix::ver()
 {
     for( int i=0;i<size_i;i++ )

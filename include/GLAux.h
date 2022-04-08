@@ -1,5 +1,4 @@
-#ifndef GLAux_H
-#define GLAux_H
+#pragma once
 
 #include "matrix.h"
 #include "quaternion.h"
@@ -21,7 +20,7 @@
 #include <cstdint>
 
 class SDL_Surface;
-class SDL_Event;
+union SDL_Event;
 class SDL_Rect;
 class SDL_Window;
 
@@ -102,5 +101,3 @@ public:
     //Divide os sprits da surface.
     static SDL_Rect *CreateSurfaceClips(int linhas, int colunas, int intervalo_x, int intervalo_y);
 };
-
-#endif

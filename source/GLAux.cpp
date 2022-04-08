@@ -77,7 +77,10 @@ void GLAux::OrthogonalView(bool ortho, float pos[3] = position) {
         glViewport(0, 0, WIDTH, HEIGHT);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(-WIDTH / 2, WIDTH / 2, -HEIGHT / 2, HEIGHT / 2, 1000.0, -1000.0);
+
+        auto width = static_cast<float>(WIDTH);
+        auto height = static_cast<float>(HEIGHT);
+        glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1000.0, -1000.0);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
@@ -168,20 +171,20 @@ void GLAux::drawSphere(vector3D position, float radius) {
 
 
 void GLAux::rayFromScreenCoord(int scr_x, int scr_y, vector3D &point, vector3D &dir) {
-    float fovy = 90.0;
-    float zNear = 1.0;
-    float zFar = 1.0;
-    float aspect = (GLfloat) WIDTH / (GLfloat) HEIGHT;
+    float _fovy = 90.0f;
+    float _zNear = 1.0f;
+    float _zFar = 1.0f;
+    float _aspect = (GLfloat) WIDTH / (GLfloat) HEIGHT;
 
-    float ymax = zNear * tan(fovy * M_PI / 360.0);
-    float ymin = -ymax;
-    float xmin = ymin * aspect;
-    float xmax = ymax * aspect;
+    float _ymax = _zNear * tanf(_fovy * static_cast<float>(M_PI) / 360.0f);
+    float _ymin = -_ymax;
+    float _xmin = _ymin * _aspect;
+    float _xmax = _ymax * _aspect;
 
     float x, y, z;
     z = -1;
-    x = (2 * scr_x * xmax) / WIDTH - xmax;
-    y = (2 * scr_y * ymin) / HEIGHT + ymax;
+    x = (2.0f * static_cast<float>(scr_x) * _xmax) / static_cast<float>(WIDTH) - _xmax;
+    y = (2.0f * static_cast<float>(scr_y) * _ymin) / static_cast<float>(HEIGHT) + _ymax;
 
     dir = (worldToCam * vector3D(x, y, z)) - cam_pos;
     point = cam_pos;
@@ -221,26 +224,30 @@ void GLAux::camFPS() {
     float rot_x = 0;
     float cam_vel = 1;
 
-    if (GLAux::keyState[SDLK_RIGHT])
-        x = x - cam_vel;
-    if (GLAux::keyState[SDLK_LEFT])
-        x = x + cam_vel;
-    if (GLAux::keyState[SDLK_UP])
-        y = y - cam_vel;
-    if (GLAux::keyState[SDLK_DOWN])
-        y = y + cam_vel;
-    if (GLAux::keyState[SDLK_o])
-        z = z + cam_vel;
-    if (GLAux::keyState[SDLK_i])
-        z = z - cam_vel;
-    if (GLAux::keyState[SDLK_a])
-        rot_y = rot_y + cam_vel;
-    if (GLAux::keyState[SDLK_d])
-        rot_y = rot_y - cam_vel;
-    if (GLAux::keyState[SDLK_w])
-        rot_x = rot_x + cam_vel;
-    if (GLAux::keyState[SDLK_s])
-        rot_x = rot_x - cam_vel;
+    if(keyState) {
+        switch (*keyState) {
+            case SDLK_RIGHT:
+                x = x - cam_vel;
+            case SDLK_LEFT:
+                x = x + cam_vel;
+            case SDLK_UP:
+                y = y - cam_vel;
+            case SDLK_DOWN:
+                y = y + cam_vel;
+            case SDLK_o:
+                z = z + cam_vel;
+            case SDLK_i:
+                z = z - cam_vel;
+            case SDLK_a:
+                rot_y = rot_y + cam_vel;
+            case SDLK_d:
+                rot_y = rot_y - cam_vel;
+            case SDLK_w:
+                rot_x = rot_x + cam_vel;
+            case SDLK_s:
+                rot_x = rot_x - cam_vel;
+        }
+    }
 
     double angX = mouseTracking_x * 180 / 400 - vel_x;
     double angY = mouseTracking_y * 180 / 300 - vel_y;

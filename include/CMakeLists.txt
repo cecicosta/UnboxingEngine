@@ -1,30 +1,30 @@
 target_sources(catboxengine
         PUBLIC
-        boundingbox.h
-        collisionutil.h
-        draw.h
+#        boundingbox.h
+#        collisionutil.h
+#        draw.h
         GLAux.h
-        glm.h
-        grafo.h
-        lightsource.h
-        lista.h
-        LU.h
-        material.h
+#        glm.h
+#        grafo.h
+#        lightsource.h
+#        lista.h
+#        LU.h
+#        material.h
         mathUtil.h
         matrix.h
-        mazeGenerator.h
-        mazeUtil.h
-        meshbuffer.h
-        MyList.h
-        octree.h
-        physicsutil.h
+#        mazeGenerator.h
+#        mazeUtil.h
+#        meshbuffer.h
+#        MyList.h
+#        octree.h
+#        physicsutil.h
         quaternion.h
-        rect.h
-        region.h
-        resources.h
-        SceneElement.h
-        SceneElements.h
-        SELoader.h
-        sphere.h
+#        rect.h
+#        region.h
+#        resources.h
+#        SceneElement.h
+#        SceneElements.h
+#        SELoader.h
+#        sphere.h
         texture.h
         vector3D.h)
