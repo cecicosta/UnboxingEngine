@@ -7,6 +7,7 @@
 #include <SDL_opengl.h>
 #include <SDL_ttf.h>
 #include <cstdio>
+#include <iostream>
 
 float GLAux::mouseTracking_x = 0;
 float GLAux::mouseTracking_y = 0;
@@ -26,12 +27,19 @@ GLdouble GLAux::xmin, GLAux::xmax, GLAux::ymin,
 
 SDL_Window *GLAux::screen;
 SDL_Event GLAux::event;
+SDL_GLContext GLAux::mGLContext;
+
 Uint8 const *GLAux::keyState;
 float GLAux::position[3];
 int GLAux::mousestate[3];
 bool GLAux::mouse_buttonPressed = false;
 int GLAux::mouse_wheel = 0;
 bool GLAux::quit = false;
+
+std::vector<float> GLAux::vertices;
+
+std::uint32_t GLAux::vao;
+std::uint32_t GLAux::program;
 
 vector3D GLAux::cam_pos = vector3D(0, 0, 0);
 vector3D GLAux::cam_dir = vector3D(0, 0, -1);
@@ -40,23 +48,94 @@ quaternion GLAux::q = quaternion(0, vector3D(1, 0, 0));
 Matrix GLAux::transfomation = Matrix::identity(4);
 Matrix GLAux::worldToCam = Matrix::identity(4);
 
+
+static inline void mat4x4_ortho(float *out, float left, float right, float bottom, float top, float znear, float zfar) {
+#define T(a, b) (a * 4 + b)
+
+    out[T(0, 0)] = 2.0f / (right - left);
+    out[T(0, 1)] = 0.0f;
+    out[T(0, 2)] = 0.0f;
+    out[T(0, 3)] = 0.0f;
+
+    out[T(1, 1)] = 2.0f / (top - bottom);
+    out[T(1, 0)] = 0.0f;
+    out[T(1, 2)] = 0.0f;
+    out[T(1, 3)] = 0.0f;
+
+    out[T(2, 2)] = -2.0f / (zfar - znear);
+    out[T(2, 0)] = 0.0f;
+    out[T(2, 1)] = 0.0f;
+    out[T(2, 3)] = 0.0f;
+
+    out[T(3, 0)] = -(right + left) / (right - left);
+    out[T(3, 1)] = -(top + bottom) / (top - bottom);
+    out[T(3, 2)] = -(zfar + znear) / (zfar - znear);
+    out[T(3, 3)] = 1.0f;
+
+#undef T
+}
+
+static const char *vertex_shader_source =
+        "#version 150 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "}\0";
+
+static const char *fragment_shader_source =
+        "#version 150\n"
+        "out vec4 FragColor;\n"
+        "void main() {\n"
+        "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "}\n";
+
+typedef enum t_attrib_id {
+    attrib_position,
+    attrib_color
+} t_attrib_id;
+
 void GLAux::Init(bool ortho = true) {
-    //Inicializa todos os subsistemas da SDL.
-    SDL_Init(SDL_INIT_EVERYTHING);
+    //Initialize SDL subsystems
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+        std::cout << "Video initialization failed: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
     //Inicializa a ttf
     TTF_Init();
+
     //Inicializa a screen.
     screen = SDL_CreateWindow("My Game Window",
                               SDL_WINDOWPOS_UNDEFINED,
                               SDL_WINDOWPOS_UNDEFINED,
                               640, 480,
-                              SDL_WINDOW_OPENGL);
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
+    // Create an OpenGL context associated with the window
+    mGLContext = SDL_GL_CreateContext(screen);
+
+    glewInit();
+
+    CreateBasicShader();
     //Inicializa o opengl
     position[0] = 0;
     position[1] = 0;
     position[2] = 0;
-    OrthogonalView(ortho, position);
+    //OrthogonalView(ortho, position);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glViewport(0, 0, 640, 480);
 }
 
 
@@ -80,7 +159,14 @@ void GLAux::OrthogonalView(bool ortho, float pos[3] = position) {
 
         auto width = static_cast<float>(WIDTH);
         auto height = static_cast<float>(HEIGHT);
-        glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1000.0, -1000.0);
+        xmin = 0;
+        xmax = width;
+        ymin = 0;
+        xmax = height;
+        zNear = 100;
+        zFar = -100;
+
+        glOrtho(xmin, xmax, ymin, ymax, zNear, zFar);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
@@ -224,7 +310,7 @@ void GLAux::camFPS() {
     float rot_x = 0;
     float cam_vel = 1;
 
-    if(keyState) {
+    if (keyState) {
         switch (*keyState) {
             case SDLK_RIGHT:
                 x = x - cam_vel;
@@ -281,13 +367,13 @@ void GLAux::camFPS() {
     glMatrixMode(GL_MODELVIEW);
 }
 
-void GLAux::setCam(vector3D pos, float ang, vector3D eixo, vector3D point) {
-    cam_dir = Matrix::rotationMatrix(ang, eixo) * cam_dir;
-    cam_up = Matrix::rotationMatrix(ang, eixo) * cam_up;
+void GLAux::setCam(const vector3D &pos, float ang, const vector3D &axi, const vector3D &point) {
+    cam_dir = Matrix::rotationMatrix(ang, axi) * cam_dir;
+    cam_up = Matrix::rotationMatrix(ang, axi) * cam_up;
 
     //Atualiza a matrix de transformação da câmera
     worldToCam = Matrix::translationMatrix(cam_pos * -1) * worldToCam;
-    worldToCam = Matrix::rotationMatrix(ang, eixo) * worldToCam;
+    worldToCam = Matrix::rotationMatrix(ang, axi) * worldToCam;
 
     //Transçada a camera em seu sistema local
     cam_pos = pos;
@@ -602,8 +688,8 @@ void GLAux::ApplySurface(int x, int y, SDL_Surface *origem, SDL_Surface *destino
 }
 
 SDL_Surface *GLAux::LoadSurface(char *nome) {
-    auto* newImage = IMG_Load(nome);
-    auto* newImageOptimized = SDL_ConvertSurface(newImage, newImage->format, 0);
+    auto *newImage = IMG_Load(nome);
+    auto *newImageOptimized = SDL_ConvertSurface(newImage, newImage->format, 0);
 
     //Define a color key
     Uint32 colorkey = SDL_MapRGB(newImageOptimized->format, 0, 0xFF, 0xFF);
@@ -644,4 +730,85 @@ SDL_Rect *GLAux::CreateSurfaceClips(int linhas, int colunas, int intervalo_x, in
         }
 
     return clip;
+}
+
+void GLAux::ReleaseCurrentGLContext() {
+    SDL_GL_DeleteContext(mGLContext);
+}
+
+void GLAux::CreateBasicShader() {
+
+    // Create and compile vertex shader
+    unsigned int vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertex_shader_source, nullptr);
+    glCompileShader(vertexShader);
+
+    {
+        int success;
+        char infoLog[512];
+        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
+            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+                      << infoLog << std::endl;
+        }
+    }
+
+    // Create and compile fragment shader
+    unsigned int fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragment_shader_source, nullptr);
+    glCompileShader(fragmentShader);
+
+    {
+        int success;
+        char infoLog[512];
+        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
+            std::cout << "ERROR::FRAGMENT::VERTEX::COMPILATION_FAILED\n"
+                      << infoLog << std::endl;
+        }
+    }
+
+    // Create program and link shaders
+    program = glCreateProgram();
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+
+    {
+        int success;
+        char infoLog[512];
+        glGetProgramiv(program, GL_LINK_STATUS, &success);
+        if (!success) {
+            glGetProgramInfoLog(program, 512, nullptr, infoLog);
+            std::cout << "ERROR::LINKING::PROGRAM::FAILED\n"
+                      << infoLog << std::endl;
+        }
+    }
+
+    glUseProgram(program);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+}
+
+void GLAux::CreateArray() {
+
+    unsigned int vbo;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), &vertices[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+
+//    Matrix projection_matrix(4);
+//    mat4x4_ortho(projection_matrix.getMatrixGL(), 0, 640, 0, 480, 100, 100);
+//    glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, projection_matrix.getMatrixGL());
 }

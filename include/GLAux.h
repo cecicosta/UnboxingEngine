@@ -5,6 +5,12 @@
 #include "sphere.h"
 #include "texture.h"
 #include "vector3D.h"
+#include "SDL_video.h"
+
+#include <cmath>
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 #define L_BUTTON 0
 #define R_BUTTON 1
@@ -16,8 +22,6 @@
 #define BLUE SDL_MapRGB(GLAux::screen->format, 0, 0, 255)
 #define YELLOW SDL_MapRGB(GLAux::screen->format, 255, 255, 0)
 
-#include <cmath>
-#include <cstdint>
 
 class SDL_Surface;
 union SDL_Event;
@@ -63,9 +67,13 @@ public:
 
     static SDL_Window *screen;
     static SDL_Event event;
+    static SDL_GLContext mGLContext;
     static std::uint8_t const *keyState;
     static float position[3];
     static int mousestate[3];
+
+    static std::uint32_t vao;
+    static std::uint32_t program;
 
     //Inicia os subsistemas da SDL.
     static void Init(bool ortho);
@@ -89,7 +97,9 @@ public:
     static vector3D convert2DTo3DCoord(float X, float Y, float dist);
     //Controlador da camera
     static void camFPS();
-    static void setCam(vector3D pos, float ang, vector3D eixo, vector3D point);
+    static void setCam(const vector3D& pos, float ang, const vector3D& axi, const vector3D& point);
+    static void CreateBasicShader();
+    static void ReleaseCurrentGLContext();
 
 
     //Aplica uma surface em outra surface.
@@ -100,4 +110,7 @@ public:
     static SDL_Surface *LoadSurfaceAlpha(char *nome);
     //Divide os sprits da surface.
     static SDL_Rect *CreateSurfaceClips(int linhas, int colunas, int intervalo_x, int intervalo_y);
+    static void CreateArray();
+
+    static std::vector<float> vertices;
 };
