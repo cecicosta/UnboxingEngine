@@ -14,7 +14,7 @@ target_sources(catboxengine
         matrix.h
 #        mazeGenerator.h
 #        mazeUtil.h
-#        meshbuffer.h
+        meshbuffer.h
 #        MyList.h
 #        octree.h
 #        physicsutil.h
@@ -22,8 +22,7 @@ target_sources(catboxengine
 #        rect.h
 #        region.h
 #        resources.h
-#        SceneElement.h
-#        SceneElements.h
+        SceneElement.h
 #        SELoader.h
 #        sphere.h
         texture.h

@@ -13,15 +13,14 @@ target_sources(catboxengine
         matrix.cpp
 #        mazeGenerator.cpp
 #        mazeUtil.cpp
-#        meshbuffer.cpp
+        meshbuffer.cpp
 #        octree.cpp
 #        physicsutil.cpp
         quaternion.cpp
 #        rect.cpp
 #        region.cpp
 #        resources.cpp
-#        SceneElement.cpp
-#        SceneElements.cpp
+        SceneElement.cpp
 #        SELoader.cpp
 #        sphere.cpp
         vector3D.cpp
