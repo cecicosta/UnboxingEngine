@@ -1,5 +1,6 @@
 target_sources(catboxengine
         PUBLIC
+        Camera.cpp
 #        boundingbox.cpp
 #        collisionutil.cpp
 #        draw.cpp
@@ -20,7 +21,7 @@ target_sources(catboxengine
 #        rect.cpp
 #        region.cpp
 #        resources.cpp
-        SceneElement.cpp
+#        SceneElement.cpp
 #        SELoader.cpp
 #        sphere.cpp
         vector3D.cpp

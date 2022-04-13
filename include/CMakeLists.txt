@@ -1,5 +1,6 @@
 target_sources(catboxengine
         PUBLIC
+        Camera.h
 #        boundingbox.h
 #        collisionutil.h
 #        draw.h
@@ -22,7 +23,7 @@ target_sources(catboxengine
 #        rect.h
 #        region.h
 #        resources.h
-        SceneElement.h
+#        SceneElement.h
 #        SELoader.h
 #        sphere.h
         texture.h
