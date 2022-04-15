@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "lista.h"
 #include "glm.h"
-#include "GLAux.h"
+#include "CatUnboxerEngine.h"
 #include "meshbuffer.h"
 
 /*Carrega previamente os recursos do editor, objetos e texturas.*/

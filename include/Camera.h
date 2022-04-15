@@ -10,6 +10,8 @@ public:
     void CastRayFromScreen(int scr_x, int scr_y, vector3D &point, vector3D &dir) const;
     vector3D ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const;
     void SetCamera(const vector3D &pos, float ang, const vector3D &axi, const vector3D &point);
+    ///Move the camera
+    void FPSCamera(const vector3D& movement, const vector3D& rotation);
 
     //Opengl camera attributes
     quaternion mRotation = quaternion(0, vector3D(1, 0, 0));

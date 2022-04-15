@@ -1,4 +1,4 @@
-#include "GLAux.h"
+#include "CatUnboxerEngine.h"
 #include "Camera.h"
 
 #include <GL/glew.h>
@@ -17,8 +17,8 @@ static const char *vertex_shader_source =
         "out vec4 v_color;\n"
         "uniform mat4 u_projection_matrix;\n"
         "void main() {\n"
-        "    v_color = vec4(0.5 + i_position.x, 0.5 + i_position.y, 0.5 + i_position.z, 1.0);\n"
-        "    gl_Position = u_projection_matrix * vec4( i_position.x, i_position.y, i_position.z, 1.0 );\n"
+        "    v_color = vec4(0.5 + i_position.y, 0.5 + i_position.y, 0.5 + i_position.z, 1.0);\n"
+        "    gl_Position = u_projection_matrix * vec4( i_position.y, i_position.y, i_position.z, 1.0 );\n"
         "}\n";
 
 static const char *fragment_shader_source =
@@ -34,10 +34,10 @@ typedef enum t_attrib_id {
     attrib_color
 } t_attrib_id;
 
-GLAux::GLAux(uint32_t width, uint32_t height, uint32_t bpp)
+CCatUnboxerEngine::CCatUnboxerEngine(uint32_t width, uint32_t height, uint32_t bpp)
     : camera(std::make_unique<Camera>(width, height, 70.0f, 1, 1)), BPP(bpp) {}
 
-void GLAux::CreateWindow(bool isOrthogonal = true) {
+void CCatUnboxerEngine::CreateWindow(bool isOrthogonal = true) {
     //Initialize SDL subsystems
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         std::cout << "Video initialization failed: " << SDL_GetError() << std::endl;
@@ -63,228 +63,89 @@ void GLAux::CreateWindow(bool isOrthogonal = true) {
     mWindow = SDL_CreateWindow("My Game Window",
                                SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED,
-                               camera->mWidth, camera->mHeight,
+                               static_cast<GLint>(camera->mWidth),
+                               static_cast<GLint>(camera->mHeight),
                                SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-
-    {
-        auto gl_error = glGetError();
-        std::cout << "Error1: " << gl_error << std::endl;
-        std::cout << "Error: " << gluErrorString(gl_error) << std::endl;
-    }
 
     // Create an OpenGL context associated with the window
     mGLContext = SDL_GL_CreateContext(mWindow);
 
-    {
-        auto gl_error = glGetError();
-        std::cout << "Error2: " << gl_error << std::endl;
-        std::cout << "Error: " << gluErrorString(gl_error) << std::endl;
-    }
-
+    //TODO: Verify if by creating a new window, a new context needs to be
+    // created and glew needs to be initialize for that context
     auto init_res = glewInit();
     if (init_res != GLEW_OK) {
         std::cout << glewGetErrorString(glewInit()) << std::endl;
     }
 
-    {
-        auto gl_error = glGetError();
-        std::cout << "Error3: " << gl_error << std::endl;
-        std::cout << "Error: " << gluErrorString(gl_error) << std::endl;
-    }
-
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
-    //Create view port and frustum
-    OrthogonalView(isOrthogonal);
-
+    CreateView();
     CreateBasicShader();
 }
 
-void GLAux::OrthogonalView(bool isOrthogonal) {
+void CCatUnboxerEngine::CreateView() const {
+    glClearColor(0.0f, 0.0f, 0.0f, 0.5f);// Clear The Background Color To Blue
+    glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
 
-    if (isOrthogonal) {
-        glClearColor(0.0f, 0.0f, 0.0f, 0.5f);// Clear The Background Color To Blue
-                                             //        glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
-                                             //        glEnable(GL_BLEND);
-                                             //        // TODO: Check the need and advantage of having blend and alpha enabled together
-                                             //        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                                             //        glAlphaFunc(GL_GREATER, 0.1f);// Set Alpha Testing
-                                             //        glEnable(GL_ALPHA_TEST);
-                                             //        glEnable(GL_TEXTURE_2D);
-                                             //
-                                             //        glDepthFunc(GL_LEQUAL);// Type Of Depth Testing
-                                             //        glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending
+    glEnable(GL_BLEND);
+    glAlphaFunc(GL_GREATER, 0.1f);// Set Alpha Testing     (disable blending)
+    glEnable(GL_ALPHA_TEST);
+    glEnable(GL_TEXTURE_2D);// Enable Texture Mapping
+    glEnable(GL_CULL_FACE);
 
-        glViewport(0, 0, camera->mWidth, camera->mHeight);
-        //        glMatrixMode(GL_PROJECTION);
-        //        glLoadIdentity();
+    glDepthFunc(GL_LEQUAL); // Type Of Depth Testing
+    glEnable(GL_DEPTH_TEST);// Enables Depth Testing
 
-        {
-            auto gl_error = glGetError();
-            std::cout << "Error13: " << gl_error << std::endl;
-            std::cout << "Error: " << gluErrorString(gl_error) << std::endl;
-        }
-        //glOrtho(camera->mLeft, camera->mRight, camera->mBottom, camera->mTop, camera->mZNear, camera->mZFar);
-        //        glMatrixMode(GL_MODELVIEW);
-        //        glLoadIdentity();
-        {
-            auto gl_error = glGetError();
-            std::cout << "Error14: " << gl_error << std::endl;
-            std::cout << "Error: " << gluErrorString(gl_error) << std::endl;
-        }
-
-    } else {
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending
-        glEnable(GL_BLEND);
-        glAlphaFunc(GL_GREATER, 0.1f);// Set Alpha Testing     (disable blending)
-        glEnable(GL_ALPHA_TEST);
-        glEnable(GL_TEXTURE_2D);// Enable Texture Mapping
-        //glEnable(GL_CULL_FACE);
-
-        glDepthFunc(GL_LEQUAL); // Type Of Depth Testing
-        glEnable(GL_DEPTH_TEST);// Enables Depth Testing
-
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        glFrustum(camera->mLeft, camera->mRight, camera->mBottom, camera->mTop, camera->mZNear, camera->mZFar);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-    }
+    glViewport(0, 0, static_cast<GLint>(camera->mWidth), static_cast<GLint>(camera->mHeight));
 }
 
-void GLAux::draw2DObject(plane2D area, Texture *texture, float cor[4], float rect[4]) {
-
-    glBindTexture(GL_TEXTURE_2D, texture->texID);
-
-    glTranslatef(area.x, area.y, area.z);
-    glColor4f(cor[0], cor[1], cor[2], cor[3]);
-    glBegin(GL_QUADS);// Start Drawing A Quad
-    glTexCoord2f(rect[0], rect[1]);
-    glVertex3f(-area.w / 2, -area.h / 2, 0);// Bottom Left
-    glTexCoord2f(rect[2], rect[1]);
-    glVertex3f(area.w / 2, -area.h / 2, 0);// Bottom Right
-    glTexCoord2f(rect[2], rect[3]);
-    glVertex3f(area.w / 2, area.h / 2, 0);// Top Right
-    glTexCoord2f(rect[0], rect[3]);
-    glVertex3f(-area.w / 2, area.h / 2, 0);// Top Left
-    glEnd();
-    glLoadIdentity();
-}
-
-void GLAux::FPSCamera() {
-
-    float x = 0;
-    float y = 0;
-    float z = 0;
-    float rot_y = 0;
-    float rot_x = 0;
-    float cam_vel = 1;
-
-    if (keyState) {
-        switch (*keyState) {
-            case SDLK_RIGHT:
-                x = x - cam_vel;
-            case SDLK_LEFT:
-                x = x + cam_vel;
-            case SDLK_UP:
-                y = y - cam_vel;
-            case SDLK_DOWN:
-                y = y + cam_vel;
-            case SDLK_o:
-                z = z + cam_vel;
-            case SDLK_i:
-                z = z - cam_vel;
-            case SDLK_a:
-                rot_y = rot_y + cam_vel;
-            case SDLK_d:
-                rot_y = rot_y - cam_vel;
-            case SDLK_w:
-                rot_x = rot_x + cam_vel;
-            case SDLK_s:
-                rot_x = rot_x - cam_vel;
-        }
-    }
-
-    double angX = mouseTracking_x * 180 / 400 - vel_x;
-    double angY = mouseTracking_y * 180 / 300 - vel_y;
-    vel_x = mouseTracking_x * 180 / 400;
-    vel_y = mouseTracking_y * 180 / 300;
-
-    //Obter o eixo x atual da câmera
-    vector3D x_axis = camera->mDirection.vetorial(camera->mUp).normalizado();
-
-    //Atualizar as proriedades da camera
-    camera->mDirection = Matrix::rotationMatrix(angY, x_axis) * camera->mDirection;
-    camera->mUp = Matrix::rotationMatrix(angY, x_axis) * camera->mUp;
-    //Atualizar as proriedades da camera
-    camera->mDirection = Matrix::rotationMatrix(angX, vector3D(0, 1, 0)) * camera->mDirection;
-    camera->mUp = Matrix::rotationMatrix(angX, vector3D(0, 1, 0)) * camera->mUp;
-
-    //Atualiza a matrix de transformação da câmera
-    camera->mWorldToCamTransformation = Matrix::translationMatrix(camera->mPosition * -1) * camera->mWorldToCamTransformation;
-    camera->mWorldToCamTransformation = Matrix::rotationMatrix(angY, x_axis) * camera->mWorldToCamTransformation;
-    camera->mWorldToCamTransformation = Matrix::rotationMatrix(angX, vector3D(0, 1, 0)) * camera->mWorldToCamTransformation;
-
-    //Transçada a camera->em seu sistema local
-    camera->mPosition = camera->mPosition - x_axis.normalizado() * x - camera->mUp.normalizado() * y - camera->mDirection.normalizado() * z;
-
-    camera->mWorldToCamTransformation = Matrix::translationMatrix(camera->mPosition) * camera->mWorldToCamTransformation;
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glFrustum(camera->mLeft, camera->mRight, camera->mBottom, camera->mTop, camera->mZNear, camera->mZFar);
-    glMultMatrixf(camera->mWorldToCamTransformation.inverse().getMatrixGL());
-    glMatrixMode(GL_MODELVIEW);
-}
-
-void GLAux::OnInput() {
+void CCatUnboxerEngine::OnInput() {
     keyState = SDL_GetKeyboardState(nullptr);
 
-    mouse_wheel = 0;
-
+    mCursor.scrolling = 0;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
             case SDL_MOUSEMOTION:
-                if (mousestate[L_BUTTON] == 1) {
-                    mouseTracking_x = event.motion.x - mouse_click_x;
-                    mouseTracking_y = event.motion.y - mouse_click_y;
+                if (mCursor.cursorState[L_BUTTON] == 1) {
+                    mCursor.draggingX = event.motion.x - mCursor.buttonPressedX;
+                    mCursor.draggingY = event.motion.y - mCursor.buttonPressedY;
                 }
-                mouse_x = event.motion.x;
-                mouse_y = event.motion.y;
+                mCursor.x = event.motion.x;
+                mCursor.y = event.motion.y;
 
                 break;
             case SDL_MOUSEBUTTONDOWN:
 
-                if (GLAux::event.button.button == SDL_BUTTON_LEFT && mouse_buttonPressed == false) {
-                    mousestate[L_BUTTON] = 1;
-                    mouse_click_x = event.motion.x;
-                    mouse_click_y = event.motion.y;
+                if (CCatUnboxerEngine::event.button.button == SDL_BUTTON_LEFT && !mCursor.isButtonPressed) {
+                    mCursor.cursorState[L_BUTTON] = 1;
+                    mCursor.buttonPressedX = event.motion.x;
+                    mCursor.buttonPressedY = event.motion.y;
                 }
-                if (GLAux::event.button.button == SDL_BUTTON_RIGHT && mouse_buttonPressed == false) {
-                    mousestate[R_BUTTON] = 1;
-                    mouse_click_x = event.motion.x;
-                    mouse_click_y = event.motion.y;
+                if (CCatUnboxerEngine::event.button.button == SDL_BUTTON_RIGHT && !mCursor.isButtonPressed) {
+                    mCursor.cursorState[R_BUTTON] = 1;
+                    mCursor.buttonPressedX = event.motion.x;
+                    mCursor.buttonPressedY = event.motion.y;
                 }
-                mouse_buttonPressed = true;
+                mCursor.isButtonPressed = true;
 
-                if (GLAux::event.type == SDL_MOUSEWHEEL) {
-                    mouse_wheel = GLAux::event.wheel.y;
+                if (CCatUnboxerEngine::event.type == SDL_MOUSEWHEEL) {
+                    mCursor.scrolling = CCatUnboxerEngine::event.wheel.y;
                 }
 
                 break;
             case SDL_MOUSEBUTTONUP:
-                mouseTracking_x = 0;
-                mouseTracking_y = 0;
-                vel_x = 0;
-                vel_y = 0;
-                mouse_buttonPressed = false;
+                mCursor.draggingX = 0;
+                mCursor.draggingY = 0;
+                mCursor.draggingSpeedX = 0;
+                mCursor.draggingSpeedY = 0;
+                mCursor.isButtonPressed = false;
 
-                if (GLAux::event.button.button == SDL_BUTTON_LEFT && mousestate[L_BUTTON] == 1) {
-                    mousestate[L_BUTTON] = 0;
+                if (CCatUnboxerEngine::event.button.button == SDL_BUTTON_LEFT && mCursor.cursorState[L_BUTTON] == 1) {
+                    mCursor.cursorState[L_BUTTON] = 0;
                 }
-                if (GLAux::event.button.button == SDL_BUTTON_RIGHT && mousestate[R_BUTTON] == 1) {
-                    mousestate[R_BUTTON] = 0;
+                if (CCatUnboxerEngine::event.button.button == SDL_BUTTON_RIGHT && mCursor.cursorState[R_BUTTON] == 1) {
+                    mCursor.cursorState[R_BUTTON] = 0;
                 }
 
                 break;
@@ -293,12 +154,46 @@ void GLAux::OnInput() {
         }
     }
 
+    mCursor.draggingSpeedX = mCursor.draggingX * 180 / 400;
+    mCursor.draggingSpeedY = mCursor.draggingY * 180 / 300;
+
     if (keyState[SDLK_ESCAPE])
         quit = true;
 }
+void CCatUnboxerEngine::UpdateFlyingController() {
+    vector3D velocity;
+    vector3D rotation;
+    if (keyState) {
+        switch (*keyState) {
+            case SDLK_RIGHT:
+                velocity.x = -1;
+                break;
+            case SDLK_LEFT:
+                velocity.x = 1;
+                break;
+            case SDLK_UP:
+                velocity.y = -1;
+                break;
+            case SDLK_DOWN:
+                velocity.y = 1;
+                break;
+            case SDLK_o:
+                velocity.z = 1;
+                break;
+            case SDLK_i:
+                velocity.z = -1;
+                break;
+        }
+    }
+
+    rotation.x = mCursor.draggingX * 180 / 400 - mCursor.draggingSpeedX;
+    rotation.y = mCursor.draggingY * 180 / 300 - mCursor.draggingSpeedY;
+
+    camera->FPSCamera(velocity, rotation);
+}
 
 
-Texture *GLAux::LoadTexture(char *filename) {
+Texture *CCatUnboxerEngine::LoadTexture(char *filename) {
 
     GLuint retval;
     SDL_Surface *sdlimage;
@@ -417,7 +312,7 @@ Texture *GLAux::LoadTexture(char *filename) {
     return texture;
 }
 
-Texture *GLAux::CreateTextureFromSurface(SDL_Surface *sdlimage) {
+Texture *CCatUnboxerEngine::CreateTextureFromSurface(SDL_Surface *sdlSurface) {
 
     GLuint retval;
     void *raw;
@@ -426,24 +321,24 @@ Texture *GLAux::CreateTextureFromSurface(SDL_Surface *sdlimage) {
     Uint32 truePixel;
     GLenum errorCode;
 
-    if (!sdlimage) {
+    if (!sdlSurface) {
         printf("SDL_Image load error: %s\n", IMG_GetError());
         return NULL;
     }
 
-    w = sdlimage->w;
-    h = sdlimage->h;
+    w = sdlSurface->w;
+    h = sdlSurface->h;
 
     raw = (void *) malloc(w * h * 4);
     dstPixel = (Uint8 *) raw;
 
-    SDL_LockSurface(sdlimage);
+    SDL_LockSurface(sdlSurface);
 
-    bpp = sdlimage->format->BytesPerPixel;
+    bpp = sdlSurface->format->BytesPerPixel;
 
     for (i = h - 1; i >= 0; i--) {
         for (j = 0; j < w; j++) {
-            srcPixel = (Uint8 *) sdlimage->pixels + i * sdlimage->pitch + j * bpp;
+            srcPixel = (Uint8 *) sdlSurface->pixels + i * sdlSurface->pitch + j * bpp;
             switch (bpp) {
                 case 1:
                     truePixel = *srcPixel;
@@ -467,13 +362,13 @@ Texture *GLAux::CreateTextureFromSurface(SDL_Surface *sdlimage) {
 
                 default:
                     printf("Image bpp of %d unusable\n", bpp);
-                    SDL_UnlockSurface(sdlimage);
-                    SDL_FreeSurface(sdlimage);
+                    SDL_UnlockSurface(sdlSurface);
+                    SDL_FreeSurface(sdlSurface);
                     free(raw);
                     return NULL;
             }
 
-            SDL_GetRGBA(truePixel, sdlimage->format, &(dstPixel[0]), &(dstPixel[1]), &(dstPixel[2]), &(dstPixel[3]));
+            SDL_GetRGBA(truePixel, sdlSurface->format, &(dstPixel[0]), &(dstPixel[1]), &(dstPixel[2]), &(dstPixel[3]));
             dstPixel++;
             dstPixel++;
             dstPixel++;
@@ -481,8 +376,8 @@ Texture *GLAux::CreateTextureFromSurface(SDL_Surface *sdlimage) {
         }
     }
 
-    SDL_UnlockSurface(sdlimage);
-    SDL_FreeSurface(sdlimage);
+    SDL_UnlockSurface(sdlSurface);
+    SDL_FreeSurface(sdlSurface);
 
     while (glGetError()) { ; }
 
@@ -530,7 +425,7 @@ Texture *GLAux::CreateTextureFromSurface(SDL_Surface *sdlimage) {
     return texture;
 }
 
-void GLAux::ApplySurface(int x, int y, SDL_Surface *origem, SDL_Surface *destino, SDL_Rect *clip = NULL) {
+void CCatUnboxerEngine::ApplySurface(int x, int y, SDL_Surface *origem, SDL_Surface *destino, SDL_Rect *clip = NULL) {
     SDL_Rect offset;
     offset.x = x;
     offset.y = y;
@@ -538,7 +433,7 @@ void GLAux::ApplySurface(int x, int y, SDL_Surface *origem, SDL_Surface *destino
     SDL_BlitSurface(origem, clip, destino, &offset);
 }
 
-SDL_Surface *GLAux::LoadSurface(char *nome) {
+SDL_Surface *CCatUnboxerEngine::LoadSurface(char *nome) {
     auto *newImage = IMG_Load(nome);
     auto *newImageOptimized = SDL_ConvertSurface(newImage, newImage->format, 0);
 
@@ -550,7 +445,7 @@ SDL_Surface *GLAux::LoadSurface(char *nome) {
     return newImageOptimized;
 }
 
-SDL_Surface *GLAux::LoadSurfaceAlpha(char *nome) {
+SDL_Surface *CCatUnboxerEngine::LoadSurfaceAlpha(char *nome) {
     auto *newImage = IMG_Load(nome);
     auto *newImageOptimized = SDL_ConvertSurfaceFormat(newImage, SDL_PIXELFORMAT_RGBA8888, 0);
 
@@ -559,37 +454,28 @@ SDL_Surface *GLAux::LoadSurfaceAlpha(char *nome) {
     return newImageOptimized;
 }
 
-//Função que estabelece o intervalo entre os quadros.
-void GLAux::Timer(int tempo) {
-    auto cont = SDL_GetTicks();
-    //TODO: Change the way the FPS is controlled so the process is not interrupted
-    while (SDL_GetTicks() - cont < tempo)
-        ;
-    //frame_cont++;
-}
-
-SDL_Rect *GLAux::CreateSurfaceClips(int linhas, int colunas, int intervalo_x, int intervalo_y) {
+SDL_Rect *CCatUnboxerEngine::CreateSurfaceClips(int linhas, int colunas, int width, int height) {
     int i, j, cont = 0;
     SDL_Rect *clip = nullptr;
     clip = (SDL_Rect *) malloc((linhas * colunas) * sizeof(SDL_Rect));
     for (i = 0; i < linhas; i++)
         for (j = 0; j < colunas; j++) {
-            clip[cont].x = j * intervalo_x;
-            clip[cont].y = i * intervalo_y;
-            clip[cont].w = intervalo_x;
-            clip[cont++].h = intervalo_y;
+            clip[cont].x = j * width;
+            clip[cont].y = i * height;
+            clip[cont].w = width;
+            clip[cont++].h = height;
         }
 
     return clip;
 }
 
-void GLAux::Release() {
+void CCatUnboxerEngine::Release() {
     SDL_GL_DeleteContext(mGLContext);
     SDL_DestroyWindow(mWindow);
     SDL_Quit();
 }
 
-void GLAux::CreateBasicShader() {
+void CCatUnboxerEngine::CreateBasicShader() {
 
     // Create and compile vertex shader
     unsigned int vertexShader;
@@ -653,7 +539,7 @@ void GLAux::CreateBasicShader() {
     glDeleteShader(fragmentShader);
 }
 
-void GLAux::CreateArray(const float *vertices, size_t vSize, const unsigned int *indices, size_t iSize) {
+void CCatUnboxerEngine::CreateArray(const float *vertices, size_t vSize, const unsigned int *indices, size_t iSize) {
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
@@ -671,7 +557,7 @@ void GLAux::CreateArray(const float *vertices, size_t vSize, const unsigned int 
     glVertexAttribPointer(attrib_position, 3, GL_FLOAT, GL_FALSE, (0)* sizeof(float), (void *) (0 * sizeof(float)));
 
 }
-void GLAux::RenderCanvas()  {
+void CCatUnboxerEngine::RenderCanvas()  {
     SDL_GL_SwapWindow(mWindow);
     SDL_Delay(1);
 }

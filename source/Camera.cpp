@@ -37,6 +37,34 @@ void Camera::SetCamera(const vector3D &pos, float ang, const vector3D &axi, cons
     mTransformation = mWorldToCamTransformation.inverse();
 }
 
+void Camera::FPSCamera(const vector3D& movement, const vector3D& rotation) {
+    const float x = movement.x;
+    const float y = movement.y;
+    const float z = movement.z;
+
+    //Obter o eixo y atual da câmera
+    vector3D x_axis = mDirection.vetorial(mUp).normalizado();
+
+    //Atualizar as proriedades da camera
+    mDirection = Matrix::rotationMatrix(rotation.y, x_axis) * mDirection;
+    mUp = Matrix::rotationMatrix(rotation.y, x_axis) * mUp;
+    //Atualizar as proriedades da camera
+    mDirection = Matrix::rotationMatrix(rotation.x, vector3D(0, 1, 0)) * mDirection;
+    mUp = Matrix::rotationMatrix(rotation.x, vector3D(0, 1, 0)) * mUp;
+
+    //Atualiza a matrix de transformação da câmera
+    mWorldToCamTransformation = Matrix::translationMatrix(mPosition * -1) * mWorldToCamTransformation;
+    mWorldToCamTransformation = Matrix::rotationMatrix(rotation.y, x_axis) * mWorldToCamTransformation;
+    mWorldToCamTransformation = Matrix::rotationMatrix(rotation.x, vector3D(0, 1, 0)) * mWorldToCamTransformation;
+
+    //Transçada a em seu sistema local
+    mPosition = mPosition - x_axis.normalizado() * x - mUp.normalizado() * y - mDirection.normalizado() * z;
+
+    mWorldToCamTransformation = Matrix::translationMatrix(mPosition) * mWorldToCamTransformation;
+
+    mTransformation = mWorldToCamTransformation.inverse();
+}
+
 Camera::Camera(uint32_t width, uint32_t height, float FOV, float zNear, float zFar)
 : mWidth(width), mHeight(height)
 , mAspect(static_cast<float>(width)/static_cast<float>(height))

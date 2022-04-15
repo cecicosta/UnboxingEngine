@@ -4,7 +4,7 @@ target_sources(catboxengine
 #        boundingbox.h
 #        collisionutil.h
 #        draw.h
-        GLAux.h
+        CatUnboxerEngine.h
 #        glm.h
 #        grafo.h
 #        lightsource.h

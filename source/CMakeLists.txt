@@ -4,7 +4,7 @@ target_sources(catboxengine
 #        boundingbox.cpp
 #        collisionutil.cpp
 #        draw.cpp
-        GLAux.cpp
+        CatUnboxerEngine.cpp
 #        glm.cpp
 #        grafo.cpp
 #        lightsource.cpp
