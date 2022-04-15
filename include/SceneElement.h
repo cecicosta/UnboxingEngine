@@ -1,9 +1,9 @@
 #ifndef SCENEELEMENT_H
 #define SCENEELEMENT_H
 
-/*Classe que representa um objeto génerico. Possui ids para
-a geometria e textura, variaveis de estado para posição, escala e rotação,
-região de colisão e material*/
+/*Classe que representa um objeto generico. Possui ids para
+a geometria e textura, variaveis de estado para poso, escala e rotao,
+regio de coliso e material*/
 
 #include <vector>
 #include <string>
@@ -53,7 +53,7 @@ class SceneElement
     void setScale( vector3D scale );
     void setMaterial( material mat);
     material getMaterial();
-    meshBuffer *getMesh();
+    CMeshBuffer *getMesh();
     Matrix &getMatrix();
     virtual int Interation( SceneElement* );
     virtual void Update();

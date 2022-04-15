@@ -8,7 +8,7 @@ material::material()
     setMaterialEmis( 0.2, 0.2, 0.2, 1.0 );
 }
 
-material::material(GLfloat dif[], GLfloat spec[], GLfloat amb[], GLfloat emis[], float shininess)
+material::material(float dif[], float spec[], float amb[], float emis[], float shininess)
 {
     setMaterialAmb( amb[0], amb[1], amb[2], amb[3] );
     setMaterialDif( dif[0], dif[1], dif[2], dif[3] );
@@ -22,7 +22,7 @@ void material::Illuminated(bool enable)
     this->enable = enable;
 }
 
-void material::setMaterialAmb(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+void material::setMaterialAmb(float r, float g, float b, float a)
 {
     materialAmb[0] = r;
     materialAmb[1] = g;
@@ -30,7 +30,7 @@ void material::setMaterialAmb(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
     materialAmb[3] = a;
 }
 
-void material::setMaterialDif(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+void material::setMaterialDif(float r, float g, float b, float a)
 {
     materialDif[0] = r;
     materialDif[1] = g;
@@ -38,7 +38,7 @@ void material::setMaterialDif(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
     materialDif[3] = a;
 }
 
-void material::setMaterialSpec(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+void material::setMaterialSpec(float r, float g, float b, float a)
 {
     materialSpe[0] = r;
     materialSpe[1] = g;
@@ -46,35 +46,35 @@ void material::setMaterialSpec(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
     materialSpe[3] = a;
 }
 
-void material::setMaterialEmis(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+void material::setMaterialEmis(float r, float g, float b, float a)
 {
     materialEmis[0] = r;
     materialEmis[1] = g;
     materialEmis[2] = b;
     materialEmis[3] = a;
 }
-
-void material::activeMaterial()
-{
-    if( enable )
-    {
-        glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT, materialAmb);
-        glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, materialDif);
-        glMaterialfv (GL_FRONT_AND_BACK, GL_SPECULAR, materialSpe);
-        glMaterialfv (GL_FRONT_AND_BACK, GL_EMISSION, materialEmis);
-        glMaterialf  (GL_FRONT_AND_BACK, GL_SHININESS, shininess );
-    }
-    else
-    {
-        GLfloat amb[] = {0.0,0.0,0.0,1.0};
-        GLfloat dif[] = {0.0,0.0,0.0,1.0};
-        GLfloat spe[] = {0.0,0.0,0.0,1.0};
-        GLfloat emi[] = {1.0,1.0,1.0,1.0};
-
-        glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT, amb);
-        glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
-        glMaterialfv (GL_FRONT_AND_BACK, GL_SPECULAR, spe);
-        glMaterialfv (GL_FRONT_AND_BACK, GL_EMISSION, emi);
-        glMaterialf  (GL_FRONT_AND_BACK, GL_SHININESS, 0 );
-    }
-}
+//
+//void material::activeMaterial()
+//{
+//    if( enable )
+//    {
+//        glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT, materialAmb);
+//        glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, materialDif);
+//        glMaterialfv (GL_FRONT_AND_BACK, GL_SPECULAR, materialSpe);
+//        glMaterialfv (GL_FRONT_AND_BACK, GL_EMISSION, materialEmis);
+//        glMaterialf  (GL_FRONT_AND_BACK, GL_SHININESS, shininess );
+//    }
+//    else
+//    {
+//        float amb[] = {0.0,0.0,0.0,1.0};
+//        float dif[] = {0.0,0.0,0.0,1.0};
+//        float spe[] = {0.0,0.0,0.0,1.0};
+//        float emi[] = {1.0,1.0,1.0,1.0};
+//
+//        glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT, amb);
+//        glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
+//        glMaterialfv (GL_FRONT_AND_BACK, GL_SPECULAR, spe);
+//        glMaterialfv (GL_FRONT_AND_BACK, GL_EMISSION, emi);
+//        glMaterialf  (GL_FRONT_AND_BACK, GL_SHININESS, 0 );
+//    }
+//}

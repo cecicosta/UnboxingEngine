@@ -18,7 +18,7 @@ class Resources
 {
     public:
     static List<Texture> textures;
-    static List<meshBuffer> models;
+    static List<CMeshBuffer> models;
     static List<int> fonts;
 
     public:

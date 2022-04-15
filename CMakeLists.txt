@@ -35,6 +35,7 @@ include_directories(
         ./third_party/SDL_ttf
         ./third_party/glew-2.1.0/include)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 add_executable(catboxengine main.cpp)
 target_link_libraries(catboxengine opengl32 SDL2main glew SDL2 SDL2_image SDL2_ttf)
 

@@ -12,6 +12,7 @@ target_sources(catboxengine
 #        LU.h
 #        material.h
         mathUtil.h
+        MeshPrimitivesUtils.h
         matrix.h
 #        mazeGenerator.h
 #        mazeUtil.h

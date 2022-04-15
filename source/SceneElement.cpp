@@ -82,9 +82,9 @@ material SceneElement::getMaterial()
     return SEmaterial;
 }
 
-meshBuffer *SceneElement::getMesh()
+CMeshBuffer *SceneElement::getMesh()
 {
-    return (meshBuffer*)Resources::getResource( MODEL, meshID );
+    return (CMeshBuffer *)Resources::getResource( MODEL, meshID );
 }
 
 Matrix &SceneElement::getMatrix()
