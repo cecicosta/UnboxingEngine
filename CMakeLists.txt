@@ -36,7 +36,7 @@ include_directories(
         ./third_party/glew-2.1.0/include)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-add_executable(catboxengine main.cpp)
+add_executable(catboxengine main.cpp include/IEngine.h)
 target_link_libraries(catboxengine opengl32 SDL2main glew SDL2 SDL2_image SDL2_ttf)
 
 add_custom_command(

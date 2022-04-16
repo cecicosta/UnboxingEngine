@@ -20,7 +20,7 @@ namespace primitive_utils {
     //Create a cube mesh
     [[nodiscard]] CMeshBuffer *Cube() {
         auto mesh = new CMeshBuffer();
-        mesh->nvertices = 24;
+        mesh->nvertices = 8;
         mesh->nnormals = 12;
         mesh->ntexcoords = 24;
         mesh->nfaces = 12;
@@ -91,7 +91,7 @@ namespace primitive_utils {
 //        // Top Right Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 1.0f, 0.5f);
 //        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, 0.5f, -0.5f);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 3, 2, 5);
+        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 3, 2, 6);
         InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 6, 5, 3);
 
         
@@ -135,8 +135,7 @@ namespace primitive_utils {
         
         InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 7, 6, 2);
         InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 2, 1, 7);
-        
-        
+
         // Left Face (2,3)
         InsertCoordinates(&mesh->normals[normalOffset], normalOffset, -1, 0, 0);
         InsertCoordinates(mesh->faces[5].vnormal, vNormalIdOffset, 5, 5, 5, 5);

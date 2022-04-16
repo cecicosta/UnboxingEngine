@@ -4,6 +4,33 @@
 
 constexpr float pi = 3.1415926f;
 
+static inline void mat4x4_ortho( float* out, float left, float right, float bottom, float top, float znear, float zfar )
+{
+#define T(a, b) (a * 4 + b)
+
+    out[T(0,0)] = 2.0f / (right - left);
+    out[T(0,1)] = 0.0f;
+    out[T(0,2)] = 0.0f;
+    out[T(0,3)] = 0.0f;
+
+    out[T(1,1)] = 2.0f / (top - bottom);
+    out[T(1,0)] = 0.0f;
+    out[T(1,2)] = 0.0f;
+    out[T(1,3)] = 0.0f;
+
+    out[T(2,2)] = -2.0f / (zfar - znear);
+    out[T(2,0)] = 0.0f;
+    out[T(2,1)] = 0.0f;
+    out[T(2,3)] = 0.0f;
+
+    out[T(3,0)] = -(right + left) / (right - left);
+    out[T(3,1)] = -(top + bottom) / (top - bottom);
+    out[T(3,2)] = -(zfar + znear) / (zfar - znear);
+    out[T(3,3)] = 1.0f;
+
+#undef T
+}
+
 void Camera::CastRayFromScreen(int scr_x, int scr_y, vector3D &point, vector3D &dir) const {
     //We calculate the ratio of mWindow coordinate by its respective axi size - i.g. scr_x/width
     //This ratio multiplies the near plane size in the same axi - i.g. 2*right.
@@ -25,7 +52,7 @@ void Camera::SetCamera(const vector3D &pos, float ang, const vector3D &axi, cons
     mDirection = Matrix::rotationMatrix(ang, axi) * mDirection;
     mUp = Matrix::rotationMatrix(ang, axi) * mUp;
 
-    //Update transformation matrix
+    //Run transformation matrix
     mWorldToCamTransformation = Matrix::translationMatrix(mPosition * -1) * mWorldToCamTransformation;
     mWorldToCamTransformation = Matrix::rotationMatrix(ang, axi) * mWorldToCamTransformation;
 
@@ -75,4 +102,6 @@ Camera::Camera(uint32_t width, uint32_t height, float FOV, float zNear, float zF
 , mZNear(zNear)
 , mFieldOfViewX(2 * atanf(tanf(mFieldOfViewY * 0.5f) * mAspect))
 , mRight(zNear * tanf(mFieldOfViewX * pi / 360.0f))
-, mLeft(-mRight) {}
+, mLeft(-mRight) {
+    //mat4x4_ortho(mTransformation.getMatrixGL(),mLeft, mRight, mBottom, mTop, zNear, zFar );
+}

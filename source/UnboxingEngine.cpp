@@ -1,5 +1,6 @@
-#include "CatUnboxerEngine.h"
+#include "UnboxingEngine.h"
 #include "Camera.h"
+#include "meshbuffer.h"
 
 #include <GL/glew.h>
 #include <SDL.h>
@@ -18,7 +19,7 @@ static const char *vertex_shader_source =
         "uniform mat4 u_projection_matrix;\n"
         "void main() {\n"
         "    v_color = vec4(0.5 + i_position.y, 0.5 + i_position.y, 0.5 + i_position.z, 1.0);\n"
-        "    gl_Position = u_projection_matrix * vec4( i_position.y, i_position.y, i_position.z, 1.0 );\n"
+        "    gl_Position = u_projection_matrix * vec4( i_position.x, i_position.y, i_position.z, 1.0 );\n"
         "}\n";
 
 static const char *fragment_shader_source =
@@ -30,21 +31,46 @@ static const char *fragment_shader_source =
         "}\n";
 
 typedef enum t_attrib_id {
-    attrib_position,
-    attrib_color
+    attrib_position
 } t_attrib_id;
 
-CCatUnboxerEngine::CCatUnboxerEngine(uint32_t width, uint32_t height, uint32_t bpp)
+CUnboxingEngine::CUnboxingEngine(uint32_t width, uint32_t height, uint32_t bpp)
     : camera(std::make_unique<Camera>(width, height, 70.0f, 1, 1)), BPP(bpp) {}
 
-void CCatUnboxerEngine::CreateWindow(bool isOrthogonal = true) {
+void CUnboxingEngine::Start() {
+    CreateWindow();
+}
+void CUnboxingEngine::Run() {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    while (!HasQuit()) {
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        OnInput();
+
+        WritePendingRenderData();
+
+        Render();
+    }
+}
+void CUnboxingEngine::Render() {
+    glUseProgram(program);
+    camera->mTransformation = Matrix::rotationMatrix(1, vector3D(1, 0, 0)) * camera->mTransformation;
+    glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, camera->mTransformation.getMatrixGL());
+    for (auto &&data: mRenderQueue) {
+        glBindVertexArray(data.vao);
+        glDrawElements(GL_TRIANGLES, data.mMeshBuffer->nfaces * 3, GL_UNSIGNED_INT, 0);
+    }
+    RenderCanvas();
+}
+
+void CUnboxingEngine::CreateWindow() {
     //Initialize SDL subsystems
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         std::cout << "Video initialization failed: " << SDL_GetError() << std::endl;
         return;
     }
 
-    //Inicializa a ttf
+    //Initialize SDL_ttf
     TTF_Init();
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -59,7 +85,7 @@ void CCatUnboxerEngine::CreateWindow(bool isOrthogonal = true) {
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 
-    //Inicializa a mWindow.
+    //Creates the window
     mWindow = SDL_CreateWindow("My Game Window",
                                SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED,
@@ -80,27 +106,24 @@ void CCatUnboxerEngine::CreateWindow(bool isOrthogonal = true) {
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
     CreateView();
+
     CreateBasicShader();
 }
 
-void CCatUnboxerEngine::CreateView() const {
+void CUnboxingEngine::CreateView() const {
     glClearColor(0.0f, 0.0f, 0.0f, 0.5f);// Clear The Background Color To Blue
-    glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
+//    glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
+//    glEnable(GL_BLEND);
+//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending
+    //glEnable(GL_CULL_FACE);
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending
-    glEnable(GL_BLEND);
-    glAlphaFunc(GL_GREATER, 0.1f);// Set Alpha Testing     (disable blending)
-    glEnable(GL_ALPHA_TEST);
-    glEnable(GL_TEXTURE_2D);// Enable Texture Mapping
-    glEnable(GL_CULL_FACE);
-
-    glDepthFunc(GL_LEQUAL); // Type Of Depth Testing
-    glEnable(GL_DEPTH_TEST);// Enables Depth Testing
+//    glEnable(GL_DEPTH_TEST);// Enables Depth Testing
+//    glDepthFunc(GL_LEQUAL); // Type Of Depth Testing
 
     glViewport(0, 0, static_cast<GLint>(camera->mWidth), static_cast<GLint>(camera->mHeight));
 }
 
-void CCatUnboxerEngine::OnInput() {
+void CUnboxingEngine::OnInput() {
     keyState = SDL_GetKeyboardState(nullptr);
 
     mCursor.scrolling = 0;
@@ -117,20 +140,20 @@ void CCatUnboxerEngine::OnInput() {
                 break;
             case SDL_MOUSEBUTTONDOWN:
 
-                if (CCatUnboxerEngine::event.button.button == SDL_BUTTON_LEFT && !mCursor.isButtonPressed) {
+                if (CUnboxingEngine::event.button.button == SDL_BUTTON_LEFT && !mCursor.isButtonPressed) {
                     mCursor.cursorState[L_BUTTON] = 1;
                     mCursor.buttonPressedX = event.motion.x;
                     mCursor.buttonPressedY = event.motion.y;
                 }
-                if (CCatUnboxerEngine::event.button.button == SDL_BUTTON_RIGHT && !mCursor.isButtonPressed) {
+                if (CUnboxingEngine::event.button.button == SDL_BUTTON_RIGHT && !mCursor.isButtonPressed) {
                     mCursor.cursorState[R_BUTTON] = 1;
                     mCursor.buttonPressedX = event.motion.x;
                     mCursor.buttonPressedY = event.motion.y;
                 }
                 mCursor.isButtonPressed = true;
 
-                if (CCatUnboxerEngine::event.type == SDL_MOUSEWHEEL) {
-                    mCursor.scrolling = CCatUnboxerEngine::event.wheel.y;
+                if (CUnboxingEngine::event.type == SDL_MOUSEWHEEL) {
+                    mCursor.scrolling = CUnboxingEngine::event.wheel.y;
                 }
 
                 break;
@@ -141,10 +164,10 @@ void CCatUnboxerEngine::OnInput() {
                 mCursor.draggingSpeedY = 0;
                 mCursor.isButtonPressed = false;
 
-                if (CCatUnboxerEngine::event.button.button == SDL_BUTTON_LEFT && mCursor.cursorState[L_BUTTON] == 1) {
+                if (CUnboxingEngine::event.button.button == SDL_BUTTON_LEFT && mCursor.cursorState[L_BUTTON] == 1) {
                     mCursor.cursorState[L_BUTTON] = 0;
                 }
-                if (CCatUnboxerEngine::event.button.button == SDL_BUTTON_RIGHT && mCursor.cursorState[R_BUTTON] == 1) {
+                if (CUnboxingEngine::event.button.button == SDL_BUTTON_RIGHT && mCursor.cursorState[R_BUTTON] == 1) {
                     mCursor.cursorState[R_BUTTON] = 0;
                 }
 
@@ -160,7 +183,8 @@ void CCatUnboxerEngine::OnInput() {
     if (keyState[SDLK_ESCAPE])
         quit = true;
 }
-void CCatUnboxerEngine::UpdateFlyingController() {
+
+void CUnboxingEngine::UpdateFlyingController() {
     vector3D velocity;
     vector3D rotation;
     if (keyState) {
@@ -192,8 +216,7 @@ void CCatUnboxerEngine::UpdateFlyingController() {
     camera->FPSCamera(velocity, rotation);
 }
 
-
-Texture *CCatUnboxerEngine::LoadTexture(char *filename) {
+Texture *CUnboxingEngine::LoadTexture(char *filename) {
 
     GLuint retval;
     SDL_Surface *sdlimage;
@@ -312,7 +335,7 @@ Texture *CCatUnboxerEngine::LoadTexture(char *filename) {
     return texture;
 }
 
-Texture *CCatUnboxerEngine::CreateTextureFromSurface(SDL_Surface *sdlSurface) {
+Texture *CUnboxingEngine::CreateTextureFromSurface(SDL_Surface *sdlSurface) {
 
     GLuint retval;
     void *raw;
@@ -425,7 +448,7 @@ Texture *CCatUnboxerEngine::CreateTextureFromSurface(SDL_Surface *sdlSurface) {
     return texture;
 }
 
-void CCatUnboxerEngine::ApplySurface(int x, int y, SDL_Surface *origem, SDL_Surface *destino, SDL_Rect *clip = NULL) {
+void CUnboxingEngine::ApplySurface(int x, int y, SDL_Surface *origem, SDL_Surface *destino, SDL_Rect *clip = NULL) {
     SDL_Rect offset;
     offset.x = x;
     offset.y = y;
@@ -433,7 +456,7 @@ void CCatUnboxerEngine::ApplySurface(int x, int y, SDL_Surface *origem, SDL_Surf
     SDL_BlitSurface(origem, clip, destino, &offset);
 }
 
-SDL_Surface *CCatUnboxerEngine::LoadSurface(char *nome) {
+SDL_Surface *CUnboxingEngine::LoadSurface(char *nome) {
     auto *newImage = IMG_Load(nome);
     auto *newImageOptimized = SDL_ConvertSurface(newImage, newImage->format, 0);
 
@@ -445,7 +468,7 @@ SDL_Surface *CCatUnboxerEngine::LoadSurface(char *nome) {
     return newImageOptimized;
 }
 
-SDL_Surface *CCatUnboxerEngine::LoadSurfaceAlpha(char *nome) {
+SDL_Surface *CUnboxingEngine::LoadSurfaceAlpha(char *nome) {
     auto *newImage = IMG_Load(nome);
     auto *newImageOptimized = SDL_ConvertSurfaceFormat(newImage, SDL_PIXELFORMAT_RGBA8888, 0);
 
@@ -454,7 +477,7 @@ SDL_Surface *CCatUnboxerEngine::LoadSurfaceAlpha(char *nome) {
     return newImageOptimized;
 }
 
-SDL_Rect *CCatUnboxerEngine::CreateSurfaceClips(int linhas, int colunas, int width, int height) {
+SDL_Rect *CUnboxingEngine::CreateSurfaceClips(int linhas, int colunas, int width, int height) {
     int i, j, cont = 0;
     SDL_Rect *clip = nullptr;
     clip = (SDL_Rect *) malloc((linhas * colunas) * sizeof(SDL_Rect));
@@ -469,14 +492,13 @@ SDL_Rect *CCatUnboxerEngine::CreateSurfaceClips(int linhas, int colunas, int wid
     return clip;
 }
 
-void CCatUnboxerEngine::Release() {
+void CUnboxingEngine::Release() {
     SDL_GL_DeleteContext(mGLContext);
     SDL_DestroyWindow(mWindow);
     SDL_Quit();
 }
 
-void CCatUnboxerEngine::CreateBasicShader() {
-
+void CUnboxingEngine::CreateBasicShader() {
     // Create and compile vertex shader
     unsigned int vertexShader;
     {
@@ -519,7 +541,6 @@ void CCatUnboxerEngine::CreateBasicShader() {
     glAttachShader(program, fragmentShader);
 
     glBindAttribLocation(program, attrib_position, "i_position");
-    glBindAttribLocation(program, attrib_color, "i_color");
 
     glLinkProgram(program);
 
@@ -539,25 +560,44 @@ void CCatUnboxerEngine::CreateBasicShader() {
     glDeleteShader(fragmentShader);
 }
 
-void CCatUnboxerEngine::CreateArray(const float *vertices, size_t vSize, const unsigned int *indices, size_t iSize) {
+void CUnboxingEngine::WritePendingRenderData() {
+    for (auto &&data: mPendingWriteQueue) {
+        glGenVertexArrays(1, &data.vao);
+        glGenBuffers(1, &data.vbo);
+        glGenBuffers(1, &data.ebo);
 
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
+        glBindVertexArray(data.vao);
 
-    glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, data.vbo);
+        glBufferData(GL_ARRAY_BUFFER, 3 * data.mMeshBuffer->nvertices * sizeof(float), data.mMeshBuffer->vertices, GL_DYNAMIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vSize * sizeof(float), vertices, GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(attrib_position);
+        glVertexAttribPointer(attrib_position, 3, GL_FLOAT, GL_FALSE, 0, (void *) (0));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, iSize * sizeof(int), indices, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,3 * data.mMeshBuffer->nfaces * sizeof(unsigned int), data.mMeshBuffer->triangles, GL_DYNAMIC_DRAW);
 
-    glEnableVertexAttribArray(attrib_position);
-    glVertexAttribPointer(attrib_position, 3, GL_FLOAT, GL_FALSE, (0)* sizeof(float), (void *) (0 * sizeof(float)));
-
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        mRenderQueue.emplace_back(data);
+    };
+    mPendingWriteQueue.clear();
 }
-void CCatUnboxerEngine::RenderCanvas()  {
+void CUnboxingEngine::GetError() {
+    static int error_count = 0;
+    auto gl_error = glGetError();
+    std::cout << "Get error count: " << error_count++ << std::endl;
+    if(gl_error != 0) {
+        std::cout << "Code: " << gl_error << std::endl;
+        std::cout << "Message: " << gluErrorString(gl_error) << std::endl;
+    }
+}
+void CUnboxingEngine::RenderCanvas() {
     SDL_GL_SwapWindow(mWindow);
     SDL_Delay(1);
+}
+
+void CUnboxingEngine::RegisterSceneElement(const CMeshBuffer &mesh) {
+    mPendingWriteQueue.emplace_back(SRenderContext(mesh));
 }
