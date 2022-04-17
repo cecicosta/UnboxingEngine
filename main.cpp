@@ -2,10 +2,11 @@
 
 #include <MeshPrimitivesUtils.h>
 
+using namespace unboxing_engine;
 
 int main(int argc, char *argv[]) {
 
-    CUnboxingEngine engine(640, 480, 32);
+    CCore engine(640, 480, 32);
     engine.CreateWindow();
 
     auto cube = primitive_utils::Cube();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "SDL_events.h"
 #include "SDL_timer.h"
 #include "SDL_video.h"
@@ -18,6 +20,8 @@
 #include <vector>
 #include <iostream>
 
+#include <EventDispatcher.h>
+
 #define L_BUTTON 0
 #define R_BUTTON 1
 
@@ -27,11 +31,12 @@ class SDL_Rect;
 class SDL_Window;
 class CMeshBuffer;
 
-class CUnboxingEngine : public IEngine {
-public:
-    CUnboxingEngine(uint32_t width, uint32_t height, uint32_t bpp);
-    ~CUnboxingEngine() override = default;
+namespace unboxing_engine {
 
+class CCore : public IEngine, public CEventDispatcher {
+public:
+    CCore(uint32_t width, uint32_t height, uint32_t bpp);
+    ~CCore() override = default;
     std::unique_ptr<Camera> camera;
 
     ///Create new window and setup view
@@ -46,7 +51,6 @@ public:
     void RegisterSceneElement(const CMeshBuffer& mesh);
     ///Writes objects geometry to be rendered
     void WritePendingRenderData();
-
 
     ///Destroy opengl context, window and finish SDL subsystems
     void Release();
@@ -87,13 +91,14 @@ private:
     ///Method used for debug purposes. Allows to control the camera and fly around the 3D space.
     ///The control keys used are wasd for movement and mouse for direction.
     void UpdateFlyingController();
+
+    ///Retrieve and log opengl errors
     static void GetError() ;
 
     ///Captures the window y button click
     [[nodiscard]] bool HasQuit() const { return quit; }
 
-
-    //Basic shader handler
+    ///Basic shader handler
     std::uint32_t program = -1;
 
     ///Rendering opengl buffer handlers
@@ -108,18 +113,18 @@ private:
     std::vector<SRenderContext> mPendingWriteQueue;
 
     //SDL input event handling
-    SDL_Event event;
+    SDL_Event event{};
 
     struct SCursor {
         //Cursor input attributes
-        float x = 0;
-        float y = 0;
-        float draggingX = 0;
-        float draggingY = 0;
+        int x = 0;
+        int y = 0;
+        int draggingX = 0;
+        int draggingY = 0;
         float draggingSpeedX = 0;
         float draggingSpeedY = 0;
-        float buttonPressedX = 0;
-        float buttonPressedY = 0;
+        int buttonPressedX = 0;
+        int buttonPressedY = 0;
         bool isButtonPressed = false;
         int scrolling = -1;
         int cursorState[3]{0, 0, 0};
@@ -127,7 +132,7 @@ private:
     SCursor mCursor;
 
     ///Keyboard input attributes
-    std::uint8_t const *keyState;
+    std::uint8_t const *keyState = nullptr;
 
     ///Window and opengl handlers
     SDL_Window *mWindow = nullptr;
@@ -136,3 +141,5 @@ private:
     bool quit = false;
     std::uint32_t BPP = 32;
 };
+
+}
