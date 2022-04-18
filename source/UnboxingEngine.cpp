@@ -1,6 +1,7 @@
 #include "UnboxingEngine.h"
 #include "Camera.h"
 #include "meshbuffer.h"
+#include "CoreEvents.h"
 
 #include <GL/glew.h>
 #include <SDL.h>
@@ -40,6 +41,9 @@ namespace unboxing_engine {
 
     void CCore::Start() {
         CreateWindow();
+        for(auto&& listener: GetListeners<core_events::IStartListener>()) {
+            listener->OnStart();
+        }
     }
     void CCore::Run() {
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -51,10 +55,18 @@ namespace unboxing_engine {
             WritePendingRenderData();
 
             Render();
+            for(auto&& listener: GetListeners<core_events::IUpdateListener>()) {
+                listener->OnUpdate();
+            }
         }
     }
     void CCore::Render() {
         glUseProgram(program);
+
+        for(auto&& listener: GetListeners<core_events::IPreRenderListener>()) {
+            listener->OnPreRender();
+        }
+
         camera->mTransformation = Matrix::rotationMatrix(1, vector3D(1, 0, 0)) * camera->mTransformation;
         glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, camera->mTransformation.getMatrixGL());
         for (auto &&data: mRenderQueue) {
@@ -62,6 +74,10 @@ namespace unboxing_engine {
             glDrawElements(GL_TRIANGLES, data.mMeshBuffer->nfaces * 3, GL_UNSIGNED_INT, nullptr);
         }
         RenderCanvas();
+
+        for(auto&& listener: GetListeners<core_events::IPostRenderListener>()) {
+            listener->OnPostRender();
+        }
     }
 
     void CCore::CreateWindow() {
@@ -183,6 +199,10 @@ namespace unboxing_engine {
 
         if (keyState[SDLK_ESCAPE])
             quit = true;
+
+        for(auto&& listener: GetListeners<core_events::IInputListener>()) {
+            listener->OnInput();
+        }
     }
 
     void CCore::UpdateFlyingController() {
@@ -497,6 +517,9 @@ namespace unboxing_engine {
         SDL_GL_DeleteContext(mGLContext);
         SDL_DestroyWindow(mWindow);
         SDL_Quit();
+        for(auto&& listener: GetListeners<core_events::IReleaseListener>()) {
+            listener->OnRelease();
+        }
     }
 
     void CCore::CreateBasicShader() {
@@ -601,6 +624,14 @@ namespace unboxing_engine {
 
     void CCore::RegisterSceneElement(const CMeshBuffer &mesh) {
         mPendingWriteQueue.emplace_back(SRenderContext(mesh));
+    }
+
+    void CCore::RegisterEventListener(IListener<> &listener) {
+        RegisterListener(listener);
+    }
+
+    void CCore::UnregisterEventListener(IListener<> &listener) {
+        UnregisterListener(listener);
     }
 
 } //namespace unboxing_engine
