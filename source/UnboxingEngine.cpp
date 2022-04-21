@@ -42,9 +42,12 @@ namespace unboxing_engine {
     void CCore::Start() {
         CreateWindow();
         auto list = GetListeners<core_events::IStartListener>();
-        for(auto listener = list.begin<core_events::IStartListener>();
-             listener != list.end<core_events::IStartListener>(); listener++) {
-            (*listener).OnStart();
+        for(auto listener = list.begin();
+             listener != list.end(); listener++) {
+            (*listener)->OnStart();
+        }
+        for(auto l: GetListeners<core_events::IStartListener>()) {
+            l->OnStart();
         }
     }
     void CCore::Run() {
