@@ -60,17 +60,17 @@ namespace unboxing_engine {
             WritePendingRenderData();
 
             Render();
-//            for(auto&& listener: GetListeners<core_events::IUpdateListener>()) {
-//                listener->OnUpdate();
-//            }
+            for(auto&& listener: GetListeners<core_events::IUpdateListener>()) {
+                listener->OnUpdate();
+            }
         }
     }
     void CCore::Render() {
         glUseProgram(program);
 
-//        for(auto&& listener: GetListeners<core_events::IPreRenderListener>()) {
-//            listener->OnPreRender();
-//        }
+        for(auto&& listener: GetListeners<core_events::IPreRenderListener>()) {
+            listener->OnPreRender();
+        }
 
         camera->mTransformation = Matrix::rotationMatrix(1, vector3D(1, 0, 0)) * camera->mTransformation;
         glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, camera->mTransformation.getMatrixGL());
@@ -80,9 +80,9 @@ namespace unboxing_engine {
         }
         RenderCanvas();
 
-//        for(auto&& listener: GetListeners<core_events::IPostRenderListener>()) {
-//            listener->OnPostRender();
-//        }
+        for(auto&& listener: GetListeners<core_events::IPostRenderListener>()) {
+            listener->OnPostRender();
+        }
     }
 
     void CCore::CreateWindow() {
@@ -133,7 +133,7 @@ namespace unboxing_engine {
     }
 
     void CCore::CreateView() const {
-        glClearColor(0.0f, 0.0f, 0.0f, 0.5f);// Clear The Background Color To Blue
+        glClearColor(0.0f, 0.0f, 0.0f, 0.5f);// Clear The Background Color Out Blue
                                              //    glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
                                              //    glEnable(GL_BLEND);
                                              //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending
@@ -205,9 +205,9 @@ namespace unboxing_engine {
         if (keyState[SDLK_ESCAPE])
             quit = true;
 
-//        for(auto&& listener: GetListeners<core_events::IInputListener>()) {
-//            listener->OnInput();
-//        }
+        for(auto&& listener: GetListeners<core_events::IInputListener>()) {
+            listener->OnInput();
+        }
     }
 
     void CCore::UpdateFlyingController() {
@@ -522,9 +522,9 @@ namespace unboxing_engine {
         SDL_GL_DeleteContext(mGLContext);
         SDL_DestroyWindow(mWindow);
         SDL_Quit();
-//        for(auto&& listener: GetListeners<core_events::IReleaseListener>()) {
-//            listener->OnRelease();
-//        }
+        for(auto&& listener: GetListeners<core_events::IReleaseListener>()) {
+            listener->OnRelease();
+        }
     }
 
     void CCore::CreateBasicShader() {
