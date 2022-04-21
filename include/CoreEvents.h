@@ -8,32 +8,32 @@
 namespace unboxing_engine::core_events {
     class IStartListener {
     public:
-        ~IStartListener() = default;
+        virtual ~IStartListener() = default;
         virtual void OnStart() = 0;
     };
     class IUpdateListener {
     public:
-        ~IUpdateListener() = default;
+        virtual ~IUpdateListener() = default;
         virtual void OnUpdate() = 0;
     };
     class IInputListener {
     public:
-        ~IInputListener() = default;
+        virtual ~IInputListener() = default;
         virtual void OnInput() = 0;
     };
     class IPreRenderListener {
     public:
-        ~IPreRenderListener() = default;
+        virtual ~IPreRenderListener() = default;
         virtual void OnPreRender() = 0;
     };
     class IPostRenderListener {
     public:
-        ~IPostRenderListener() = default;
+        virtual ~IPostRenderListener() = default;
         virtual void OnPostRender() = 0;
     };
     class IReleaseListener {
     public:
-        ~IReleaseListener() = default;
+        virtual ~IReleaseListener() = default;
         virtual void OnRelease() = 0;
     };
 
