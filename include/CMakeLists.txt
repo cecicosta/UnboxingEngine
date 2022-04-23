@@ -25,6 +25,7 @@ target_sources(catboxengine
 #        region.h
 #        resources.h
 #        SceneElement.h
+        CustomTypes.h
 #        SELoader.h
 #        sphere.h
         texture.h
