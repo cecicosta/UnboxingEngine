@@ -9,113 +9,114 @@
 
 #include <iostream>
 
-class IStartListener;
+class CEventDispatcher;
 
+/// Base class for UListener variadic template implementation. Holds the hash_handles member std::vector.
+/// \tparam Types Packed variadic types.
 template<typename... Types>
-class IListener {
+class UListener {
 public:
-    virtual ~IListener() = default;
+    virtual ~UListener() = default;
+    friend CEventDispatcher;
+protected:
     std::vector<size_t> hash_handles;
 };
 
+/// Listener template classes. Derive from each class given as template parameter,
+/// allowing dynamic conversion to each specific class type.
+/// Also keep the hash information of each class it derives from in its base class
+/// member UListener::hash_handles.
+/// \tparam T Variadic type unpacked template parameter. Represents the left-to-right
+/// unpacked type given to UListener template.
+/// \tparam Types Packed variadic types. Represents the types still to be resolved by
+/// UListener derivation.
 template<typename T, typename... Types>
-class IListener<T, Types...> : public T, public IListener<Types...> {
+class UListener<T, Types...> : public T, public UListener<Types...> {
 public:
-    template<typename... Args>
-    friend class IListener;
+    /// Copy constructor. Can convert a given base class Listener type, to type T, if T is a derived UListener type.
+    /// \param base
+    explicit UListener(UListener<> *base) : UListener(dynamic_cast<T *>(base)) {}
 
-    explicit IListener(IListener<> *base) : IListener(dynamic_cast<T *>(base)) {}
-
-    IListener() {
-        IListener::hash_handles.emplace_back(typeid(T).hash_code());
-        std::cout << "Instantiation of: " << typeid(T).name() << std::endl;
+    /// Default constructor. Fills in the base member UListener::hash_handles with the calculated type T hash.
+    UListener() {
+        UListener::hash_handles.emplace_back(typeid(T).hash_code());
     }
-    ~IListener() override = default;
+    ~UListener() override = default;
 };
 
-
-/// Template container which dynamically converts a base type pointer or reference to a derived sub type compatible with the original object instance
-/// \tparam In source container elements type
-/// \tparam Out type of the new container elements
+/// Template container derived from std::vector. Allows to access its In type elements as Out type elements if Out is dynamically convertible to In.
+/// \tparam In Stored type elements.
+/// \tparam Out Output type elements
 template<typename In, typename Out = In,
          std::enable_if_t<std::is_pointer<In>::value && std::is_pointer<Out>::value, bool> = true>
-class to_specialized_vector : public std::vector<In>{
-    /// specialized-type iterator inheriting from vector<Out>::iterator, extends the constructor options to
-    /// allow building a new iterator from the existing base-type iterator
-    template <typename T,
-    std::enable_if_t<std::is_convertible<T, In>::value, bool> = true>
-    struct to_specialized_iterator : std::vector<In>::iterator {
+class u_convertible_vector : public std::vector<In>{
+    /// Derived iterator from vector<In>::iterator. Overloads the deference operators to convert dynamically the object type to T.
+    template <typename T>
+    struct u_convertible_iterator : std::vector<In>::iterator {
     public:
         T operator*() {return dynamic_cast<T>(std::vector<In>::iterator::operator*());}
         T operator->() {return dynamic_cast<T>(std::vector<In>::iterator::operator->());}
     };
-    struct iterator_accessor_wrapper {
-        iterator_accessor_wrapper() = default;
-
-        explicit iterator_accessor_wrapper(std::function<typename std::vector<In>::iterator()> accessor) : m_accessor(std::move(accessor)) {}
-
-        to_specialized_iterator<Out> operator ()() {
-            return to_specialized_iterator<Out>{m_accessor()};
-        }
-    private:
-        std::function<typename std::vector<In>::iterator()> m_accessor;
-    };
 
 public:
 
-    to_specialized_vector() : std::vector<In>() {
-        this->begin = iterator_accessor_wrapper([this](){
-            return std::vector<In>::begin();
-        });
-        this->end = iterator_accessor_wrapper([this](){
-            return std::vector<In>::end();
-        });
+    u_convertible_vector() : std::vector<In>() {
+        this->begin = [this](){
+            return u_convertible_iterator<Out>{std::vector<In>::begin()};
+        };
+        this->end = [this](){
+            return u_convertible_iterator<Out>{std::vector<In>::end()};
+        };
     };
 
-    /// Defines a range constructor allowing for fast conversion from container base-type to the new container specialized-type
-    /// \param begin Iterator pointing to the first elemexnt of the base-type container
-    /// \param end Iterator pointing to the last+1 element of the base-type container
-    to_specialized_vector(typename std::vector<In>::iterator begin,
+    /// Defines a range constructor.
+    /// \param begin Iterator pointing to the first element of type In in the container
+    /// \param end Iterator pointing to the last+1 element of type In in the container
+    u_convertible_vector(typename std::vector<In>::iterator begin,
                           typename std::vector<In>::iterator end) : std::vector<In>(begin, end) {
-        this->begin = iterator_accessor_wrapper([this](){
-            return std::vector<In>::begin();
-        });
-        this->end = iterator_accessor_wrapper([this](){
-            return std::vector<In>::end();
-        });
+        this->begin = [this](){
+            return u_convertible_iterator<Out>{std::vector<In>::begin()};
+        };
+        this->end = [this](){
+            return u_convertible_iterator<Out>{std::vector<In>::end()};
+        };
     }
 
     /// Copy constructor
-    /// \param original original to_specialized_vector which the new convertible vector will be build from
-    explicit to_specialized_vector(const to_specialized_vector<In>& original) : std::vector<In>(original) {
-        this->begin = iterator_accessor_wrapper([this](){
-            return std::vector<In>::begin();
-        });
-        this->end = iterator_accessor_wrapper([this](){
-            return std::vector<In>::end();
-        });
+    /// \param original original u_convertible_vector which the new convertible vector will be build from
+    explicit u_convertible_vector(const u_convertible_vector<In>& original) : std::vector<In>(original) {
+        this->begin = [this](){
+            return u_convertible_iterator<Out>{std::vector<In>::begin()};
+        };
+        this->end = [this](){
+            return u_convertible_iterator<Out>{std::vector<In>::end()};
+        };
     }
 
-    ~to_specialized_vector() = default;
+    ~u_convertible_vector() = default;
 
-    iterator_accessor_wrapper begin;
-    iterator_accessor_wrapper end;
+    ///Access to begin iterator of the this container dynamically converted to Out type
+    std::function<u_convertible_iterator<Out>()> begin;
+    ///Access to end iterator of the this container dynamically converted to Out type
+    std::function<u_convertible_iterator<Out>()> end;
 };
 
 class CEventDispatcher {
-    typedef IListener<> CListener;
+    typedef UListener<> CListener;
 
 public:
     CEventDispatcher() = default;
     virtual ~CEventDispatcher() = default;
 
 protected:
-    /// Register @listener to multiple events based on the types inherited by IListener<T, Types...>
+    /// Register @listener to multiple events based on the types inherited by UListener<T, Types...>
     /// @param listener
-    void RegisterListener(CListener &listener) {
+    template<class T,
+             std::enable_if_t<std::is_constructible<T, UListener<>>::value, bool> = true>
+    void RegisterListener(T &listener) {
         for (auto &&hash: listener.hash_handles) {
             if (m_Listeners.find(hash) == m_Listeners.end()) {
-                to_specialized_vector<CListener*> first;
+                u_convertible_vector<CListener*, T*> first;
                 first.push_back(&listener);
                 m_Listeners.insert_or_assign(hash, first);
             } else {
@@ -133,14 +134,14 @@ protected:
     }
 
     template<typename T>
-    to_specialized_vector<CListener*, T*> GetListeners() {
+    u_convertible_vector<CListener*, T*> GetListeners() {
         auto hash = typeid(T).hash_code();
         if (auto &&it = m_Listeners.find(hash); it != m_Listeners.end()) {
-            return to_specialized_vector<CListener*, T*>(it->second);
+            return u_convertible_vector<CListener*, T*>(it->second);
         }
         return {};
     }
 
 private:
-    std::unordered_map<std::size_t, to_specialized_vector<CListener*>> m_Listeners;
+    std::unordered_map<std::size_t, u_convertible_vector<CListener*>> m_Listeners;
 };

@@ -631,11 +631,11 @@ namespace unboxing_engine {
         mPendingWriteQueue.emplace_back(SRenderContext(mesh));
     }
 
-    void CCore::RegisterEventListener(IListener<> &listener) {
+    void CCore::RegisterEventListener(UListener<> &listener) {
         RegisterListener(listener);
     }
 
-    void CCore::UnregisterEventListener(IListener<> &listener) {
+    void CCore::UnregisterEventListener(UListener<> &listener) {
         UnregisterListener(listener);
     }
 

@@ -1,9 +1,6 @@
 #pragma once
 
 #include <EventDispatcher.h>
-//
-// Created by Cecilia Costa on 17/04/2022.
-//
 
 namespace unboxing_engine::core_events {
     class IStartListener {
@@ -37,5 +34,5 @@ namespace unboxing_engine::core_events {
         virtual void OnRelease() = 0;
     };
 
-    class ICoreEventsListener : public IListener<IStartListener, IUpdateListener, IInputListener, IPreRenderListener, IPostRenderListener, IReleaseListener> {};
+    class ICoreEventsListener : public UListener<IStartListener, IUpdateListener, IInputListener, IPreRenderListener, IPostRenderListener, IReleaseListener> {};
 }// namespace unboxing_engine::core_events

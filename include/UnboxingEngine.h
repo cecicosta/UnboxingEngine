@@ -48,9 +48,9 @@ public:
     void Run() override;
 
     ///
-    void RegisterEventListener(IListener<>& listener);
+    void RegisterEventListener(UListener<>& listener);
     ///
-    void UnregisterEventListener(IListener<>& listener);
+    void UnregisterEventListener(UListener<>& listener);
     ///
     void RegisterSceneElement(const CMeshBuffer& mesh);
     ///Writes objects geometry to be rendered
