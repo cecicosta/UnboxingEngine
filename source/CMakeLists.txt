@@ -22,6 +22,7 @@ target_sources(catboxengine
 #        region.cpp
 #        resources.cpp
 #        SceneElement.cpp
+        Composite.cpp
 #        SELoader.cpp
 #        sphere.cpp
         vector3D.cpp
