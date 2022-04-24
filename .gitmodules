@@ -9,5 +9,5 @@
 	path = third_party/SDL_ttf
 	url = git@github.com:libsdl-org/SDL_ttf.git
 [submodule "googletest"]
-	path = googletest
+	path = third_party/googletest
 	url = git@github.com:google/googletest.git
