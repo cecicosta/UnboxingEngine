@@ -12,7 +12,7 @@ set(SOURCES
         ./matrix.cpp
         ./meshbuffer.cpp
         ./quaternion.cpp
-        Vector3d.cpp
+        ./Vector3d.cpp
         )
 set(HEADERS
         ${HEADERS}

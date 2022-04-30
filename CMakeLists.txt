@@ -26,6 +26,7 @@ add_subdirectory(./third_party/SDL)
 add_subdirectory(./third_party/SDL_image)
 add_subdirectory(./third_party/SDL_ttf)
 add_subdirectory(./third_party/googletest)
+add_subdirectory(./tests)
 
 include_directories(
         ./include
@@ -47,31 +48,3 @@ if (WIN32)
             COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
     )
 endif ()
-
-#Google tests
-enable_testing()
-
-include_directories(./tests)
-add_executable(
-        unboxing_engine_tests
-        tests/main.cpp
-        tests/ComponentSystemTests.cpp
-)
-
-#add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests)
-
-target_link_libraries(
-        unboxing_engine_tests
-        ${CMAKE_BINARY_DIR}/source/libunboxing_engine_src_lib.a
-        gtest_main
-)
-
-target_sources(unboxing_engine_tests
-        PRIVATE
-        tests/ComponentSystemTests.h
-        )
-
-include(GoogleTest)
-gtest_discover_tests(unboxing_engine_tests)
-
-
