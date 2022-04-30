@@ -58,13 +58,12 @@ add_executable(
         tests/ComponentSystemTests.cpp
 )
 
-add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests)
+#add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests)
 
 target_link_libraries(
         unboxing_engine_tests
-        unboxing_engine_src_lib
+        ${CMAKE_BINARY_DIR}/source/libunboxing_engine_src_lib.a
         gtest_main
-        gtest
 )
 
 target_sources(unboxing_engine_tests

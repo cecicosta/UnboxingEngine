@@ -40,23 +40,11 @@ namespace unboxing_engine {
     CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
         : camera(std::make_unique<Camera>(width, height, 70.0f, 1, 1)), BPP(bpp) {}
 
-
-    class MockComponent : public unboxing_engine::IComponent {
-    public:
-        ~MockComponent() override = default;
-        bool IsComponent() { return true; }
-    };
-
     void CCore::Start() {
         CreateWindow();
         for (auto l: GetListeners<core_events::IStartListener>()) {
             l->OnStart();
         }
-
-        unboxing_engine::Composite composite;
-        MockComponent mockComponent;
-        composite.AddComponent(mockComponent);
-        //    auto component = composite.GetComponent<MockComponent>();
     }
     void CCore::Run() {
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -80,7 +68,7 @@ namespace unboxing_engine {
             listener->OnPreRender();
         }
 
-        camera->mTransformation = Matrix::rotationMatrix(1, vector3D(1, 0, 0)) * camera->mTransformation;
+        camera->mTransformation = Matrix::rotationMatrix(1, Vector3d(1, 0, 0)) * camera->mTransformation;
         glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, camera->mTransformation.getMatrixGL());
         for (auto &&data: mRenderQueue) {
             glBindVertexArray(data.vao);
@@ -219,8 +207,8 @@ namespace unboxing_engine {
     }
 
     void CCore::UpdateFlyingController() {
-        vector3D velocity;
-        vector3D rotation;
+        Vector3d velocity;
+        Vector3d rotation;
         if (keyState) {
             if (keyState[SDLK_RIGHT]) {
                 velocity.x = -1;

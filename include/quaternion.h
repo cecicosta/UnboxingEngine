@@ -1,9 +1,8 @@
 #ifndef QUAT_H
 #define QUAT_H
-#include "vector3D.h"
+#include "Vector3d.h"
 
-class quaternion: public vector3D
-{
+class quaternion: public Vector3d {
 
     float m[16];
 
@@ -11,12 +10,12 @@ class quaternion: public vector3D
     float w;
 
     quaternion();
-    quaternion( vector3D v );
+    quaternion(Vector3d v );
     quaternion( float w, float x, float y, float z );
 
     //Construtor para quaternion de rotação.
     //Recebe o angulo de rotação  o eixo.
-    quaternion( float alpha, vector3D eixo);
+    quaternion( float alpha, Vector3d eixo);
 
     friend quaternion operator+ ( quaternion v1, quaternion v2 );
 
@@ -30,7 +29,7 @@ class quaternion: public vector3D
 
     friend quaternion operator/ ( quaternion v, float escalar );
 
-    float modulo();
+    float Length();
 
     quaternion conjugado();
 
@@ -39,9 +38,9 @@ class quaternion: public vector3D
     quaternion inverso();
 
     //Retorna os angulos de rotação de euler
-    vector3D Euler();
+    Vector3d Euler();
 
-    //Matriz de rotação ( quaternion deve estar normalizado )
+    //Matriz de rotação ( quaternion deve estar Normalized )
     float* getMatrix();
 
 

@@ -1,6 +1,6 @@
 #ifndef MATRIX_H
 #define MATRIX_H
-#include "vector3D.h"
+#include "Vector3d.h"
 #include "quaternion.h"
 class Matrix
 {
@@ -15,7 +15,7 @@ class Matrix
     Matrix(Matrix const &m);
     Matrix(int size_i, int size_j);
     Matrix( float m[], int n );
-    Matrix( vector3D vet );
+    Matrix(Vector3d vet );
     //Destrutor
     virtual ~Matrix();
     //Metodo para definir a Matrix a partir de entradas do usuario
@@ -35,11 +35,11 @@ class Matrix
     //Retorna a Matrix identity de order n
     static Matrix identity(int n);
     //Cria uma matriz de translação a aprtir de um vetor
-    static Matrix translationMatrix(vector3D translation);
+    static Matrix translationMatrix(Vector3d translation);
     //Cria uma matriz de escala
-    static Matrix scaleMatrix(vector3D scale);
+    static Matrix scaleMatrix(Vector3d scale);
     //Cria uma matriz de rotação
-    static Matrix rotationMatrix( float ang, vector3D axis );
+    static Matrix rotationMatrix( float ang, Vector3d axis );
     static Matrix rotationMatrix( quaternion q );
     //Retorna uma matriz no formato do opengl
     float *getMatrixGL();
@@ -50,7 +50,7 @@ class Matrix
 
     friend Matrix operator* ( Matrix m1, Matrix m2 );
 
-    friend vector3D operator* ( Matrix m, vector3D vet  );
+    friend Vector3d operator* ( Matrix m, Vector3d vet  );
 
     Matrix operator* ( float a );
 

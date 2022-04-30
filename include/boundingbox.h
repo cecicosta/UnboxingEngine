@@ -1,6 +1,6 @@
 #ifndef BOUNDINGBOX_H
 #define BOUNDINGBOX_H
-#include "vector3D.h"
+#include "Vector3d.h"
 #include "sphere.h"
 #define TOP 0
 #define BOTTOM 1

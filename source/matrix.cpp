@@ -74,7 +74,7 @@ Matrix::Matrix( float m[], int n )
     }
 }
 
-Matrix::Matrix( vector3D vet )
+Matrix::Matrix(Vector3d vet )
 {
     A = new float[4];
     size_i = 4;
@@ -100,7 +100,7 @@ Matrix Matrix::identity(int n)
     return ident;
 }
 
-Matrix Matrix::translationMatrix(vector3D translation)
+Matrix Matrix::translationMatrix(Vector3d translation)
 {
     Matrix m = identity(4);
     m.index(0,3) = translation.x;
@@ -109,7 +109,7 @@ Matrix Matrix::translationMatrix(vector3D translation)
     return m;
 }
 //Cria uma matriz de escala
-Matrix Matrix::scaleMatrix(vector3D scale)
+Matrix Matrix::scaleMatrix(Vector3d scale)
 {
     Matrix m = identity(4);
     m.index(0,0) = scale.x;
@@ -118,7 +118,7 @@ Matrix Matrix::scaleMatrix(vector3D scale)
     return m;
 }
 //Cria uma matriz de rotação
-Matrix Matrix::rotationMatrix( float ang, vector3D axis )
+Matrix Matrix::rotationMatrix( float ang, Vector3d axis )
 {
     quaternion q( ang, axis );
     return Matrix(q.getMatrix(), 4);
@@ -232,12 +232,12 @@ Matrix operator*( Matrix m1, Matrix m2  )
     return Matrix();
 }
 
-vector3D operator*( Matrix m, vector3D vet )
+Vector3d operator*( Matrix m, Vector3d vet )
 {
     if( m.size_i != 4 || m.size_j != 4 )
-        return vector3D();
+        return Vector3d();
 
-    vector3D res;
+    Vector3d res;
     float soma;
 
     soma = 0;

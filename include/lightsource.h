@@ -1,7 +1,7 @@
 #ifndef LIGHTSOURCE_H
 #define LIGHTSOURCE_H
+#include "Vector3d.h"
 #include <GL/gl.h>
-#include "vector3D.h"
 
 #define SPOT  0
 #define POINT 1
@@ -9,7 +9,7 @@
 class lightSource
 {
 public:
-    //Parametros opengl para iluminação
+    //Parametros opengl para iluminaï¿½ï¿½o
     GLfloat lightAmb[4];
     GLfloat lightDif[4];
     GLfloat lightSpe[4];

@@ -1,7 +1,7 @@
 #ifndef QUAD_H
 #define QUAD_H
 
-#include "vector3D.h"
+#include "Vector3d.h"
 #include "region.h"
 
 class rect: public region
@@ -16,7 +16,7 @@ class rect: public region
 
     vector3D getNormal();
 
-    //Checa se um ponto está dentro da esfera
+    //Checa se um ponto estï¿½ dentro da esfera
     virtual bool isInside( vector3D point );
 
     //Metodo que checa se um raio dado pelos dois pontos p1 e p2 intercepta a esfera.

@@ -3,7 +3,7 @@
 
     quaternion::quaternion() {}
 
-    quaternion::quaternion( vector3D v )
+    quaternion::quaternion(Vector3d v )
     {
         w = 0;
         x = v.x;
@@ -20,13 +20,13 @@
     }
 
     //Construtor para quaternion de rotação
-    quaternion::quaternion( float alpha, vector3D eixo)
+    quaternion::quaternion( float alpha, Vector3d eixo)
     {
         float alpha_rad = 3.1415*alpha/180.0;
         float cosseno = cos( alpha_rad/2 );
         float seno = sin( alpha_rad/2 );
 
-        eixo = eixo.normalizado();
+        eixo = eixo.Normalized();
         eixo = eixo*seno;
 
         w = cosseno;
@@ -79,10 +79,10 @@
 
     quaternion operator* ( quaternion q1, quaternion q2 )
     {
-        vector3D v1( q1.x,q1.y,q1.z );
-        vector3D v2( q2.x,q2.y,q2.z );
-        float w = q1.w*q2.w - v1.escalar(v2);
-        vector3D v = q1.w*v2 + q2.w*v1 + v1.vetorial(v2);
+        Vector3d v1( q1.x,q1.y,q1.z );
+        Vector3d v2( q2.x,q2.y,q2.z );
+        float w = q1.w*q2.w - v1.DotProduct(v2);
+        Vector3d v = q1.w*v2 + q2.w*v1 + v1.CrossProduct(v2);
 
         return quaternion( w, v.x, v.y, v.z );
     }
@@ -92,7 +92,7 @@
         return v*(1/escalar);
     }
 
-    float quaternion::modulo()
+    float quaternion::Length()
     {
         return sqrt( w*w + x*x + y*y + z*z );
     }
@@ -118,10 +118,10 @@
     }
 
     //Retorna o angulo de rotação em um determinado eixo
-    vector3D quaternion::Euler()
+    Vector3d quaternion::Euler()
     {
         float PI = 3.1415;
-        vector3D ang;
+        Vector3d ang;
         float test = x*y + z*w;
                 if (test > 0.499) { // singularity at north pole
                         ang.y = 2 * atan2(x,w);
@@ -144,7 +144,7 @@
                 return ang;
     }
 
-    //Matriz de rotação ( quaternion deve estár normalizado )
+    //Matriz de rotação ( quaternion deve estár Normalized )
     float* quaternion::getMatrix()
     {
         float x2 = x * x;

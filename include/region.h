@@ -1,27 +1,27 @@
 #ifndef REGION_H
 #define REGION_H
 
-#include "vector3D.h"
+#include "Vector3d.h"
 #include "texture.h"
 
 class region
 {
 
 public:
-    vector3D position;
-    vector3D w; // Velocidade Angular da região
-    vector3D v; // Velocidade de translação da região
+    Vector3d position;
+    Vector3d w; // Velocidade Angular da regiï¿½o
+    Vector3d v; // Velocidade de translaï¿½ï¿½o da regiï¿½o
     float mass;
     float inertia;
-    float COR;  // coeficiente de restituição
+    float COR;  // coeficiente de restituiï¿½ï¿½o
 
     public:
 
-    void setVelocity( vector3D v );
-    vector3D getVelocity();
+    void setVelocity(Vector3d v );
+    Vector3d getVelocity();
 
-    void setAngularVelocity( vector3D w );
-    vector3D getAngularVelocity();
+    void setAngularVelocity(Vector3d w );
+    Vector3d getAngularVelocity();
 
     float getMass();
     void setMass(float mass);
@@ -29,12 +29,12 @@ public:
     float getInertia();
     float getCOR();
 
-    //Checa se um ponto está dentro da região
-    virtual bool isInside( vector3D point ) = 0;
+    //Checa se um ponto estï¿½ dentro da regiï¿½o
+    virtual bool isInside(Vector3d point ) = 0;
 
-    //Metodo que checa se um raio dado pelos dois pontos p1 e p2 intercepta a região.
-    virtual bool intersectionWithRay( vector3D p1, vector3D p2, vector3D &intersection ) = 0;
-    virtual bool intersectionWithLine( vector3D p1, vector3D p2, vector3D &intersection ) = 0;
+    //Metodo que checa se um raio dado pelos dois pontos p1 e p2 intercepta a regiï¿½o.
+    virtual bool intersectionWithRay(Vector3d p1, Vector3d p2, Vector3d &intersection ) = 0;
+    virtual bool intersectionWithLine(Vector3d p1, Vector3d p2, Vector3d &intersection ) = 0;
 
     virtual void draw(float pos[], float scale[], Texture* tex) = 0;
 

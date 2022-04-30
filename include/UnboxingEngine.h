@@ -6,13 +6,13 @@
 #include "SDL_timer.h"
 #include "SDL_video.h"
 
+#include "Camera.h"
+#include "IEngine.h"
+#include "Vector3d.h"
 #include "matrix.h"
 #include "quaternion.h"
 #include "sphere.h"
 #include "texture.h"
-#include "vector3D.h"
-#include "Camera.h"
-#include "IEngine.h"
 
 #include <cmath>
 #include <cstdint>

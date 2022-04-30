@@ -27,8 +27,8 @@
 //    mb->ntexcoords = model->numtexcoords + 1;
 //
 //
-//    vector3D max(-99999999.0f, -99999999.0f, -99999999.0f);
-//    vector3D min(99999999.0f, 99999999.0f, 99999999.0f);
+//    Vector3d max(-99999999.0f, -99999999.0f, -99999999.0f);
+//    Vector3d min(99999999.0f, 99999999.0f, 99999999.0f);
 //
 //    for (int i = 0; i < mb->nvertices; i++) {
 //        float *vert = &model->vertices[3 * i];
@@ -51,7 +51,7 @@
 //        if (vert[2] < min.z)
 //            min.z = vert[2];
 //    }
-//    vector3D center = min + (max - min) / 2;
+//    Vector3d center = min + (max - min) / 2;
 //    mb->boundingBox = BoundingBox(center, max, min);
 //
 //    for (int i = 0; i < mb->nnormals; i++) {

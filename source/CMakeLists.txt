@@ -12,7 +12,7 @@ set(SOURCES
         ./matrix.cpp
         ./meshbuffer.cpp
         ./quaternion.cpp
-        ./vector3D.cpp
+        Vector3d.cpp
         )
 set(HEADERS
         ${HEADERS}
@@ -28,7 +28,7 @@ set(HEADERS
         ../include/CustomTypes.h
         ../include/Composite.h
         ../include/texture.h
-        ../include/vector3D.h)
+        ../include/Vector3d.h)
 message("Source files: ${SOURCES}")
 add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES})
 target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})
