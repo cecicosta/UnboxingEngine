@@ -6,12 +6,12 @@ include_directories(
 )
 set(SOURCES
         ${SOURCES}
+        ./Composite.cpp
         ./Camera.cpp
         ./mathUtil.cpp
         ./matrix.cpp
         ./meshbuffer.cpp
         ./quaternion.cpp
-        ./Composite.cpp
         ./vector3D.cpp
         )
 set(HEADERS
@@ -29,6 +29,6 @@ set(HEADERS
         ../include/Composite.h
         ../include/texture.h
         ../include/vector3D.h)
-
-add_library(${BINARY_FILENAME}_lib SHARED)
+message("Source files: ${SOURCES}")
+add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES})
 target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})

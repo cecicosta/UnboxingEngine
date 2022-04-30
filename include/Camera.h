@@ -3,6 +3,8 @@
 #include "quaternion.h"
 #include "matrix.h"
 
+#include <cstdint>
+
 class Camera {
 public:
     Camera(uint32_t width, uint32_t height, float FOV, float zNear, float zFar);

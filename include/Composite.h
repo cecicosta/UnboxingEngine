@@ -1,29 +1,17 @@
 #pragma once
 
-#if defined (WIN32) && defined (BUILD_SHARED_LIBS)
-#if defined (_MSC_VER)
-#pragma warning(disable: 4251)
-#endif
-#if defined(UnboxingEngine_EXPORT)
-#define UNBOXING_ENGINE_EXPORT __declspec(dllexport)
-#else
-#define UNBOXING_ENGINE_EXPORT __declspec(dllimport)
-#endif
-#else
-#define UNBOXING_ENGINE_EXPORT
-#endif
-
-
 #include <vector>
+#include <cstdint>
+#include <typeinfo>
 
 namespace unboxing_engine {
 
-    class UNBOXING_ENGINE_EXPORT IComponent {
+    class IComponent {
     public:
         virtual ~IComponent() = default;
     };
 
-    class UNBOXING_ENGINE_EXPORT IComposite {
+    class IComposite {
     public:
         virtual ~IComposite() = default;
         virtual void AddComponent(IComponent &component) = 0;
@@ -31,7 +19,7 @@ namespace unboxing_engine {
         virtual void RemoveComponent(const size_t &hash) = 0;
     };
 
-    class UNBOXING_ENGINE_EXPORT Composite : public IComposite {
+    class Composite : public IComposite {
     public:
         ~Composite() override = default;
 
@@ -49,4 +37,21 @@ namespace unboxing_engine {
 
         std::vector<IComponent*> m_components;
     };
+
+    template<class T>
+    void Composite::AddComponent(T &component) {
+        m_components.push_back(&component);
+    }
+
+    template<class T>
+    void Composite::RemoveComponent(T &component) {
+        RemoveComponent(typeid(T).hash_code());
+    }
+
+    template<class T>
+    T *Composite::GetComponent() {
+        return dynamic_cast<T*>(GetComponent(typeid(T).hash_code()));
+    }
+
+
 }// namespace unboxing_engine

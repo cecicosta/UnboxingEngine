@@ -1,7 +1,8 @@
 #include "UnboxingEngine.h"
 #include "Camera.h"
-#include "meshbuffer.h"
+#include "Composite.h"
 #include "CoreEvents.h"
+#include "meshbuffer.h"
 
 #include <GL/glew.h>
 #include <SDL.h>
@@ -39,16 +40,23 @@ namespace unboxing_engine {
     CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
         : camera(std::make_unique<Camera>(width, height, 70.0f, 1, 1)), BPP(bpp) {}
 
+
+    class MockComponent : public unboxing_engine::IComponent {
+    public:
+        ~MockComponent() override = default;
+        bool IsComponent() { return true; }
+    };
+
     void CCore::Start() {
         CreateWindow();
-        auto list = GetListeners<core_events::IStartListener>();
-        for(auto listener = list.begin();
-             listener != list.end(); listener++) {
-            (*listener)->OnStart();
-        }
-        for(auto l: GetListeners<core_events::IStartListener>()) {
+        for (auto l: GetListeners<core_events::IStartListener>()) {
             l->OnStart();
         }
+
+        unboxing_engine::Composite composite;
+        MockComponent mockComponent;
+        composite.AddComponent(mockComponent);
+        //    auto component = composite.GetComponent<MockComponent>();
     }
     void CCore::Run() {
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -60,7 +68,7 @@ namespace unboxing_engine {
             WritePendingRenderData();
 
             Render();
-            for(auto&& listener: GetListeners<core_events::IUpdateListener>()) {
+            for (auto &&listener: GetListeners<core_events::IUpdateListener>()) {
                 listener->OnUpdate();
             }
         }
@@ -68,7 +76,7 @@ namespace unboxing_engine {
     void CCore::Render() {
         glUseProgram(program);
 
-        for(auto&& listener: GetListeners<core_events::IPreRenderListener>()) {
+        for (auto &&listener: GetListeners<core_events::IPreRenderListener>()) {
             listener->OnPreRender();
         }
 
@@ -80,7 +88,7 @@ namespace unboxing_engine {
         }
         RenderCanvas();
 
-        for(auto&& listener: GetListeners<core_events::IPostRenderListener>()) {
+        for (auto &&listener: GetListeners<core_events::IPostRenderListener>()) {
             listener->OnPostRender();
         }
     }
@@ -199,13 +207,13 @@ namespace unboxing_engine {
             }
         }
 
-        mCursor.draggingSpeedX = static_cast<float>(mCursor.draggingX) * 180.f/ 400.f;
+        mCursor.draggingSpeedX = static_cast<float>(mCursor.draggingX) * 180.f / 400.f;
         mCursor.draggingSpeedY = static_cast<float>(mCursor.draggingY) * 180.f / 300.f;
 
         if (keyState[SDLK_ESCAPE])
             quit = true;
 
-        for(auto&& listener: GetListeners<core_events::IInputListener>()) {
+        for (auto &&listener: GetListeners<core_events::IInputListener>()) {
             listener->OnInput();
         }
     }
@@ -214,25 +222,23 @@ namespace unboxing_engine {
         vector3D velocity;
         vector3D rotation;
         if (keyState) {
-            switch (*keyState) {
-                case SDLK_RIGHT:
-                    velocity.x = -1;
-                    break;
-                case SDLK_LEFT:
-                    velocity.x = 1;
-                    break;
-                case SDLK_UP:
-                    velocity.y = -1;
-                    break;
-                case SDLK_DOWN:
-                    velocity.y = 1;
-                    break;
-                case SDLK_o:
-                    velocity.z = 1;
-                    break;
-                case SDLK_i:
-                    velocity.z = -1;
-                    break;
+            if (keyState[SDLK_RIGHT]) {
+                velocity.x = -1;
+            }
+            if (keyState[SDLK_LEFT]) {
+                velocity.x = 1;
+            }
+            if (keyState[SDLK_UP]) {
+                velocity.y = -1;
+            }
+            if (keyState[SDLK_DOWN]) {
+                velocity.y = 1;
+            }
+            if (keyState[SDLK_o]) {
+                velocity.z = 1;
+            }
+            if (keyState[SDLK_i]) {
+                velocity.z = -1;
             }
         }
 
@@ -522,7 +528,7 @@ namespace unboxing_engine {
         SDL_GL_DeleteContext(mGLContext);
         SDL_DestroyWindow(mWindow);
         SDL_Quit();
-        for(auto&& listener: GetListeners<core_events::IReleaseListener>()) {
+        for (auto &&listener: GetListeners<core_events::IReleaseListener>()) {
             listener->OnRelease();
         }
     }
@@ -639,4 +645,4 @@ namespace unboxing_engine {
         UnregisterListener(listener);
     }
 
-} //namespace unboxing_engine
+}//namespace unboxing_engine

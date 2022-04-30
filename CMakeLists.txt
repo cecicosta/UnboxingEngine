@@ -11,7 +11,7 @@ set(ZLIB_LIBRARY ${PROJECT_SOURCE_DIR}/third_party/zlib-1.2.12/cmake-build-debug
 if (WIN32)
     #Set up SDL_ttf dependency
     set(FREETYPE_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/third_party/freetype-windows-binaries/include)
-    set(FREETYPE_LIBRARY ${PROJECT_SOURCE_DIR}/third_party/freetype-windows-binaries/release-dll/win64/freetype.lib)
+    set(FREETYPE_LIBRARY ${PROJECT_SOURCE_DIR}/third_party/freetype-windows-binaries/release\ dll/win64/freetype.lib)
 
     #Enable building dlls
     set(BUILD_SHARED_LIBS TRUE)
@@ -37,7 +37,7 @@ include_directories(
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp)
-target_link_libraries(unboxing_engine unboxing_engine_src_lib opengl32 SDL2main glew SDL2 SDL2_image SDL2_ttf)
+target_link_libraries(unboxing_engine ${CMAKE_BINARY_DIR}/source/libunboxing_engine_src_lib.a opengl32 SDL2main glew SDL2 SDL2_image SDL2_ttf)
 
 if (WIN32)
     #Copy OpenGL wrapper dll after building
