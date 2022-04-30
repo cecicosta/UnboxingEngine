@@ -3,6 +3,7 @@
 #include <MeshPrimitivesUtils.h>
 
 #include "CoreEvents.h"
+#include "Composite.h"
 
 using namespace unboxing_engine;
 
@@ -29,10 +30,22 @@ public:
     }
 };
 
+class MockComponent : public unboxing_engine::IComponent {
+public:
+    ~MockComponent() override = default;
+    bool IsComponent() { return true; }
+};
+
 int main(int argc, char *argv[]) {
+    unboxing_engine::Composite composite;
+    MockComponent mockComponent;
+
+    std::cout << "Is component: " << mockComponent.IsComponent() << std::endl;
+    composite.AddComponent(mockComponent);
+//    auto component = composite.GetComponent<MockComponent>();
+
 
     CCore engine(640, 480, 32);
-
 
     CEventListener eventListener;
     engine.RegisterEventListener(eventListener);

@@ -4,16 +4,16 @@ SceneElement::SceneElement(){}
 SceneElement::SceneElement( sphere reg, vector3D position, int meshID, int texID, int type, int id, bool illuminated)
 {
     this->reg = reg;
-    this->position = position;
+    this->m_position = position;
     this->meshID = meshID;
     this->texID = texID;
     this->type = type;
     this->nivel = nivel;
     this->id = id;
-    this->q = quaternion(0, vector3D(1,0,0));
-    this->scale = vector3D(1,1,1);
+    this->m_rotation = quaternion(0, vector3D(1,0,0));
+    this->m_scale = vector3D(1,1,1);
     this->SEmaterial.Illuminated(illuminated);
-    this->transformation = Matrix::translationMatrix(position);
+    this->m_transformation = Matrix::translationMatrix(position);
     this->reg.position = position;
 }
 
@@ -48,30 +48,30 @@ double *SceneElement::getEmissivity()
 }
 vector3D SceneElement::getPosition()
 {
-    return position;
+    return m_position;
 }
 void SceneElement::setPosition(vector3D position)
 {
-    transformation = Matrix::translationMatrix(this->position*-1)*transformation;
-    transformation = Matrix::translationMatrix(position)*transformation;
-    this->position = position;
+    m_transformation = Matrix::translationMatrix(this->m_position *-1)* m_transformation;
+    m_transformation = Matrix::translationMatrix(position)* m_transformation;
+    this->m_position = position;
     this->reg.position = position;
 }
 void SceneElement::setRotation( double ang, vector3D eixo)
 {
-    transformation = Matrix::translationMatrix(position*-1)*transformation;
-    transformation = Matrix::rotationMatrix( ang, eixo )*transformation;
-    transformation = Matrix::translationMatrix(position)*transformation;
-    q = quaternion( ang, eixo )*q;
+    m_transformation = Matrix::translationMatrix(m_position *-1)* m_transformation;
+    m_transformation = Matrix::rotationMatrix( ang, eixo )* m_transformation;
+    m_transformation = Matrix::translationMatrix(m_position)* m_transformation;
+    m_rotation = quaternion( ang, eixo )* m_rotation;
 }
 vector3D SceneElement::getScale()
 {
-    return scale;
+    return m_scale;
 }
 void SceneElement::setScale( vector3D scale )
 {
-    transformation = transformation*Matrix::scaleMatrix(scale);
-    this->scale = scale;
+    m_transformation = m_transformation *Matrix::scaleMatrix(scale);
+    this->m_scale = scale;
 }
 void SceneElement::setMaterial( material mat)
 {
@@ -89,7 +89,7 @@ CMeshBuffer *SceneElement::getMesh()
 
 Matrix &SceneElement::getMatrix()
 {
-    return transformation;
+    return m_transformation;
 }
 
 int SceneElement::Interation( SceneElement* e)

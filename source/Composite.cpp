@@ -27,16 +27,16 @@ namespace unboxing_engine {
 
     template<class T>
     void Composite::AddComponent(T &component) {
-        AddComponent(component);
+        IComposite::AddComponent(component);
     }
 
     template<class T>
     void Composite::RemoveComponent(T &component) {
-        RemoveComponent(typeid(T).hash_code());
+        IComposite::RemoveComponent(typeid(T).hash_code());
     }
 
     template<class T>
     T *Composite::GetComponent() {
-        return dynamic_cast<T*>(GetComponent(typeid(T).hash_code()));
+        return dynamic_cast<T*>(IComposite::GetComponent(typeid(T).hash_code()));
     }
 }// namespace unboxing_engine

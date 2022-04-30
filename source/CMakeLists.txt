@@ -1,29 +1,34 @@
-target_sources(catboxengine
-        PUBLIC
-        Camera.cpp
-#        boundingbox.cpp
-#        collisionutil.cpp
-#        draw.cpp
-        UnboxingEngine.cpp
-#        glm.cpp
-#        grafo.cpp
-#        lightsource.cpp
-#        LU.cpp
-#        material.cpp
-        mathUtil.cpp
-        matrix.cpp
-#        mazeGenerator.cpp
-#        mazeUtil.cpp
-        meshbuffer.cpp
-#        octree.cpp
-#        physicsutil.cpp
-        quaternion.cpp
-#        rect.cpp
-#        region.cpp
-#        resources.cpp
-#        SceneElement.cpp
-        Composite.cpp
-#        SELoader.cpp
-#        sphere.cpp
-        vector3D.cpp
+project(UnboxingEngineSrc)
+
+set(BINARY_FILENAME unboxing_engine_src)
+include_directories(
+        ../include
+)
+set(SOURCES
+        ${SOURCES}
+        ./Camera.cpp
+        ./mathUtil.cpp
+        ./matrix.cpp
+        ./meshbuffer.cpp
+        ./quaternion.cpp
+        ./Composite.cpp
+        ./vector3D.cpp
         )
+set(HEADERS
+        ${HEADERS}
+        ../include/Camera.h
+        ../include/IEngine.h
+        ../include/EventDispatcher.h
+        ../include/CoreEvents.h
+        ../include/mathUtil.h
+        ../include/MeshPrimitivesUtils.h
+        ../include/matrix.h
+        ../include/meshbuffer.h
+        ../include/quaternion.h
+        ../include/CustomTypes.h
+        ../include/Composite.h
+        ../include/texture.h
+        ../include/vector3D.h)
+
+add_library(${BINARY_FILENAME}_lib SHARED)
+target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})

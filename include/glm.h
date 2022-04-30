@@ -91,7 +91,7 @@ typedef struct _GLMmodel {
   GLuint       numgroups;       /* number of groups in model */
   GLMgroup*    groups;          /* linked list of groups */
 
-  GLfloat position[3];          /* position of the model */
+  GLfloat position[3];          /* m_position of the model */
 
 } GLMmodel;
 
@@ -117,7 +117,7 @@ glmDimensions(GLMmodel* model, GLfloat* dimensions);
 /* glmScale: Scales a model by a given amount.
  *
  * model - properly initialized GLMmodel structure
- * scale - scalefactor (0.5 = half as large, 2.0 = twice as large)
+ * m_scale - scalefactor (0.5 = half as large, 2.0 = twice as large)
  */
 GLvoid
 glmScale(GLMmodel* model, GLfloat scale);

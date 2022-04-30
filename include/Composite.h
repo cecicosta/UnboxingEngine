@@ -1,14 +1,29 @@
 #pragma once
 
+#if defined (WIN32) && defined (BUILD_SHARED_LIBS)
+#if defined (_MSC_VER)
+#pragma warning(disable: 4251)
+#endif
+#if defined(UnboxingEngine_EXPORT)
+#define UNBOXING_ENGINE_EXPORT __declspec(dllexport)
+#else
+#define UNBOXING_ENGINE_EXPORT __declspec(dllimport)
+#endif
+#else
+#define UNBOXING_ENGINE_EXPORT
+#endif
+
+
 #include <vector>
 
 namespace unboxing_engine {
 
-    class IComponent {
-
+    class UNBOXING_ENGINE_EXPORT IComponent {
+    public:
+        virtual ~IComponent() = default;
     };
 
-    class IComposite {
+    class UNBOXING_ENGINE_EXPORT IComposite {
     public:
         virtual ~IComposite() = default;
         virtual void AddComponent(IComponent &component) = 0;
@@ -16,12 +31,9 @@ namespace unboxing_engine {
         virtual void RemoveComponent(const size_t &hash) = 0;
     };
 
-    class Composite : public IComposite{
+    class UNBOXING_ENGINE_EXPORT Composite : public IComposite {
     public:
         ~Composite() override = default;
-        void AddComponent(IComponent &component) override;
-        IComponent *GetComponent(const size_t &hash) override;
-        void RemoveComponent(const size_t &hash) override;
 
         template<class T>
         void AddComponent(T &component);
@@ -31,6 +43,10 @@ namespace unboxing_engine {
         void RemoveComponent(T &component);
 
     private:
+        void AddComponent(IComponent &component) override;
+        IComponent *GetComponent(const size_t &hash) override;
+        void RemoveComponent(const size_t &hash) override;
+
         std::vector<IComponent*> m_components;
     };
 }// namespace unboxing_engine
