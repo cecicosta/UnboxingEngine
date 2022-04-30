@@ -52,8 +52,8 @@ float Vector3d::Length() const {
 }
 
 Vector3d Vector3d::Normalized() const {
-    float norma = std::sqrt(x * x + y * y + z * z);
-    return Vector3d;
+    float length = Length();
+    return {x/length, y/length, z/length};
 }
 
 float Vector3d::DotProduct(const Vector3d & vet) const {
