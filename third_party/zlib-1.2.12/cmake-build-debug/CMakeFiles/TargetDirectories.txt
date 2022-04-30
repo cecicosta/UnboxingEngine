@@ -1,0 +1,13 @@
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/minigzip64.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/zlib.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/zlibstatic.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/example.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/minigzip.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/example64.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/test.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/list_install_components.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/install/local.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/install.dir
+C:/Users/Cecilia Costa/git/CatBoxEngine/third_party/zlib-1.2.12/cmake-build-debug/CMakeFiles/install/strip.dir

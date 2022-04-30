@@ -1,0 +1,13 @@
+prefix=C:/Program Files (x86)/CatBoxEngine
+exec_prefix=C:/Program Files (x86)/CatBoxEngine
+libdir=C:/Program Files (x86)/CatBoxEngine/lib
+sharedlibdir=C:/Program Files (x86)/CatBoxEngine/lib
+includedir=C:/Program Files (x86)/CatBoxEngine/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.2.12
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}
