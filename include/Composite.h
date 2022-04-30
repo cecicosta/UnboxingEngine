@@ -35,6 +35,7 @@ namespace unboxing_engine {
         IComponent *GetComponent(const size_t &hash) override;
         void RemoveComponent(const size_t &hash) override;
 
+        //TODO: Try to improve memory allocation management. Potentially suboptimal with reallocation, copy and fragmentation of memory for new added components.
         std::vector<IComponent*> m_components;
     };
 
