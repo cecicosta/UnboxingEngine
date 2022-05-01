@@ -1,6 +1,6 @@
-prefix=C:/Program Files (x86)/CatBoxEngine
+prefix=C:/Program Files (x86)/UnboxingEngine
 exec_prefix=${prefix}
-libdir=C:/Program Files (x86)/CatBoxEngine/lib
+libdir=C:/Program Files (x86)/UnboxingEngine/lib
 includedir=${prefix}/include
 
 Name: glew

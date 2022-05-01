@@ -51,15 +51,14 @@ namespace unboxing_engine {
         CEventDispatcher() = default;
         virtual ~CEventDispatcher() = default;
 
-    protected:
         /// Register @listener to multiple events based on the types inherited by UListener<T, Types...>
         /// @param listener
         template<class T,
-                 std::enable_if_t<std::is_constructible<T, UListener<>>::value, bool> = true>
+                 std::enable_if_t<std::is_convertible<T, CListener>::value, bool> = true>
         void RegisterListener(T &listener) {
             for (auto &&hash: listener.hash_handles) {
                 if (m_Listeners.find(hash) == m_Listeners.end()) {
-                    custom_types::u_convertible_vector<CListener *, T *> first;
+                    custom_types::u_convertible_vector<CListener*> first;
                     first.push_back(&listener);
                     m_Listeners.insert_or_assign(hash, first);
                 } else {

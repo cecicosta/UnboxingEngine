@@ -17,7 +17,7 @@ if (WIN32)
     set(BUILD_SHARED_LIBS TRUE)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    configure_file(./third_party/freetype-windows-binaries/release\ dll/win64/freetype.dll ${CMAKE_BINARY_DIR} COPYONLY)
+    configure_file(./third_party/freetype-windows-binaries/release\ dll/win64/freetype.dll ${CMAKE_BINARY_DIR}/Debug COPYONLY)
 endif ()
 
 add_subdirectory(./source)
@@ -25,6 +25,14 @@ add_subdirectory(./third_party/glew-2.1.0/build/cmake)
 add_subdirectory(./third_party/SDL)
 add_subdirectory(./third_party/SDL_image)
 add_subdirectory(./third_party/SDL_ttf)
+
+#Disable building dlls
+#set(BUILD_SHARED_LIBS FALSE)
+# Prevent GoogleTest from overriding our compiler/linker options
+# when building with Visual Studio
+#set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set(BUILD_GMOCK "ON")
+set(INSTALL_GTEST "OFF")
 add_subdirectory(./third_party/googletest)
 add_subdirectory(./tests)
 
@@ -38,13 +46,13 @@ include_directories(
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp)
-target_link_libraries(unboxing_engine ${CMAKE_BINARY_DIR}/source/libunboxing_engine_src_lib.a opengl32 SDL2main glew SDL2 SDL2_image SDL2_ttf)
+target_link_libraries(unboxing_engine unboxing_engine_src_lib opengl32 SDL2main glew SDL2 SDL2_image SDL2_ttf)
 
 if (WIN32)
     #Copy OpenGL wrapper dll after building
     add_custom_command(
             TARGET unboxing_engine
             POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/Debug/glew32d.dll ${CMAKE_BINARY_DIR}/Debug
     )
 endif ()
