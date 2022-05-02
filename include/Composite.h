@@ -28,7 +28,7 @@ namespace unboxing_engine {
         template<class T>
         T *GetComponent();
         template<class T>
-        void RemoveComponent(T &component);
+        void RemoveComponent();
 
     private:
         void AddComponent(IComponent &component) override;
@@ -45,14 +45,13 @@ namespace unboxing_engine {
     }
 
     template<class T>
-    void Composite::RemoveComponent(T &component) {
-        RemoveComponent(typeid(T).hash_code());
-    }
-
-    template<class T>
     T *Composite::GetComponent() {
         return dynamic_cast<T*>(GetComponent(typeid(T).hash_code()));
     }
 
+    template<class T>
+    void Composite::RemoveComponent() {
+        RemoveComponent(typeid(T).hash_code());
+    }
 
 }// namespace unboxing_engine

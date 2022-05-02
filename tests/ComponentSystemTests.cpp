@@ -59,3 +59,24 @@ TEST_F(ComponentSystemFixture, can_hold_and_recover_multiple_objects_of_differen
     ASSERT_EQ(componentOther->GetId(), 5);
     ASSERT_EQ(componentOther->GetIdAsString(), "5");
 }
+
+TEST_F(ComponentSystemFixture, can_remove_component_of_specified_type) {
+    MockComponent mockComponent(1);
+    MockComponentOther mockComponentOther(5);
+
+    composite.AddComponent(mockComponent);
+    composite.AddComponent(mockComponentOther);
+
+    //Remove only Component of type MockComponent
+    composite.RemoveComponent<MockComponent>();
+
+    //Try to retrieve both first added components
+    auto component = composite.GetComponent<MockComponent>();
+    auto componentOther = composite.GetComponent<MockComponentOther>();
+
+    //Removed Component should be nullptr
+    EXPECT_TRUE(component == nullptr);
+    EXPECT_FALSE(componentOther == nullptr);
+
+    ASSERT_EQ(componentOther->GetId(), 5);
+}

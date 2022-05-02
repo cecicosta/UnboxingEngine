@@ -15,7 +15,7 @@ namespace unboxing_engine::custom_types {
     class u_convertible_vector : public std::vector<In>{
         /// Derived iterator from vector<In>::iterator. Overloads the deference operators to convert dynamically the object type to T.
         template <typename T>
-        struct u_convertible_iterator : std::vector<In>::iterator {
+        struct u_convertible_iterator : public std::vector<In>::iterator {
         public:
             T operator*() {return dynamic_cast<T>(std::vector<In>::iterator::operator*());}
             T operator->() {return dynamic_cast<T>(std::vector<In>::iterator::operator->());}

@@ -10,15 +10,14 @@ namespace unboxing_engine {
 
     IComponent *Composite::GetComponent(const size_t &hash) {
         auto it = std::find_if(m_components.begin(), m_components.end(), [&hash](IComponent* component) {
-            auto compHash = typeid(*component).hash_code();
-            return compHash == hash;
+            return typeid(*component).hash_code() == hash;
         });
         return it != m_components.end() ? *it : nullptr;
     }
 
     void Composite::RemoveComponent(const size_t &hash) {
         auto it = std::find_if(m_components.begin(), m_components.end(), [&hash](IComponent* component) {
-            return typeid(component).hash_code() == hash;
+            return typeid(*component).hash_code() == hash;
         });
         if(it != m_components.end()) {
             m_components.erase(it);

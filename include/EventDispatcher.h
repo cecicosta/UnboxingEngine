@@ -67,14 +67,31 @@ namespace unboxing_engine {
             }
         }
 
+        /// Removes a CListener object from all registered events previously registered according to the types it holds
+        /// \param listener CListener object to be unregistered
         void UnregisterListener(CListener &listener) {
+            //Navigate through all types lists the object belongs to
             for (auto &&hash: listener.hash_handles) {
                 if (auto it = m_Listeners.find(hash); it != m_Listeners.end()) {
-                    m_Listeners.erase(it);
+                    //Find listener to be removed
+                    auto listenerIt = std::find_if(it->second.begin(), it->second.end(), [&](auto item) {
+                       return item == &listener;
+                    });
+                    //Remove listener from type list
+                    if(listenerIt != it->second.end()) {
+                        it->second.erase(listenerIt);
+                    }
+                    //If listener type list became empty, erase list
+                    if(it->second.empty()) {
+                        m_Listeners.erase(it);
+                    }
                 }
             }
         }
 
+        /// Retrieves a list of previously registered listener of the given template type T.
+        /// \tparam T Type of the listeners to be returned
+        /// \return special vector holding all previously registered listeners of type T
         template<typename T>
         custom_types::u_convertible_vector<CListener *, T *> GetListeners() {
             auto hash = typeid(T).hash_code();
@@ -87,4 +104,4 @@ namespace unboxing_engine {
     private:
         std::unordered_map<std::size_t, custom_types::u_convertible_vector<CListener *>> m_Listeners;
     };
-}// namespace unboxing_engine
+}// namespace unboxing_engine<
