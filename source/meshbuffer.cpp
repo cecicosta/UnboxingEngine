@@ -89,7 +89,7 @@
 //            //            printf("Triangle: %d\n", i);
 //            //            printf("Face: %d\n", fId);
 //
-//            //printf("index: %d\n", group->triangles[i]);
+//            //printf("at: %d\n", group->triangles[i]);
 //            triangle = &model->triangles[group->triangles[i]];
 //            float *norm = &model->facetnorms[3 * triangle->findex];
 //

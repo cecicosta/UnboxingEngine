@@ -20,6 +20,20 @@ target_link_libraries(
         gmock
 )
 
+add_executable(unboxing_engine_minimal_unit_tests
+        main.cpp
+        MatrixTests.cpp
+        ../include/Matrix.h
+        ../source/Matrix.cpp
+        ../include/Quaternion.h
+        ../source/Quaternion.cpp
+        ../include/Vector3Df.h
+        ../source/Vector3Df.cpp)
+target_link_libraries(unboxing_engine_minimal_unit_tests
+        gtest
+        gmock
+)
+
 add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests)
 #gtest_discover_tests(unboxing_engine_tests)
 

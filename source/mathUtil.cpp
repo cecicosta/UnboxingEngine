@@ -9,7 +9,7 @@ bool MathUt::fatoracaoLU(Matrix m, Matrix &L, Matrix &U)
     int n = m.order;
 
     // Criando a matriz "L". Inicialmente, ela é uma matriz identidade:
-    L = Matrix::identity(n);
+    L = Matrix::Identity(n);
 
     // Criando a matriz "U". Inicialmente, ela é uma cópia da matriz "A":
     U = m;
@@ -20,7 +20,7 @@ bool MathUt::fatoracaoLU(Matrix m, Matrix &L, Matrix &U)
         for (int i=(k+1) ; i<n ; i++)
         {
             // Testa o pivô:
-            if ( U.index(k,k) == 0 )
+            if (U.at(k, k) == 0 )
             {
                 if( pivot(U, k) == false )
                 {
@@ -29,18 +29,18 @@ bool MathUt::fatoracaoLU(Matrix m, Matrix &L, Matrix &U)
                 }
             }
             // Calcula o "m(i,k)":
-            double m = (U.index(i,k)) / (U.index(k,k));
+            double m = (U.at(i, k)) / (U.at(k, k));
 
 
             // Matriz "L": recebe o valor de m na posição (i,k):
-            L.index(i,k) = m;
+            L.at(i, k) = m;
 
             // Matriz "A": linha "i" recebe ela mesma menos "m(i,k)" multiplicado pela linha "k":
 
             for (int j=0 ; j<n ; j++)
-                U.index(i,j) = U.index(i,j) - m * U.index(k,j);
+                U.at(i, j) = U.at(i, j) - m * U.at(k, j);
             // Para evitar valores próximos de zero, o elemento "a(i,k)" recebe logo zero:
-            U.index(i,k) = 0;
+            U.at(i, k) = 0;
         }
     }
     return(true);
@@ -50,11 +50,8 @@ bool MathUt::fatoracaoLU(Matrix m, Matrix &L, Matrix &U)
 
 bool MathUt::GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao)
 {
-
-    solucao = Matrix(tInd.size_i, tInd.size_j);
-
     const int ordem = coef.order;
-    for( int t=0; t<tInd.size_j; t++ )
+    for( int t=0; t<tInd.m_columns; t++ )
     {
 
         Matrix copy;
@@ -62,13 +59,13 @@ bool MathUt::GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao
         copy = coef;
         std::vector<float> b(ordem);
         for(int i=0;i<ordem;i++)
-            b[i]=tInd.index(i,t);
+            b[i]= tInd.at(i, t);
 
 
 
         for(int k=0; k<ordem; k++ )
         {
-            float pivo = copy.index(k,k);
+            float pivo = copy.at(k, k);
 
             if( pivo == 0 )
             {
@@ -84,10 +81,10 @@ bool MathUt::GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao
                 if(i!=k)
                 {
 
-                    float m = copy.index(i,k)/pivo;
+                    float m = copy.at(i, k)/pivo;
                     for(int j=0;j<ordem;j++)
                     {
-                        copy.index(i,j) = copy.index(i,j)-copy.index(k,j)*m;
+                        copy.at(i, j) = copy.at(i, j)- copy.at(k, j)*m;
                     }
                     b[i]= b[i]-b[k]*m;
                 }
@@ -96,7 +93,7 @@ bool MathUt::GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao
 
         for(int i=ordem-1; i>=0;i--)
         {
-            solucao.index(i, t) = (b[i])/copy.index(i,i);
+            solucao.at(i, t) = (b[i])/ copy.at(i, i);
         }
     }
 }
@@ -105,14 +102,14 @@ bool MathUt::GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao
 bool MathUt::pivot(Matrix &m, int i)
 {
 
-    float maior=m.index(i,i);
+    float maior= m.at(i, i);
     int k=i;
 
     for(int j=0;j<m.order; j++)
     {
-        if(m.index(j,i) > maior)
+        if(m.at(j, i) > maior)
         {
-            maior = m.index(j,i);
+            maior = m.at(j, i);
             k=j;
         }
     }
@@ -129,7 +126,7 @@ bool MathUt::pivot(Matrix &m, int i)
         return true;
     }
 
-    m.switchLines(i,k);
+    m.swap_rows(i, k);
 
     return true;
 

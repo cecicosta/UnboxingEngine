@@ -1,7 +1,7 @@
 #ifndef QUAD_H
 #define QUAD_H
 
-#include "Vector3d.h"
+#include "Vector3Df.h"
 #include "region.h"
 
 class rect: public region

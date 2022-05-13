@@ -1,12 +1,8 @@
-#ifndef MATHUT_H
-#define MATHUT_H
-#include "matrix.h"
+#pragma once
+#include "Matrix.h"
 
-namespace MathUt
-{
-    bool fatoracaoLU(Matrix m, Matrix &L, Matrix &U);
-    bool GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao);
-    bool pivot(Matrix &m, int i);
-}
-
-#endif
+namespace MathUt {
+bool fatoracaoLU(Matrix4f m, Matrix4f &L, Matrix4f &U);
+bool GaussJordan(const Matrix4f &coef, const Matrix4f &tInd, Matrix4f &solucao);
+bool pivot(Matrix4f &m, int i);
+}// namespace MathUt

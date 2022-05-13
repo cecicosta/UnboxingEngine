@@ -1,5 +1,5 @@
 #include "SceneElement.h"
-#include "Vector3d.h"
+#include "Vector3Df.h"
 #include "sphere.h"
 /*
 Tratamento de colisao

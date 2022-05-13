@@ -8,9 +8,9 @@
 
 #include "Camera.h"
 #include "IEngine.h"
-#include "Vector3d.h"
-#include "matrix.h"
-#include "quaternion.h"
+#include "Matrix.h"
+#include "Quaternion.h"
+#include "Vector3Df.h"
 #include "sphere.h"
 #include "texture.h"
 

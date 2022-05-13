@@ -1,9 +1,9 @@
 #pragma once
-#include "Vector3d.h"
+#include "Matrix.h"
+#include "Quaternion.h"
+#include "Vector3Df.h"
 #include "material.h"
-#include "matrix.h"
 #include "meshbuffer.h"
-#include "quaternion.h"
 #include "region.h"
 #include "sphere.h"
 

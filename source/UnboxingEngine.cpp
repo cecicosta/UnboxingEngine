@@ -69,8 +69,8 @@ namespace unboxing_engine {
             listener->OnPreRender();
         }
 
-        camera->mTransformation = Matrix::rotationMatrix(1, Vector3d(1, 0, 0)) * camera->mTransformation;
-        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, camera->mTransformation.getMatrixGL());
+        camera->mTransformation = Matrix::RotationMatrix(Vector3Df(1, 0, 0), 1) * camera->mTransformation;
+        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, camera->mTransformation.ToArray());
         for (auto &&data: mRenderQueue) {
             glBindVertexArray(data.vao);
             glDrawElements(GL_TRIANGLES, data.mMeshBuffer->nfaces * 3, GL_UNSIGNED_INT, nullptr);
@@ -208,8 +208,8 @@ namespace unboxing_engine {
     }
 
     void CCore::UpdateFlyingController() {
-        Vector3d velocity;
-        Vector3d rotation;
+        Vector3Df velocity;
+        Vector3Df rotation;
         if (keyState) {
             if (keyState[SDLK_RIGHT]) {
                 velocity.x = -1;

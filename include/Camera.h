@@ -1,7 +1,7 @@
 #pragma once
 
-#include "quaternion.h"
-#include "matrix.h"
+#include "Matrix.h"
+#include "Quaternion.h"
 
 #include <cstdint>
 
@@ -9,19 +9,19 @@ class Camera {
 public:
     Camera(uint32_t width, uint32_t height, float FOV, float zNear, float zFar);
     ~Camera() = default;
-    void CastRayFromScreen(int scr_x, int scr_y, Vector3d &point, Vector3d &dir) const;
-    Vector3d ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const;
-    void SetCamera(const Vector3d &pos, float ang, const Vector3d &axi, const Vector3d &point);
+    void CastRayFromScreen(int scr_x, int scr_y, Vector3Df &point, Vector3Df &dir) const;
+    [[nodiscard]] Vector3Df ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const;
+    void SetCamera(const Vector3Df &pos, float ang, const Vector3Df &axi, const Vector3Df &point);
     ///Move the camera
-    void FPSCamera(const Vector3d & movement, const Vector3d & rotation);
+    void FPSCamera(const Vector3Df & movement, const Vector3Df & rotation);
 
     //Opengl camera attributes
-    quaternion mRotation = quaternion(0, Vector3d(1, 0, 0));
-    Matrix mTransformation = Matrix::identity(4);
-    Vector3d mDirection = Vector3d(0, 0, -1);
-    Vector3d mPosition = Vector3d(0, 0, 0);
-    Vector3d mUp = Vector3d(0, 1, 0);
-    Matrix mWorldToCamTransformation = Matrix::identity(4);
+    Quaternion mRotation = Quaternion(0, Vector3Df(1, 0, 0));
+    Vector3Df mDirection = Vector3Df(0, 0, -1);
+    Vector3Df mPosition = Vector3Df(0, 0, 0);
+    Vector3Df mUp = Vector3Df(0, 1, 0);
+    Matrix4f mTransformation;
+    Matrix4f mWorldToCamTransformation;
 
     unsigned int mWidth, mHeight;
     ///Screen aspect ratio
