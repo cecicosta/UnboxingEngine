@@ -47,20 +47,20 @@ at(std::uint32_t i) {
 
 TEMPLATE_PREDICATE_ARG0_ARG1_ARG2_CLASS(, T, &)
 at(std::uint32_t i, std::uint32_t j) {
-    return A[i * m_rows + j % m_columns];
+    return A[i * rows + j % cols];
 }
 
 TEMPLATE_PREDICATE_ARG0_ARG1_ARG2_CLASS(const, T, &)
 at(std::uint32_t i, std::uint32_t j) const {
-    return A[i * m_rows + j % m_columns];
+    return A[i * rows + j % cols];
 }
 
 TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
 swap_rows(int row_a, int row_b) const {
     Matrix swapped(*this);
-    if (row_a >= 0 && row_a < m_rows && row_b >= 0 && row_b < m_rows) {
+    if (row_a >= 0 && row_a < rows && row_b >= 0 && row_b < rows) {
         float swap;
-        for (int k = 0; k < m_rows; k++) {
+        for (int k = 0; k < rows; k++) {
             swap = swapped.at(row_a, k);
             swapped.at(row_a, k) = swapped.at(row_b, k);
             swapped.at(row_b, k) = swap;
@@ -72,8 +72,8 @@ swap_rows(int row_a, int row_b) const {
 TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
 transpose() const {
     Matrix<T, Rows, Columns> m;
-    for (int i = 0; i < m_rows; i++) {
-        for (int j = 0; j < m_columns; j++) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
             m.at(j, i) = at(i, j);
         }
     }
@@ -107,10 +107,10 @@ ToArray() {
 
 TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
 operator+(const Matrix<T, Rows, Columns> &m) const {
-    if (m_rows == m.m_rows && m_columns == m.m_columns) {
+    if (rows == m.rows && cols == m.cols) {
         Matrix<T, Rows, Columns> sum;
-        for (int i = 0; i < m_rows; i++) {
-            for (int j = 0; j < m_columns; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
                 sum.at(i, j) = at(i, j) + m.at(i, j);
             }
         }
@@ -122,8 +122,8 @@ operator+(const Matrix<T, Rows, Columns> &m) const {
 TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
 operator-(const Matrix<T, Rows, Columns> &m) const {
     Matrix<T, Rows, Columns> sub;
-    for (int i = 0; i < m_rows; i++) {
-        for (int j = 0; j < m_columns; j++) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
             sub.at(i, j) = at(i, j) - m.at(i, j);
         }
     }
@@ -136,10 +136,10 @@ TEMPLATE_PREDICATE_ARG0_ARG1_ARG2_CLASS(T_RESULT_COLUMNS, T_MATRIX, )
 operator*(Matrix<T, Columns, ResultColumns> right) const {
     float sum;
     Matrix<T, Rows, ResultColumns> product;
-    for (int i = 0; i < right.m_columns; i++) {
-        for (int j = 0; j < m_rows; j++) {
+    for (int i = 0; i < right.cols; i++) {
+        for (int j = 0; j < rows; j++) {
             sum = 0;
-            for (int k = 0; k < m_columns; k++) {
+            for (int k = 0; k < cols; k++) {
                 sum = sum + at(j, k) * right.at(k, i);
             }
             product.at(j, i) = sum;
@@ -153,8 +153,8 @@ operator*(Matrix<T, Columns, ResultColumns> right) const {
 TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
 operator*(float a) const {
     Matrix<T, Rows, Columns> result;
-    for (int i = 0; i < m_rows; i++) {
-        for (int j = 0; j < m_columns; j++) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
             result.at(i, j) = at(i, j) * a;
         }
     }
@@ -271,11 +271,6 @@ MergeMatrix(const Matrix<T, R, C> &m) {
     return result;
 }
 #undef T_InputMatrix
-
-template<typename T, int Rows, int Columns>
-constexpr size_t Matrix<T, Rows, Columns>::array_size() {
-    return Rows * Columns;
-}
 
 template class Matrix<float, 3, 3>;
 template class Matrix<float, 4, 4>;

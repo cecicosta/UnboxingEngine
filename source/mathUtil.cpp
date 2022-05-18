@@ -51,7 +51,7 @@ bool MathUt::fatoracaoLU(Matrix m, Matrix &L, Matrix &U)
 bool MathUt::GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao)
 {
     const int ordem = coef.order;
-    for( int t=0; t<tInd.m_columns; t++ )
+    for( int t=0; t<tInd.cols; t++ )
     {
 
         Matrix copy;

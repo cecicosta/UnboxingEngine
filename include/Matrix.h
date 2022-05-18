@@ -93,19 +93,22 @@ public:
     static Matrix RotationMatrix(const Quaternion &q);
 
 
-    constexpr size_t array_size();
+    inline constexpr size_t array_size() {
+        return Rows * Columns;
+    }
+
+    const uint32_t rows = Rows;
+    const uint32_t cols = Columns;
 
 protected:
     float A[Rows * Columns]{};
-    const uint32_t m_rows = Rows;
-    const uint32_t m_columns = Columns;
 
     /// Method to complete the Faddeev-Leverrier recursion.
     /// \param m
     /// \param c
     /// \return
     std::vector<Matrix<T, Rows>> FaddeevLeVerrierRecursion(Matrix<T, Rows> m, float c[]) {
-        const int n = m.m_rows;
+        const int n = m.rows;
         std::vector<Matrix<T, Rows>> solution(n);
         solution[0] = Identity();
 
@@ -135,10 +138,12 @@ public:
 
     explicit Matrix3f(const Quaternion& q) : Matrix(q) {}
 
+    Matrix3f(const Matrix<float, 3, 3>& matrix) : Matrix(matrix){} //NOLINT(google-explicit-constructor)
+
     explicit Matrix3f(const Vector<float, 2> &v) {
         at(0, 2) = v.x;
         at(1, 2) = v.y;
-        at(1, 2) = 1;
+        at(2, 2) = 1;
     }
 };
 
@@ -150,10 +155,12 @@ public:
 
     explicit Matrix4f(const Quaternion& q) : Matrix(q) {}
 
+    Matrix4f(const Matrix<float, 4, 4>& matrix) : Matrix(matrix) {} //NOLINT(google-explicit-constructor)
+
     explicit Matrix4f(const Vector<float, 3> &v) {
         at(0, 3) = v.x;
         at(1, 3) = v.y;
-        at(1, 3) = v.z;
-        at(1, 3) = 1;
+        at(2, 3) = v.z;
+        at(3, 3) = 1;
     }
 };
