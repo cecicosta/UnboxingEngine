@@ -91,6 +91,8 @@ const T *Vector<T, Axis>::ToArray() const {
     return &values[0];
 }
 
+template class Vector<int, 2>;
+template class Vector<int, 3>;
 template class Vector<float, 2>;
 template class Vector<float, 3>;
 template<typename T>

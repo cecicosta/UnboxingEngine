@@ -52,5 +52,9 @@ template<typename T>
 using Vector2D = Vector<T, 2>;
 template<typename T>
 using Vector3D = Vector<T, 3>;
+
+using Vector2Di = Vector<int, 2>;
+using Vector3Di = Vector<int, 3>;
+
 using Vector2Df = Vector<float, 2>;
 using Vector3Df = Vector<float, 3>;

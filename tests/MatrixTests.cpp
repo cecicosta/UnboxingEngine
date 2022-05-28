@@ -56,7 +56,7 @@ TEST(MatrixTest, create_identity_matrix) {//NOLINT (gtest static memory warning 
     bool is_correct = true;
     for (int i = 0; i < matrix.rows; i++) {
         for (int j = 0; j < matrix.cols; j++) {
-            if(i==j) {
+            if (i == j) {
                 is_correct = matrix.at(i, j) == 1 && is_correct;
             } else {
                 is_correct = matrix.at(i, j) == 0 && is_correct;
@@ -64,4 +64,22 @@ TEST(MatrixTest, create_identity_matrix) {//NOLINT (gtest static memory warning 
         }
     }
     ASSERT_TRUE(is_correct);
+}
+
+//NOLINTNEXTLINE (gtest static memory warning for test_info_)
+TEST(MatrixTest, create_rotation_matrix_from_quarernion) {
+    Quaternion q(35, Vector3Df(1, 0, 0));
+    Matrix3f rotation_matrix = Matrix3f::RotationMatrix(q.normalizado());
+
+    //truncate matrix precision to enable the solution to be compared with the expected result
+    rotation_matrix = rotation_matrix*100000;
+    Matrix<int, 3, 3> truncated = static_cast<Matrix<int, 3, 3> >(rotation_matrix);
+    rotation_matrix = static_cast<Matrix<float, 3, 3> >(truncated);
+    rotation_matrix = rotation_matrix*(1.f/100000.f);
+
+    Matrix3f expected_solution{1.00000, 0.00000, 0.00000,
+                             0.00000, 0.81915, -0.57357,
+                             0.00000, 0.57357, 0.81915};
+
+    ASSERT_EQ(rotation_matrix, expected_solution);
 }

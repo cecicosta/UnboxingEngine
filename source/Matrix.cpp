@@ -39,9 +39,23 @@ TEMPLATE_PREDICATE_CLASS Matrix(const Quaternion &q) {
 TEMPLATE_PREDICATE_CLASS Matrix(const std::initializer_list<T> &matrix) {
     memcpy_s(A, Rows * Columns * sizeof(T), data(matrix), matrix.size() * sizeof(T));
 }
+//
+//template<typename T, int Rows, int Columns>
+//template<typename U>
+//Matrix<T, Rows, Columns>::Matrix(const Matrix<U, Rows, Columns> &m) {
+//    static_assert(std::is_convertible<U, T>::value, "Matrix");
+//    for (int j = 0; j < array_size(); j++) {
+//        at(j) = static_cast<T>(m.at(j));
+//    }
+//}
 
 TEMPLATE_PREDICATE_ARG0_ARG1_ARG2_CLASS(, T, &)
 at(std::uint32_t i) {
+    return A[i];
+}
+
+template<typename T, int Rows, int Columns>
+const T &Matrix<T, Rows, Columns>::at(std::uint32_t i) const {
     return A[i];
 }
 
@@ -100,7 +114,7 @@ Identity() {
     return identity;
 }
 
-TEMPLATE_PREDICATE_ARG0_ARG1_ARG2_CLASS(, float, const *)
+TEMPLATE_PREDICATE_ARG0_ARG1_ARG2_CLASS(, T, const *)
 ToArray() {
     return A;
 }
@@ -178,6 +192,11 @@ operator*(const T_Vector &v) const {
 #undef T_Vector
 
 
+TEMPLATE_PREDICATE_ARG0_ARG1_ARG2_CLASS(, bool, )
+operator==(const Matrix<T, Rows, Columns> &m) const {
+    return memcmp(A, m.A, array_size() * sizeof(T)) == 0;
+}
+
 TEMPLATE_PREDICATE_ARG0_ARG1_ARG2_CLASS(, T, )
 trace() {
     T trace = 0;
@@ -185,59 +204,6 @@ trace() {
         trace += at(i, i);
     }
     return trace;
-}
-
-TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
-TranslationMatrix(const Vector3D<T> &translation) {
-    auto m = Matrix<T, Columns>::Identity();
-    for (int i = 0; i < 3; ++i) {
-        m.at(i, Columns - 1) = translation.ToArray()[i];
-    }
-    return m;
-}
-
-TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
-TranslationMatrix(const Vector2D<T> &translation) {
-    auto m = Matrix<T, Columns>::Identity();
-    for (int i = 0; i < 2; ++i) {
-        m.at(i, Columns - 1) = translation.ToArray()[i];
-    }
-    return m;
-}
-
-TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
-ScaleMatrix(const Vector3D<T> &scale) {
-    auto m = Matrix<T, Columns>::Identity();
-    for (int i = 0; i < 3; ++i) {
-        m.at(i, i) = scale.ToArray()[i];
-    }
-    return m;
-}
-
-TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
-ScaleMatrix(const Vector2D<T> &scale) {
-    auto m = Matrix<T, Columns>::Identity();
-    for (int i = 0; i < 2; ++i) {
-        m.at(i, i) = scale.ToArray()[i];
-    }
-    return m;
-}
-
-TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
-RotationMatrix(const Vector3D<T> &axis, float angle) {
-    Quaternion q(angle, axis);
-    return Matrix<T, Rows, Columns>(q);
-}
-
-TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
-RotationMatrix(const Vector2D<T> &axis, float angle) {
-    Quaternion q(angle, axis);
-    return Matrix<T, Rows, Columns>(q);
-}
-
-TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, )
-RotationMatrix(const Quaternion &q) {
-    return Matrix<T, Rows, Columns>(q);
 }
 
 TEMPLATE_PREDICATE_ARG0_RETURN_ARG1(, &)
@@ -272,11 +238,9 @@ MergeMatrix(const Matrix<T, R, C> &m) {
 }
 #undef T_InputMatrix
 
+template class Matrix<int, 3, 3>;
 template class Matrix<float, 3, 3>;
 template class Matrix<float, 4, 4>;
-
-
-
 
 //Matrix Matrix::inverse(){
 //

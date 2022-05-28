@@ -4,13 +4,17 @@
 
 #include <cmath>
 
-constexpr static float s_PI = 3.1415;
+constexpr static float s_PI = 3.14159265359;
 
 Quaternion::Quaternion() = default;
 
-Quaternion::Quaternion(const Vector3Df &v) : Vector3Df(v), w(0) {}
+Quaternion::Quaternion(const Vector3Df &v)
+    : Vector3Df(v)
+    , w(0) {}
 
-Quaternion::Quaternion(const Vector2Df &v) : Vector3Df(v.x, v.y, 0), w(0) {}
+Quaternion::Quaternion(const Vector2Df &v)
+    : Vector3Df(v.x, v.y, 0)
+    , w(0) {}
 
 Quaternion::Quaternion(float angle, Vector3Df axi) {
     float angle_rad = s_PI * angle / 180.0f;
@@ -24,7 +28,14 @@ Quaternion::Quaternion(float angle, Vector3Df axi) {
     z = axi.z;
 }
 
-Quaternion::Quaternion(float angle, const Vector2Df& axi) : Quaternion(angle, Vector3Df(axi.x,axi.y, 0)) {}
+Quaternion::Quaternion(float angle, const Vector2Df &axi)
+    : Quaternion(angle, Vector3Df(axi.x, axi.y, 0)) {}
+
+Quaternion::Quaternion(float angle, const Vector3D<int> &axi)
+    : Quaternion(angle, Vector3Df(static_cast<float>(axi.x), static_cast<float>(axi.y), static_cast<float>(axi.z))) {}
+
+Quaternion::Quaternion(float angle, const Vector2D<int> &axi)
+    : Quaternion(angle, Vector2Df(static_cast<float>(axi.x), static_cast<float>(axi.y))) {}
 
 Quaternion::Quaternion(float w, float x, float y, float z) {
     this->w = w;
@@ -33,7 +44,7 @@ Quaternion::Quaternion(float w, float x, float y, float z) {
     this->z = z;
 }
 
-Quaternion operator+(const Quaternion& q1, const Quaternion& q2) {
+Quaternion operator+(const Quaternion &q1, const Quaternion &q2) {
     Quaternion novo;
     novo.w = q1.w + q2.w;
     novo.x = q1.x + q2.x;
@@ -42,7 +53,7 @@ Quaternion operator+(const Quaternion& q1, const Quaternion& q2) {
     return novo;
 }
 
-Quaternion operator-(const Quaternion& q1, const Quaternion& q2) {
+Quaternion operator-(const Quaternion &q1, const Quaternion &q2) {
     Quaternion novo;
     novo.w = q1.w - q2.w;
     novo.x = q1.x - q2.x;
@@ -51,7 +62,7 @@ Quaternion operator-(const Quaternion& q1, const Quaternion& q2) {
     return novo;
 }
 
-Quaternion operator*(const Quaternion& v, float t) {
+Quaternion operator*(const Quaternion &v, float t) {
     Quaternion novo;
     novo.w = v.w * t;
     novo.x = v.x * t;
@@ -61,7 +72,7 @@ Quaternion operator*(const Quaternion& v, float t) {
     return novo;
 }
 
-Quaternion operator*(float escalar, const Quaternion& v) {
+Quaternion operator*(float escalar, const Quaternion &v) {
     Quaternion novo;
     novo.w = v.w * escalar;
     novo.x = v.x * escalar;
@@ -71,7 +82,7 @@ Quaternion operator*(float escalar, const Quaternion& v) {
     return novo;
 }
 
-Quaternion operator*(const Quaternion& q1, const Quaternion& q2) {
+Quaternion operator*(const Quaternion &q1, const Quaternion &q2) {
     Vector3Df v1(q1.x, q1.y, q1.z);
     Vector3Df v2(q2.x, q2.y, q2.z);
     float w = q1.w * q2.w - v1.DotProduct(v2);
@@ -93,7 +104,7 @@ Quaternion Quaternion::conjugado() {
 }
 
 Quaternion Quaternion::normalizado() {
-    float norma = sqrt(w * w + x * x + y * y + z * z);
+    float norma = sqrtf(w * w + x * x + y * y + z * z);
     return {w / norma, x / norma, y / norma, z / norma};
 }
 
@@ -130,3 +141,4 @@ Vector3Df Quaternion::Euler() {
     ang.x = atan2(2 * x * w - 2 * y * z, 1 - 2 * sqx - 2 * sqz);
     return ang;
 }
+

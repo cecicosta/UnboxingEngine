@@ -11,7 +11,9 @@ public:
     Quaternion(float w, float x, float y, float z);
 
     Quaternion(float angle, Vector3Df axi);
+    Quaternion(float angle, const Vector3D<int>& axi);
     Quaternion(float angle, const Vector2Df& axi);
+    Quaternion(float angle, const Vector2D<int>& axi);
 
     friend Quaternion operator+(const Quaternion &v1, const Quaternion &v2);
 
