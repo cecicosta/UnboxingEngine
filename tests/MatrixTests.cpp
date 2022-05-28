@@ -72,14 +72,14 @@ TEST(MatrixTest, create_rotation_matrix_from_quarernion) {
     Matrix3f rotation_matrix = Matrix3f::RotationMatrix(q.normalizado());
 
     //truncate matrix precision to enable the solution to be compared with the expected result
-    rotation_matrix = rotation_matrix*100000;
-    Matrix<int, 3, 3> truncated = static_cast<Matrix<int, 3, 3> >(rotation_matrix);
-    rotation_matrix = static_cast<Matrix<float, 3, 3> >(truncated);
-    rotation_matrix = rotation_matrix*(1.f/100000.f);
+    rotation_matrix = rotation_matrix * 100000;
+    Matrix<int, 3, 3> truncated = static_cast<Matrix<int, 3, 3>>(rotation_matrix);
+    rotation_matrix = static_cast<Matrix<float, 3, 3>>(truncated);
+    rotation_matrix = rotation_matrix * (1.f / 100000.f);
 
     Matrix3f expected_solution{1.00000, 0.00000, 0.00000,
-                             0.00000, 0.81915, -0.57357,
-                             0.00000, 0.57357, 0.81915};
+                               0.00000, 0.81915, -0.57357,
+                               0.00000, 0.57357, 0.81915};
 
     ASSERT_EQ(rotation_matrix, expected_solution);
 }
