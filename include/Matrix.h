@@ -9,15 +9,40 @@ template<typename T, int Rows, int Columns = Rows>
 class Matrix {
 
 public:
-    Matrix();
+    Matrix() {
+        std::fill(A, A + Rows * Columns, static_cast<T>(0));
+    }
 
-    Matrix(const std::initializer_list<T> &matrix);
+    Matrix(const std::initializer_list<T> &matrix) {
+        memcpy_s(A, Rows * Columns * sizeof(T), data(matrix), matrix.size() * sizeof(T));
+    }
 
-    explicit Matrix(const Quaternion &q);
+    explicit Matrix(const Quaternion &q) {
+        float x2 = q.x * q.x;
+        float y2 = q.y * q.y;
+        float z2 = q.z * q.z;
+        float xy = q.x * q.y;
+        float xz = q.x * q.z;
+        float yz = q.y * q.z;
+        float wx = q.w * q.x;
+        float wy = q.w * q.y;
+        float wz = q.w * q.z;
+
+        *this = Identity();
+        at(0, 0) = 1.0f - 2.0f * (y2 + z2);
+        at(0, 1) = 2.0f * (xy - wz);
+        at(0, 2) = 2.0f * (xz + wy);
+        at(1, 0) = 2.0f * (xy + wz);
+        at(1, 1) = 1.0f - 2.0f * (x2 + z2);
+        at(1, 2) = 2.0f * (yz - wx);
+        at(2, 0) = 2.0f * (xz - wy);
+        at(2, 1) = 2.0f * (yz + wx);
+        at(2, 2) = 1.0f - 2.0f * (x2 + y2);
+    }
 
     template<typename U>
     //NOLINTNEXTLINE(google-explicit-constructor)
-    Matrix(const Matrix<U, Rows, Columns> &m){
+    Matrix(const Matrix<U, Rows, Columns> &m) {
         static_assert(std::is_convertible<U, T>::value, "Matrix");
         for (int j = 0; j < array_size(); j++) {
             at(j) = static_cast<T>(m.at(j));
@@ -29,49 +54,133 @@ public:
     /// Get matrix element reference from array coordinate i
     /// \param i array coordinate of the matrix element to be returned
     /// \return element reference at array coordinates i
-    T &at(std::uint32_t i);
-    [[nodiscard]] const T &at(std::uint32_t i) const;
+    T &at(std::uint32_t i) {
+        return A[i];
+    }
+
+    [[nodiscard]] const T &at(std::uint32_t i) const {
+        return A[i];
+    }
 
     /// Get matrix element reference from coordinate i (row), j (column)
     /// \param i row of the matrix element to be returned
     /// \param j column of the matrix element to be returned
     /// \return element reference at coordinates i, j
-    T &at(std::uint32_t i, std::uint32_t j);
+    T &at(std::uint32_t i, std::uint32_t j) {
+        return A[i * rows + j % cols];
+    }
 
     /// Get matrix const element reference from coordinate i (row), j (column)
     /// \param i row of the matrix element to be returned
     /// \param j column of the matrix element to be returned
     /// \return const element reference at coordinates i, j
-    [[nodiscard]] const T &at(std::uint32_t i, std::uint32_t j) const;
+    [[nodiscard]] const T &at(std::uint32_t i, std::uint32_t j) const {
+        return A[i * rows + j % cols];
+    }
 
     /// Created a new matrix from the current one with all elements of row_a and row_b swapped
     /// \param row_a row to be swapped with row_b
     /// \param row_b row to be swapped with row_a
     /// \return New matrix with swapped rows
-    [[nodiscard]] Matrix swap_rows(int row_a, int row_b) const;
+    [[nodiscard]] Matrix swap_rows(int row_a, int row_b) const {
+        Matrix swapped(*this);
+        if (row_a >= 0 && row_a < rows && row_b >= 0 && row_b < rows) {
+            float swap;
+            for (int k = 0; k < rows; k++) {
+                swap = swapped.at(row_a, k);
+                swapped.at(row_a, k) = swapped.at(row_b, k);
+                swapped.at(row_b, k) = swap;
+            }
+        }
+        return swapped;
+    }
 
     /// Calculates the transpose of the current matrix
     /// \return the calculated transpose of the current matrix
-    [[nodiscard]] Matrix transpose() const;
+    [[nodiscard]] Matrix transpose() const {
+        Matrix<T, Rows, Columns> m;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                m.at(j, i) = at(i, j);
+            }
+        }
+        return m;
+    }
 
     /// Calculates the inverse of the current matrix
     /// \return the inverse of the current matrix
-    Matrix inverse();
+    Matrix inverse() {
+        Matrix sol = Identity();
+        Matrix<T, Rows, Columns> inverse;
+        //    MathUt::GaussJordan(*this, sol, inverse);
+        return inverse;
+    }
 
-    static Matrix<T, Rows, Columns> Identity();
+    static Matrix<T, Rows, Columns> Identity() {
+        Matrix<T, Rows, Columns> identity;
+        for (int i = 0; i < Rows; i++) {
+            for (int j = 0; j < Columns; j++) {
+                identity.at(i, j) = i == j ? 1 : 0;
+            }
+        }
 
-    T const *ToArray();
+        return identity;
+    }
 
-    Matrix<T, Rows, Columns> &operator=(const Matrix<T, Rows, Columns> &m);
+    T const *ToArray() {
+        return A;
+    }
+
+    Matrix<T, Rows, Columns> &operator=(const Matrix<T, Rows, Columns> &m) {
+        if (this != &m) {
+            size_t size = Rows * Columns * sizeof(T);
+            memcpy_s(A, size, m.A, size);
+        }
+        return *this;
+    }
 
     template<int R, int C>
-    Matrix<T, Rows, Columns> &operator=(const Matrix<T, R, C> &m);
+    Matrix<T, Rows, Columns> &operator=(const Matrix<T, R, C> &m) {
+        static_assert((R < Rows) || (C < Columns), "Unable to assign matrix of higher dimensions to a matrix of lower dimensions.");
+        size_t size = Rows * Columns * sizeof(T);
+        memcpy_s(A, size, m.A, R * C * sizeof(T));
+        return *this;
+    }
 
-    Matrix<T, Rows, Columns> operator+(const Matrix<T, Rows, Columns> &m) const;
+    Matrix<T, Rows, Columns> operator+(const Matrix<T, Rows, Columns> &m) const {
+        if (rows == m.rows && cols == m.cols) {
+            Matrix<T, Rows, Columns> sum;
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    sum.at(i, j) = at(i, j) + m.at(i, j);
+                }
+            }
+            return sum;
+        }
+        return {};
+    }
 
-    Matrix<T, Rows, Columns> operator-(const Matrix<T, Rows, Columns> &m) const;
+    Matrix<T, Rows, Columns> operator-(const Matrix<T, Rows, Columns> &m) const {
+        Matrix<T, Rows, Columns> sub;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                sub.at(i, j) = at(i, j) - m.at(i, j);
+            }
+        }
+        return sub;
+    }
 
-    Vector<T, Columns - 1> operator*(const Vector<T, Columns - 1> &v) const;
+    Vector<T, Columns - 1> operator*(const Vector<T, Columns - 1> &v) const {
+        T res[Columns - 1];
+        for (int i = 0; i < Columns; ++i) {
+            T soma = this->at(i, Columns);
+            for (int j = 0; j < Columns; ++j) {
+                soma += this->at(i, j) * v.ToArray()[j];
+            }
+            res[i] = soma;
+        }
+        return Vector<T, Columns - 1>(res);
+    }
 
     /// Creates a new matrix from the multiplication of the current one by a second matrix
     /// \tparam OutC number of columns in the output and right side input matrix
@@ -80,16 +189,54 @@ public:
     /// \return Resulting matrix with number of rows equals left side matrix rows and number of
     /// columns equals right side matrix columns
     template<int ResultColumns>
-    Matrix<T, Rows, ResultColumns> operator*(Matrix<T, Columns, ResultColumns> right) const;
+    Matrix<T, Rows, ResultColumns> operator*(Matrix<T, Columns, ResultColumns> right) const {
+        float sum;
+        Matrix<T, Rows, ResultColumns> product;
+        for (int i = 0; i < right.cols; i++) {
+            for (int j = 0; j < rows; j++) {
+                sum = 0;
+                for (int k = 0; k < cols; k++) {
+                    sum = sum + at(j, k) * right.at(k, i);
+                }
+                product.at(j, i) = sum;
+            }
+        }
+        return product;
+    }
 
-    bool operator==(const Matrix<T, Rows, Columns> &m) const;
+    Matrix operator*(float a) const {
+        Matrix<T, Rows, Columns> result;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                result.at(i, j) = at(i, j) * a;
+            }
+        }
+        return result;
+    }
 
-    Matrix operator*(float a) const;
+    bool operator==(const Matrix<T, Rows, Columns> &m) const {
+        return memcmp(A, m.A, array_size() * sizeof(T)) == 0;
+    }
 
-    [[nodiscard]] T trace();
+
+    [[nodiscard]] T trace() {
+        T trace = 0;
+        for (int i = 0; i < Rows; ++i) {
+            trace += at(i, i);
+        }
+        return trace;
+    }
 
     template<int R, int C>
-    Matrix<T, Rows, Columns> MergeMatrix(const Matrix<T, R, C> &m);
+    Matrix<T, Rows, Columns> MergeMatrix(const Matrix<T, R, C> &m){
+        Matrix<T, Rows, Columns> result = *this;
+        for (int i = 0; i < R; ++i) {
+            for (int j = 0; j < C; ++j) {
+                result.at(i, j) = i < Rows && j < Columns ? m.at(i, j) : this->at(i, j);
+            }
+        }
+        return result;
+    }
 
     ///
     /// \param translation

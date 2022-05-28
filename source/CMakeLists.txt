@@ -9,7 +9,6 @@ set(SOURCES
         ./Composite.cpp
         ./Camera.cpp
         ./mathUtil.cpp
-        Matrix.cpp
         ./meshbuffer.cpp
         Quaternion.cpp
         Vector3Df.cpp

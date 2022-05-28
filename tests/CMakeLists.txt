@@ -24,7 +24,6 @@ add_executable(unboxing_engine_minimal_unit_tests
         main.cpp
         MatrixTests.cpp
         ../include/Matrix.h
-        ../source/Matrix.cpp
         ../include/Quaternion.h
         ../source/Quaternion.cpp
         ../include/Vector3Df.h
