@@ -19,28 +19,20 @@ public:
         memcpy_s(A, Rows * Columns * sizeof(T), data(matrix), matrix.size() * sizeof(T));
     }
 
-    /// Creates a 2D translation Matrix from Vector<T, 2>
+    /// Creates translation Matrix from Vector<T, Size>, given Matrix<T, Rows, Columns>
+    /// must be a square matrix and Size of Vector<T, Size> must be smaller than the Matrix order.
     /// \param v Position relative to the origin to which a translation Matrix will be created
-    explicit Matrix(const Vector<float, 2> &v) {
-        static_assert(Rows == 3 && Columns == 3, "Cannot construct translation matrix from Vector2D. Only type Matrix<T, 3, 3> is compatible.");
-        at(0, 2) = v.x;
-        at(1, 2) = v.y;
-        at(2, 2) = 1;
-        at(1, 1) = 1;
-        at(0, 0) = 1;
-    }
+    template<int Size>
+    explicit Matrix(const Vector<T, Size> &v) {
+        static_assert(Rows == Columns && Size < Rows, "Cannot construct translation matrix from Vector v. The format is inconsistent with a translation matrix.");
+        auto vector_array = v.ToArray();
+        for (int i = 0; i < rows - 1; i++) {
+            at(i, Columns - 1) = vector_array[i];
+        }
 
-    /// Creates a 3D translation Matrix from Vector<T, 3>
-    /// \param v Position relative to the origin to which a translation Matrix will be created
-    explicit Matrix(const Vector<float, 3> &v) {
-        static_assert(Rows == 4 && Columns == 4, "Cannot construct translation matrix from Vector3D. Only type Matrix<T, 4, 4> is compatible.");
-        at(0, 3) = v.x;
-        at(1, 3) = v.y;
-        at(2, 3) = v.z;
-        at(3, 3) = 1;
-        at(2, 2) = 1;
-        at(1, 1) = 1;
-        at(0, 0) = 1;
+        for (int i = 0; i < rows; i++) {
+            at(i, i) = 1;
+        }
     }
 
     /// Creates a rotation Matrix from a quaternion
@@ -153,13 +145,11 @@ public:
     /// Create a identity matrix. The identity is the base for any transformation.
     /// \return An identity matrix. Which by definition have all elements on its main diagonal equal 1.
     static Matrix<T, Rows, Columns> Identity() {
+        static_assert(Rows == Columns, "Identity matrix must be square matrix.");
         Matrix<T, Rows, Columns> identity;
         for (int i = 0; i < Rows; i++) {
-            for (int j = 0; j < Columns; j++) {
-                identity.at(i, j) = i == j ? 1 : 0;
-            }
+            identity.at(i, i) = 1;
         }
-
         return identity;
     }
 
@@ -180,10 +170,10 @@ public:
     }
 
     ///
-    /// \tparam R
-    /// \tparam C
-    /// \param m
-    /// \return
+    /// \tparam R Number or rows in the matrix to be merged with the current.
+    /// \tparam C Number or columns in the matrix to be merged with the current.
+    /// \param m Argument Matrix to be merged with the current
+    /// \return A third matrix result of the merging
     template<int R, int C>
     Matrix<T, Rows, Columns> MergeMatrix(const Matrix<T, R, C> &m) {
         Matrix<T, Rows, Columns> result = *this;
@@ -196,8 +186,8 @@ public:
     }
 
     ///
-    /// \param translation
-    /// \return
+    /// \param translation Vector 2d representation the position relative to the origin to which the translation matrix will be created.
+    /// \return A translation matrix representing the displacement from the origin to the position given by translation
     static inline Matrix TranslationMatrix(const Vector2D<T> &translation) {
         auto m = Matrix<T, Columns>::Identity();
         for (int i = 0; i < 2; ++i) {
@@ -207,8 +197,8 @@ public:
     }
 
     ///
-    /// \param translation
-    /// \return
+    /// \param translation Vector 3d representation the position relative to the origin to which the translation matrix will be created.
+    /// \return A translation matrix representing the displacement from the origin to the position given by translation
     static inline Matrix TranslationMatrix(const Vector3D<T> &translation) {
         auto m = Matrix<T, Columns>::Identity();
         for (int i = 0; i < 3; ++i) {
@@ -217,9 +207,9 @@ public:
         return m;
     }
 
-    ///
-    /// \param scale
-    /// \return
+    /// Creates a matrix which can be used to alter the magnitude/length/scale of a given 2D coordinate or object vertices
+    /// \param scale Vector 2d representing the values multiplying the dimensions respectively in x, y.
+    /// \return A scaling matrix which can multiply 2D coordinates (or object vertices) increasing its magnitude/length/scale according to the values given by scale
     static inline Matrix ScaleMatrix(const Vector2D<T> &scale) {
         auto m = Matrix<T, Columns>::Identity();
         for (int i = 0; i < 2; ++i) {
@@ -228,9 +218,9 @@ public:
         return m;
     }
 
-    ///
-    /// \param scale
-    /// \return
+    /// Creates a matrix which can be used to alter the magnitude/length/scale of a given 3D coordinate or object vertices
+    /// \param scale Vector 3d representing the values multiplying the dimensions respectively in x, y, z.
+    /// \return A scaling matrix which can multiply 3D coordinates (or object vertices) increasing its magnitude/length/scale according to the values given by scale
     static inline Matrix ScaleMatrix(const Vector3D<T> &scale) {
         auto m = Matrix<T, Columns>::Identity();
         for (int i = 0; i < 3; ++i) {
@@ -239,31 +229,33 @@ public:
         return m;
     }
 
-    ///
-    /// \param axis
-    /// \param angle
-    /// \return
-    static inline Matrix RotationMatrix(const Vector3D<T> &axis, float angle) {
-        Quaternion q(angle, axis);
-        return Matrix<T, Rows, Columns>(q);
-    }
-
-    ///
-    /// \param axis
-    /// \param angle
-    /// \return
+    /// Creates a Matrix which can be used to apply a rotation to a given 2D coordinate.
+    /// \param axis Axis on the 2D system origin around in which the rotation will be applying.
+    /// \param angle Rotation angle in degrees
+    /// \return A rotation Matrix which can multiply a 2D coordinate to obtain the new rotated coordinate.
     static inline Matrix RotationMatrix(const Vector2D<T> &axis, float angle) {
         Quaternion q(angle, axis);
         return Matrix<T, Rows, Columns>(q);
     }
 
-    ///
-    /// \param q
-    /// \return
+    /// Creates a Matrix which can be used to apply a rotation to a given 3D coordinate.
+    /// \param axis Axis on the 3D system origin around in which the rotation will be applying.
+    /// \param angle Rotation angle in degrees
+    /// \return A rotation Matrix which can multiply a 3D coordinate to obtain the new rotated coordinate.
+    static inline Matrix RotationMatrix(const Vector3D<T> &axis, float angle) {
+        Quaternion q(angle, axis);
+        return Matrix<T, Rows, Columns>(q);
+    }
+
+    /// Creates a Matrix which can be used to apply a rotation to a given 3D coordinate.
+    /// \param q A Quaternion one or more accumulated rotations. Preferably the Quaternion should be normalized to avoid accumulated errors.
+    /// \return A rotation Matrix which can multiply a 3D coordinate to obtain the new rotated coordinate.
     static inline Matrix RotationMatrix(const Quaternion &q) {
         return Matrix<T, Rows, Columns>(q);
     }
 
+    /// Get the size of the array representing this Matrix.
+    /// \return Size of the array returned by ToArray. The value returned is the multiplication of the number of rows by the number of columns.
     [[nodiscard]] inline constexpr size_t array_size() const {
         return Rows * Columns;
     }
@@ -321,7 +313,8 @@ public:
     }
 
     /// Creates a new matrix from the multiplication of the current one by a second matrix
-    /// \tparam OutC number of columns in the output and right side input matrix
+    /// of generic size following the restriction for multiplication of matrices - left-side.matrix.cols == right-side.matrix.rows
+    /// \tparam OutC number of columns of right side input matrix
     /// \param right operation right side matrix matching the requirement for number
     /// of rows equals the number of columns of the operation left side matrix
     /// \return Resulting matrix with number of rows equals left side matrix rows and number of
@@ -362,61 +355,66 @@ public:
 
 private:
     T A[Rows * Columns]{};
+/*
+        /// Method to complete the Faddeev-Leverrier recursion.
+        /// \param m
+        /// \param c
+        /// \return
+        std::vector<Matrix<T, Rows>> FaddeevLeVerrierRecursion(Matrix<T, Rows> m, T c[]) {
+            const int n = m.rows;
+            std::vector<Matrix<T, Rows>> solution(n);
+            solution[0] = Identity();
 
-//    /// Method to complete the Faddeev-Leverrier recursion.
-//    /// \param m
-//    /// \param c
-//    /// \return
-//    std::vector<Matrix<T, Rows>> FaddeevLeVerrierRecursion(Matrix<T, Rows> m, T c[]) {
-//        const int n = m.rows;
-//        std::vector<Matrix<T, Rows>> solution(n);
-//        solution[0] = Identity();
-//
-//        for (int k = 1; k < n; ++k) {
-//            solution[k] = m * solution[k - 1];
-//            c[n - k] = -solution[k].trace() / k;
-//            for (int i = 0; i < n; ++i) {
-//                solution[k].at(i, i) += c[n - k];
-//            }
-//        }
-//        auto t = m * solution[n - 1];
-//        c[0] = -t.trace() / n;
-//        return solution;
-//    }
+            for (int k = 1; k < n; ++k) {
+                solution[k] = m * solution[k - 1];
+                c[n - k] = -solution[k].trace() / k;
+                for (int i = 0; i < n; ++i) {
+                    solution[k].at(i, i) += c[n - k];
+                }
+            }
+            auto t = m * solution[n - 1];
+            c[0] = -t.trace() / n;
+            return solution;
+        }*/
 };
 
+/// Name alias for square matrix 3x3 of integers.
 using Matrix3i = Matrix<int, 3, 3>;
+/// Name alias for square matrix 3x3 of floats.
 using Matrix3f = Matrix<float, 3, 3>;
 
+/// Name alias for square matrix 4x4 of integers.
 using Matrix4i = Matrix<int, 4, 4>;
+/// Name alias for square matrix 4x4 of floats.
 using Matrix4f = Matrix<float, 4, 4>;
 
-//Matrix Matrix::inverse(){
-//
-//    int n = order;
-//    float c[n];
-//    Matrix d(order);
-//    Matrix *s = fl(*this, c);
-//    for (int i=0; i<n; ++i)
-//      for (int j=0; j<n; ++j)
-//        d.index(i,j) = -s[n-1].at(i,j)/c[0];
-//}
-//
-//// Method to complete the Faddeev-Leverrier recursion.
-//
-//Matrix *Matrix::fl(Matrix a, float c[]) {
-//    int n = a.order;
-//    Matrix s[order];
-//    for (int i=0; i<n; ++i)
-//        s[i] = Matrix(order);
-//
-//    for (int i=0; i<n; ++i) s[0].at(i,i) = 1;
-//    for (int k=1; k<n; ++k) {
-//      s[k] =a*s[k-1];
-//      c[n-k] = -tr(a*s[k-1])/k;
-//      for (int i=0; i<n; ++i)
-//      s[k].at(i,i) += c[n-k];
-//    }
-//      c[0] = -tr(a*s[n-1])/n;
-//    return s;
-//}
+/*
+Matrix Matrix::inverse(){
+
+    int n = order;
+    float c[n];
+    Matrix d(order);
+    Matrix *s = fl(*this, c);
+    for (int i=0; i<n; ++i)
+      for (int j=0; j<n; ++j)
+        d.index(i,j) = -s[n-1].at(i,j)/c[0];
+}
+
+// Method to complete the Faddeev-Leverrier recursion.
+
+Matrix *Matrix::fl(Matrix a, float c[]) {
+    int n = a.order;
+    Matrix s[order];
+    for (int i=0; i<n; ++i)
+        s[i] = Matrix(order);
+
+    for (int i=0; i<n; ++i) s[0].at(i,i) = 1;
+    for (int k=1; k<n; ++k) {
+      s[k] =a*s[k-1];
+      c[n-k] = -tr(a*s[k-1])/k;
+      for (int i=0; i<n; ++i)
+      s[k].at(i,i) += c[n-k];
+    }
+      c[0] = -tr(a*s[n-1])/n;
+    return s;
+}*/
