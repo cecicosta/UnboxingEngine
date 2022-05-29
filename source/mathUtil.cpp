@@ -3,29 +3,24 @@
 #include <vector>
 using namespace std;
 
-
-bool MathUt::fatoracaoLU(Matrix m, Matrix &L, Matrix &U)
-{
+template<typename T, int R, int C>
+bool MathUt::LUDecomposition(Matrix<T, R, C> m, Matrix<T, R, C> &L, Matrix<T, R, C> &U) {
     int n = m.order;
 
     // Criando a matriz "L". Inicialmente, ela é uma matriz identidade:
-    L = Matrix::Identity(n);
+    L = Matrix<T, R, C>::Identity(n);
 
     // Criando a matriz "U". Inicialmente, ela é uma cópia da matriz "A":
     U = m;
 
     // Preencher os valores de "L" e "U":
-    for (int k=0 ; k<n ; k++)
-    {
-        for (int i=(k+1) ; i<n ; i++)
-        {
+    for (int k = 0; k < n; k++) {
+        for (int i = (k + 1); i < n; i++) {
             // Testa o pivô:
-            if (U.at(k, k) == 0 )
-            {
-                if( pivot(U, k) == false )
-                {
-                    cout << ">>> Resolver sistema: o pivo a["<<k<<","<<k<<"] e ZERO!!!"<<endl;
-                    return(false);
+            if (U.at(k, k) == 0) {
+                if (pivot(U, k) == false) {
+                    cout << ">>> Resolver sistema: o pivo a[" << k << "," << k << "] e ZERO!!!" << endl;
+                    return (false);
                 }
             }
             // Calcula o "m(i,k)":
@@ -37,98 +32,79 @@ bool MathUt::fatoracaoLU(Matrix m, Matrix &L, Matrix &U)
 
             // Matriz "A": linha "i" recebe ela mesma menos "m(i,k)" multiplicado pela linha "k":
 
-            for (int j=0 ; j<n ; j++)
+            for (int j = 0; j < n; j++)
                 U.at(i, j) = U.at(i, j) - m * U.at(k, j);
             // Para evitar valores próximos de zero, o elemento "a(i,k)" recebe logo zero:
             U.at(i, k) = 0;
         }
     }
-    return(true);
-
+    return (true);
 }
 
+template<typename T, int R, int C>
+bool MathUt::GaussJordan(const Matrix<T, R, C> &scalar, const Matrix<T, R, C> &constant, Matrix<T, R, C> &solution) {
+    const int order = scalar.rows;
+    for (int t = 0; t < constant.cols; t++) {
 
-bool MathUt::GaussJordan(const Matrix &coef, const Matrix &tInd, Matrix &solucao)
-{
-    const int ordem = coef.order;
-    for( int t=0; t<tInd.cols; t++ )
-    {
+        Matrix<T, R, C> copy = scalar;
+        std::vector<float> v_constants(order);
+        for (int i = 0; i < order; i++) {
+            v_constants[i] = constant.at(i, t);
+        }
 
-        Matrix copy;
-
-        copy = coef;
-        std::vector<float> b(ordem);
-        for(int i=0;i<ordem;i++)
-            b[i]= tInd.at(i, t);
-
-
-
-        for(int k=0; k<ordem; k++ )
-        {
+        for (int k = 0; k < order; k++) {
             float pivo = copy.at(k, k);
 
-            if( pivo == 0 )
-            {
-                if(!pivot(copy, k))
-                {
-                    cout << ">>> Resolver sistema por gauss jordan: o pivo a["<<k<<","<<k<<"] e ZERO!!!"<<endl;
-                    return(false);
+            if (pivo == 0) {
+                if (!pivot(copy, k)) {
+                    //The system cannot be solved by Gaussian elimination
+                    return false;
                 }
             }
 
-            for(int i=0;i<ordem;i++)
-            {
-                if(i!=k)
-                {
+            for (int i = 0; i < order; i++) {
+                if (i != k) {
 
-                    float m = copy.at(i, k)/pivo;
-                    for(int j=0;j<ordem;j++)
-                    {
-                        copy.at(i, j) = copy.at(i, j)- copy.at(k, j)*m;
+                    float m = copy.at(i, k) / pivo;
+                    for (int j = 0; j < order; j++) {
+                        copy.at(i, j) = copy.at(i, j) - copy.at(k, j) * m;
                     }
-                    b[i]= b[i]-b[k]*m;
+                    v_constants[i] = v_constants[i] - v_constants[k] * m;
                 }
             }
         }
 
-        for(int i=ordem-1; i>=0;i--)
-        {
-            solucao.at(i, t) = (b[i])/ copy.at(i, i);
+        for (int i = order - 1; i >= 0; i--) {
+            solution.at(i, t) = (v_constants[i]) / copy.at(i, i);
         }
     }
+    return true;
 }
 
+template<typename T, int R, int C>
+bool MathUt::pivot(Matrix<T, R, C> &m, int pivoting_row) {
 
-bool MathUt::pivot(Matrix &m, int i)
-{
+    float greater = m.at(pivoting_row, pivoting_row);
+    int pivoting_column = pivoting_row;
 
-    float maior= m.at(i, i);
-    int k=i;
-
-    for(int j=0;j<m.order; j++)
-    {
-        if(m.at(j, i) > maior)
-        {
-            maior = m.at(j, i);
-            k=j;
+    for (int j = 0; j < m.rows; j++) {
+        if (m.at(j, pivoting_row) > greater) {
+            greater = m.at(j, pivoting_row);
+            pivoting_column = j;
         }
     }
 
-    if( maior == 0 )
-    {
-        cout<<"Nao eh possivel rsolver o sistema";
+    // Pivoting is not possible
+    if (greater == 0) {
         return false;
     }
 
-    if(k==i)
-    {
-        cout<<"Pivotação não é necessaria\n";
+    // Swapping is not necessary
+    if (pivoting_column == pivoting_row) {
         return true;
     }
 
-    m.swap_rows(i, k);
+    m.swap_rows(pivoting_row, pivoting_column);
 
     return true;
-
 }
-

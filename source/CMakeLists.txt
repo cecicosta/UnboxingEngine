@@ -10,8 +10,8 @@ set(SOURCES
         ./Camera.cpp
         ./mathUtil.cpp
         ./meshbuffer.cpp
-        Quaternion.cpp
-        Vector3Df.cpp
+        ./Quaternion.cpp
+        ./Vector3Df.cpp
         ../include/TransformComponent.h)
 set(HEADERS
         ${HEADERS}

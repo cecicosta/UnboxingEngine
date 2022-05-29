@@ -2,6 +2,7 @@
 
 #include "Quaternion.h"
 #include "Vector3Df.h"
+#include "mathUtil.h"
 
 #include <cstdint>
 
@@ -138,7 +139,7 @@ public:
     Matrix inverse() {
         Matrix sol = Identity();
         Matrix<T, Rows, Columns> inverse;
-        //    MathUt::GaussJordan(*this, sol, inverse);
+        MathUt::GaussJordan(*this, sol, inverse);
         return inverse;
     }
 
@@ -233,7 +234,7 @@ public:
     /// \param axis Axis on the 2D system origin around in which the rotation will be applying.
     /// \param angle Rotation angle in degrees
     /// \return A rotation Matrix which can multiply a 2D coordinate to obtain the new rotated coordinate.
-    static inline Matrix RotationMatrix(const Vector2D<T> &axis, float angle) {
+    static inline Matrix RotationMatrix(float angle, const Vector2D<T> &axis) {
         Quaternion q(angle, axis);
         return Matrix<T, Rows, Columns>(q);
     }
@@ -242,7 +243,7 @@ public:
     /// \param axis Axis on the 3D system origin around in which the rotation will be applying.
     /// \param angle Rotation angle in degrees
     /// \return A rotation Matrix which can multiply a 3D coordinate to obtain the new rotated coordinate.
-    static inline Matrix RotationMatrix(const Vector3D<T> &axis, float angle) {
+    static inline Matrix RotationMatrix(float angle, const Vector3D<T> &axis) {
         Quaternion q(angle, axis);
         return Matrix<T, Rows, Columns>(q);
     }
