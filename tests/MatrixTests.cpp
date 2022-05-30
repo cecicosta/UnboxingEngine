@@ -83,3 +83,15 @@ TEST(MatrixTest, create_rotation_matrix_from_quarernion) {
 
     ASSERT_EQ(rotation_matrix, expected_solution);
 }
+
+TEST(MatrixTest, calculate_matrix_inverse) {
+    Matrix3f matrix({4, -2, 1,
+                     5, 0, 3,
+                     -1, 2, 6});
+
+    auto solutiion = matrix.inverse();
+
+    Matrix3f inverse({-0.11538, 0.26923, -0.11538,
+                      -0.63461, 0.48076, -0.13461,
+                      0.19230, -0.11538, 0.19230});
+}

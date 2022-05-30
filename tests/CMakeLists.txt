@@ -27,7 +27,9 @@ add_executable(unboxing_engine_minimal_unit_tests
         ../include/Quaternion.h
         ../source/Quaternion.cpp
         ../include/Vector3Df.h
-        ../source/Vector3Df.cpp)
+        ../source/Vector3Df.cpp
+        ../include/MathUtils.h
+        ../include/TransformComponent.h)
 target_link_libraries(unboxing_engine_minimal_unit_tests
         gtest
         gmock

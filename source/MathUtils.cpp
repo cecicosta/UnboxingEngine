@@ -1,21 +1,21 @@
-#include "mathUtil.h"
+#include "MathUtils.h"
 #include <iostream>
 #include <vector>
 using namespace std;
 
 template<typename T, int R, int C>
 bool MathUt::LUDecomposition(Matrix<T, R, C> m, Matrix<T, R, C> &L, Matrix<T, R, C> &U) {
-    int n = m.order;
+    int order = m.order;
 
     // Criando a matriz "L". Inicialmente, ela é uma matriz identidade:
-    L = Matrix<T, R, C>::Identity(n);
+    L = Matrix<T, R, C>::Identity(order);
 
     // Criando a matriz "U". Inicialmente, ela é uma cópia da matriz "A":
     U = m;
 
     // Preencher os valores de "L" e "U":
-    for (int k = 0; k < n; k++) {
-        for (int i = (k + 1); i < n; i++) {
+    for (int k = 0; k < order; k++) {
+        for (int i = (k + 1); i < order; i++) {
             // Testa o pivô:
             if (U.at(k, k) == 0) {
                 if (pivot(U, k) == false) {
@@ -32,8 +32,9 @@ bool MathUt::LUDecomposition(Matrix<T, R, C> m, Matrix<T, R, C> &L, Matrix<T, R,
 
             // Matriz "A": linha "i" recebe ela mesma menos "m(i,k)" multiplicado pela linha "k":
 
-            for (int j = 0; j < n; j++)
+            for (int j = 0; j < order; j++) {
                 U.at(i, j) = U.at(i, j) - m * U.at(k, j);
+            }
             // Para evitar valores próximos de zero, o elemento "a(i,k)" recebe logo zero:
             U.at(i, k) = 0;
         }
@@ -47,15 +48,15 @@ bool MathUt::GaussJordan(const Matrix<T, R, C> &scalar, const Matrix<T, R, C> &c
     for (int t = 0; t < constant.cols; t++) {
 
         Matrix<T, R, C> copy = scalar;
-        std::vector<float> v_constants(order);
+        std::vector<T> v_constants(order);
         for (int i = 0; i < order; i++) {
             v_constants[i] = constant.at(i, t);
         }
 
         for (int k = 0; k < order; k++) {
-            float pivo = copy.at(k, k);
+            auto pivot = copy.at(k, k);
 
-            if (pivo == 0) {
+            if (pivot == 0) {
                 if (!pivot(copy, k)) {
                     //The system cannot be solved by Gaussian elimination
                     return false;
@@ -65,7 +66,7 @@ bool MathUt::GaussJordan(const Matrix<T, R, C> &scalar, const Matrix<T, R, C> &c
             for (int i = 0; i < order; i++) {
                 if (i != k) {
 
-                    float m = copy.at(i, k) / pivo;
+                    auto m = copy.at(i, k) / pivot;
                     for (int j = 0; j < order; j++) {
                         copy.at(i, j) = copy.at(i, j) - copy.at(k, j) * m;
                     }

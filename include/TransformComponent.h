@@ -16,7 +16,7 @@ private:
     Vector3Df m_position;
     Vector3Df m_scale;
     Quaternion m_rotation;
-    Matrix m_transformation;
+    Matrix4f m_transformation;
 };
 
 }// namespace unboxing_engine

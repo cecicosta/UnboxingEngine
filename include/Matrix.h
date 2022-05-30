@@ -1,8 +1,8 @@
 #pragma once
 
+#include "MathUtils.h"
 #include "Quaternion.h"
 #include "Vector3Df.h"
-#include "mathUtil.h"
 
 #include <cstdint>
 
@@ -137,9 +137,9 @@ public:
     /// Calculates the inverse of the current matrix
     /// \return the inverse of the current matrix
     Matrix inverse() {
-        Matrix sol = Identity();
+        Matrix constant = Identity();
         Matrix<T, Rows, Columns> inverse;
-        MathUt::GaussJordan(*this, sol, inverse);
+        math_utils::GaussJordan<T, Rows, Columns>(*this, constant, inverse);
         return inverse;
     }
 

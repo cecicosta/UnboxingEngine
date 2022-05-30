@@ -8,7 +8,6 @@ set(SOURCES
         ${SOURCES}
         ./Composite.cpp
         ./Camera.cpp
-        ./mathUtil.cpp
         ./meshbuffer.cpp
         ./Quaternion.cpp
         ./Vector3Df.cpp
@@ -19,9 +18,9 @@ set(HEADERS
         ../include/IEngine.h
         ../include/EventDispatcher.h
         ../include/CoreEvents.h
-        ../include/mathUtil.h
         ../include/MeshPrimitivesUtils.h
         ../include/Matrix.h
+        ../include/MathUtils.h
         ../include/meshbuffer.h
         ../include/Quaternion.h
         ../include/CustomTypes.h
