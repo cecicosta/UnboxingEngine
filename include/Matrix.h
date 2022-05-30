@@ -20,6 +20,12 @@ public:
         memcpy_s(A, Rows * Columns * sizeof(T), data(matrix), matrix.size() * sizeof(T));
     }
 
+    /// Creates a Matrix from a list of values
+    /// \param matrix vector with size equal to the number of rows x columns the Matrix will have, and of corresponding type
+    explicit Matrix(const std::vector<T> &matrix) {
+        memcpy_s(A, Rows * Columns * sizeof(T), data(matrix), matrix.size() * sizeof(T));
+    }
+
     /// Creates translation Matrix from Vector<T, Size>, given Matrix<T, Rows, Columns>
     /// must be a square matrix and Size of Vector<T, Size> must be smaller than the Matrix order.
     /// \param v Position relative to the origin to which a translation Matrix will be created
@@ -134,13 +140,15 @@ public:
         return m;
     }
 
-    /// Calculates the inverse of the current matrix
-    /// \return the inverse of the current matrix
-    Matrix inverse() {
-        Matrix constant = Identity();
-        Matrix<T, Rows, Columns> inverse;
-        math_utils::GaussJordan<T, Rows, Columns>(*this, constant, inverse);
-        return inverse;
+    /// Calculates the Inverse of the current matrix
+    /// \return the Inverse of the current matrix
+    Matrix&&Inverse() const {
+        auto identity = Identity();
+        std::vector<T> scalar(A, A + rows*cols);
+        std::vector<T> constant(identity.ToArray(), identity.ToArray() + rows*cols);
+        std::vector<T> inverse(rows*cols);
+        math_utils::GaussJordan<T>(scalar, constant, inverse);
+        return Matrix(inverse);
     }
 
     /// Create a identity matrix. The identity is the base for any transformation.
@@ -356,7 +364,7 @@ public:
 
 private:
     T A[Rows * Columns]{};
-/*
+    /*
         /// Method to complete the Faddeev-Leverrier recursion.
         /// \param m
         /// \param c

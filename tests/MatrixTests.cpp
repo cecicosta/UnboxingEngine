@@ -89,9 +89,15 @@ TEST(MatrixTest, calculate_matrix_inverse) {
                      5, 0, 3,
                      -1, 2, 6});
 
-    auto solutiion = matrix.inverse();
+    auto solution = matrix.Inverse();
+
+    solution = solution * 100000;
+    Matrix<int, 3, 3> truncated = static_cast<Matrix<int, 3, 3>>(solution);
+    solution = static_cast<Matrix<float, 3, 3>>(truncated);
+    solution = solution * (1.f / 100000.f);
 
     Matrix3f inverse({-0.11538, 0.26923, -0.11538,
                       -0.63461, 0.48076, -0.13461,
                       0.19230, -0.11538, 0.19230});
+    ASSERT_EQ(solution, inverse);
 }

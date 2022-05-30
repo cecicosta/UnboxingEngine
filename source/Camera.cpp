@@ -60,7 +60,7 @@ void Camera::SetCamera(const Vector3Df &pos, float ang, const Vector3Df &axi, co
 
     mWorldToCamTransformation = Matrix4f::TranslationMatrix(pos) * mWorldToCamTransformation;
 
-    mTransformation = mWorldToCamTransformation.inverse();
+    mTransformation = mWorldToCamTransformation.Inverse();
 }
 
 void Camera::FPSCamera(const Vector3Df &movement, const Vector3Df &rotation) {
@@ -88,7 +88,7 @@ void Camera::FPSCamera(const Vector3Df &movement, const Vector3Df &rotation) {
 
     mWorldToCamTransformation = Matrix4f::TranslationMatrix(mPosition) * mWorldToCamTransformation;
 
-    mTransformation = mWorldToCamTransformation.inverse();
+    mTransformation = mWorldToCamTransformation.Inverse();
 }
 
 Camera::Camera(uint32_t width, uint32_t height, float FOV, float zNear, float zFar)
