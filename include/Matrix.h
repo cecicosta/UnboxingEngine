@@ -149,7 +149,7 @@ public:
         std::vector<T> scalar(A, A + rows*cols);
         std::vector<T> constant(identity.ToArray(), identity.ToArray() + rows*cols);
         std::vector<T> inverse(rows*cols);
-        if(math_utils::GaussJordan<T>(scalar, constant, inverse)) {
+        if(MathUtils::GaussJordan<T>(scalar, constant, inverse)) {
             return Matrix(inverse);
         }
         return INVALID;
