@@ -10,6 +10,8 @@ template<typename T, int Rows, int Columns = Rows>
 class Matrix {
 
 public:
+    static Matrix<T, Rows, Columns> INVALID;
+
     Matrix() {
         std::fill(A, A + Rows * Columns, static_cast<T>(0));
     }
@@ -142,13 +144,15 @@ public:
 
     /// Calculates the Inverse of the current matrix
     /// \return the Inverse of the current matrix
-    Matrix&&Inverse() const {
+    Matrix Inverse() const {
         auto identity = Identity();
         std::vector<T> scalar(A, A + rows*cols);
         std::vector<T> constant(identity.ToArray(), identity.ToArray() + rows*cols);
         std::vector<T> inverse(rows*cols);
-        math_utils::GaussJordan<T>(scalar, constant, inverse);
-        return Matrix(inverse);
+        if(math_utils::GaussJordan<T>(scalar, constant, inverse)) {
+            return Matrix(inverse);
+        }
+        return INVALID;
     }
 
     /// Create a identity matrix. The identity is the base for any transformation.
@@ -386,6 +390,9 @@ private:
             return solution;
         }*/
 };
+
+template<typename T, int Rows, int Columns>
+Matrix<T, Rows, Columns> Matrix<T, Rows, Columns>::INVALID;
 
 /// Name alias for square matrix 3x3 of integers.
 using Matrix3i = Matrix<int, 3, 3>;

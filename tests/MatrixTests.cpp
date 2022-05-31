@@ -89,6 +89,7 @@ TEST(MatrixTest, create_rotation_matrix_from_quarernion) {
     ASSERT_TRUE(matrix_match_precision(rotation_matrix, expected_solution, 0.00001));
 }
 
+//NOLINTNEXTLINE (gtest static memory warning for test_info_)
 TEST(MatrixTest, calculate_matrix_inverse) {
     Matrix3f matrix({4, -2, 1,
                      5, 0, 3,
@@ -100,4 +101,14 @@ TEST(MatrixTest, calculate_matrix_inverse) {
                       -0.63461, 0.48076, -0.13461,
                       0.19230, -0.11538, 0.19230});
     ASSERT_TRUE(matrix_match_precision(solution, inverse, 0.00001));
+}
+
+//NOLINTNEXTLINE (gtest static memory warning for test_info_)
+TEST(MatrixTest, matrix_non_inverseble) {
+    Matrix3f matrix({4, -2, 1,
+                     0, 0, 0,
+                     -1, 2, 6});
+
+    auto solution = matrix.Inverse();
+    ASSERT_EQ(solution, Matrix3f::INVALID);
 }

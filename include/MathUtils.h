@@ -100,7 +100,6 @@ bool GaussJordan(const std::vector<T> &scalar, const std::vector<T> &constants, 
 
             if (pivot == 0) {
                 if (!pivoting_row(scalar_cpy, pivot_map, k)) {
-                    //The system cannot be solved by Gaussian elimination
                     return false;
                 }
             }
@@ -145,7 +144,7 @@ bool pivoting_row(std::vector<T> &m, std::map<int, int> &pivot_map, int pivoting
 
     for (int j = 0; j < order; j++) {
         if (at(m, pivot_map[j], pivoting_row) > greater) {
-            greater = at(m, pivot_map[j], pivoting_row);
+            greater = at(m, pivot_map[pivoting_row], j);
             target_row = j;
         }
     }
@@ -161,6 +160,7 @@ bool pivoting_row(std::vector<T> &m, std::map<int, int> &pivot_map, int pivoting
     }
 
     pivot_map[pivoting_row] = target_row;
+    pivot_map[target_row] = pivoting_row;
 
     return true;
 }
