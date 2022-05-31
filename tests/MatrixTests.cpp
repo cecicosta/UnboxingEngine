@@ -3,6 +3,17 @@
 
 #include <Matrix.h>
 
+//Compare two matrices, m1, m2, given the desired precision, p
+template <typename T, int R, int C>
+bool matrix_match_precision(Matrix<T, R, C> m0, Matrix<T, R, C> m1, float p) {
+    for (int i = 0; i < m0.array_size(); ++i) {
+        if(std::abs(m1.at(i) - m0.at(i)) > p) {
+            return false;
+        }
+    }
+    return true;
+}
+
 TEST(MatrixTest, intantiate_zeroed) {//NOLINT (gtest static memory warning for test_info_)
     float sum = 0;
     Matrix3f matrix3f;
@@ -71,17 +82,11 @@ TEST(MatrixTest, create_rotation_matrix_from_quarernion) {
     Quaternion q(35, Vector3Df(1, 0, 0));
     Matrix3f rotation_matrix = Matrix3f::RotationMatrix(q.normalizado());
 
-    //truncate matrix precision to enable the solution to be compared with the expected result
-    rotation_matrix = rotation_matrix * 100000;
-    Matrix<int, 3, 3> truncated = static_cast<Matrix<int, 3, 3>>(rotation_matrix);
-    rotation_matrix = static_cast<Matrix<float, 3, 3>>(truncated);
-    rotation_matrix = rotation_matrix * (1.f / 100000.f);
-
     Matrix3f expected_solution{1.00000, 0.00000, 0.00000,
                                0.00000, 0.81915, -0.57357,
                                0.00000, 0.57357, 0.81915};
 
-    ASSERT_EQ(rotation_matrix, expected_solution);
+    ASSERT_TRUE(matrix_match_precision(rotation_matrix, expected_solution, 0.00001));
 }
 
 TEST(MatrixTest, calculate_matrix_inverse) {
@@ -91,13 +96,8 @@ TEST(MatrixTest, calculate_matrix_inverse) {
 
     auto solution = matrix.Inverse();
 
-    solution = solution * 100000;
-    Matrix<int, 3, 3> truncated = static_cast<Matrix<int, 3, 3>>(solution);
-    solution = static_cast<Matrix<float, 3, 3>>(truncated);
-    solution = solution * (1.f / 100000.f);
-
     Matrix3f inverse({-0.11538, 0.26923, -0.11538,
                       -0.63461, 0.48076, -0.13461,
                       0.19230, -0.11538, 0.19230});
-    ASSERT_EQ(solution, inverse);
+    ASSERT_TRUE(matrix_match_precision(solution, inverse, 0.00001));
 }

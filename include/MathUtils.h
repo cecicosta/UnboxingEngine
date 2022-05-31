@@ -85,10 +85,10 @@ bool GaussJordan(const std::vector<T> &scalar, const std::vector<T> &constants, 
     auto at = [&order](std::vector<T> m, int i, int j) { return m[order * i + j]; };
     auto assign = [&order](std::vector<T> &m, int i, int j, T v) { m[order * i + j] = v; };
 
-    std::vector<T> scalar_cpy = scalar;
-    std::vector<T> constants_cpy = constants;
-
     for (int t = 0; t < order; t++) {
+        std::vector<T> scalar_cpy = scalar;
+        std::vector<T> constants_cpy = constants;
+
         //Create and initialize the map which keeps track of the pivoting operations
         std::map<int, int> pivot_map;
         for (int i = 0; i < order; ++i) {
@@ -113,14 +113,15 @@ bool GaussJordan(const std::vector<T> &scalar, const std::vector<T> &constants, 
                         assign(scalar_cpy, pivot_map[i], j,
                                at(scalar_cpy, pivot_map[i], j) - at(scalar_cpy, pivot_map[k], j) * m);
                     }
-                    constants_cpy[i] = constants_cpy[i] - constants_cpy[k] * m;
+                    assign(constants_cpy, i, t,
+                           at(constants_cpy, i, t) - at(constants_cpy, k, t) * m);
                 }
             }
         }
 
         for (int i = order - 1; i >= 0; i--) {
             assign(solution, i, t,
-                   (constants_cpy[i]) / at(scalar_cpy, pivot_map[i], i));
+                   at(constants_cpy,i, t) / at(scalar_cpy, pivot_map[i], i));
         }
     }
     return true;
