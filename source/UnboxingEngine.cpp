@@ -69,7 +69,7 @@ namespace unboxing_engine {
             listener->OnPreRender();
         }
 
-        camera->mTransformation = Matrix::RotationMatrix(1, Vector3Df(1, 0, 0)) * camera->mTransformation;
+        camera->mTransformation = Matrix4f::RotationMatrix(1, Vector3Df(1, 0, 0)) * camera->mTransformation;
         glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, camera->mTransformation.ToArray());
         for (auto &&data: mRenderQueue) {
             glBindVertexArray(data.vao);

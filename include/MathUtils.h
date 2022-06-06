@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <cstdint>
 #include <functional>
 
@@ -100,6 +101,7 @@ public:
                     if (i != k) {
 
                         auto m = at(scalar_cpy, pivot_map[i], k) / pivot;
+
                         for (int j = 0; j < order; j++) {
                             assign(scalar_cpy, pivot_map[i], j,
                                    at(scalar_cpy, pivot_map[i], j) - at(scalar_cpy, pivot_map[k], j) * m);

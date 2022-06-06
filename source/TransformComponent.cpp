@@ -1,6 +1,6 @@
 #include "TransformComponent.h"
 
 namespace unboxing_engine {
-TransformComponent::TransformComponent() : m_transformation(Matrix::Identity(4)) {
+TransformComponent::TransformComponent() : m_transformation(Matrix4f::Identity()) {
 }
 }// namespace unboxing_engine
