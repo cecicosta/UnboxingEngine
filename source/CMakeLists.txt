@@ -10,7 +10,7 @@ set(SOURCES
         ./Camera.cpp
         ./meshbuffer.cpp
         ./Quaternion.cpp
-        ./Vector3Df.cpp
+        UVector.cpp
         ../include/TransformComponent.h)
 set(HEADERS
         ${HEADERS}
@@ -26,7 +26,7 @@ set(HEADERS
         ../include/CustomTypes.h
         ../include/Composite.h
         ../include/texture.h
-        ../include/Vector3Df.h)
+        ../include/UVector.h)
 message("Source files: ${SOURCES}")
 add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES})
 target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})

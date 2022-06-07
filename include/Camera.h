@@ -9,17 +9,17 @@ class Camera {
 public:
     Camera(uint32_t width, uint32_t height, float FOV, float zNear, float zFar);
     ~Camera() = default;
-    void CastRayFromScreen(int scr_x, int scr_y, Vector3Df &point, Vector3Df &dir) const;
-    [[nodiscard]] Vector3Df ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const;
-    void SetCamera(const Vector3Df &pos, float ang, const Vector3Df &axi, const Vector3Df &point);
+    void CastRayFromScreen(int scr_x, int scr_y, Vector3f &point, Vector3f &dir) const;
+    [[nodiscard]] Vector3f ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const;
+    void SetCamera(const Vector3f &pos, float ang, const Vector3f &axi, const Vector3f &point);
     ///Move the camera
-    void FPSCamera(const Vector3Df & movement, const Vector3Df & rotation);
+    void FPSCamera(const Vector3f & movement, const Vector3f & rotation);
 
     //Opengl camera attributes
-    Quaternion mRotation = Quaternion(0, Vector3Df(1, 0, 0));
-    Vector3Df mDirection = Vector3Df(0, 0, -1);
-    Vector3Df mPosition = Vector3Df(0, 0, 0);
-    Vector3Df mUp = Vector3Df(0, 1, 0);
+    Quaternion mRotation = Quaternion(0, Vector3f(1, 0, 0));
+    Vector3f mDirection = Vector3f(0, 0, -1);
+    Vector3f mPosition = Vector3f(0, 0, 0);
+    Vector3f mUp = Vector3f(0, 1, 0);
     Matrix4f mTransformation;
     Matrix4f mWorldToCamTransformation;
 

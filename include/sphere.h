@@ -1,7 +1,7 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include "Vector3Df.h"
+#include "UVector.h"
 #include "region.h"
 #include "texture.h"
 
@@ -13,19 +13,19 @@ class sphere: public region
     public:
     sphere();
     sphere(float radius);
-    sphere(Vector3Df position, float radius);
+    sphere(Vector3f position, float radius);
 
     void setRadius( float radius );
     float getRadius();
 
-    Vector3Df getNormal(Vector3Df point);
+    Vector3f getNormal(Vector3f point);
 
     //Checa se um ponto está dentro da esfera
-    virtual bool isInside(Vector3Df point );
+    virtual bool isInside(Vector3f point );
 
     //Metodo que checa se um raio dado pelos dois pontos p1 e p2 intercepta a esfera.
-    virtual bool intersectionWithRay(Vector3Df p1, Vector3Df p2, Vector3Df &intersection );
-    bool intersectionWithLine(Vector3Df p1, Vector3Df p2, Vector3Df &intersection );
+    virtual bool intersectionWithRay(Vector3f p1, Vector3f p2, Vector3f &intersection );
+    bool intersectionWithLine(Vector3f p1, Vector3f p2, Vector3f &intersection );
 
     virtual void draw(float pos[], float scale[], Texture* tex){}
 

@@ -2,7 +2,7 @@
 
 #include "MathUtils.h"
 #include "Quaternion.h"
-#include "Vector3Df.h"
+#include "UVector.h"
 
 #include <cstdint>
 
@@ -201,7 +201,7 @@ public:
     ///
     /// \param translation Vector 2d representation the position relative to the origin to which the translation matrix will be created.
     /// \return A translation matrix representing the displacement from the origin to the position given by translation
-    static inline Matrix TranslationMatrix(const Vector2D<T> &translation) {
+    static inline Matrix TranslationMatrix(const Vector2<T> &translation) {
         auto m = Matrix<T, Columns>::Identity();
         for (int i = 0; i < 2; ++i) {
             m.at(i, Columns - 1) = translation.ToArray()[i];
@@ -212,7 +212,7 @@ public:
     ///
     /// \param translation Vector 3d representation the position relative to the origin to which the translation matrix will be created.
     /// \return A translation matrix representing the displacement from the origin to the position given by translation
-    static inline Matrix TranslationMatrix(const Vector3D<T> &translation) {
+    static inline Matrix TranslationMatrix(const Vector3<T> &translation) {
         auto m = Matrix<T, Columns>::Identity();
         for (int i = 0; i < 3; ++i) {
             m.at(i, Columns - 1) = translation.ToArray()[i];
@@ -223,7 +223,7 @@ public:
     /// Creates a matrix which can be used to alter the magnitude/length/scale of a given 2D coordinate or object vertices
     /// \param scale Vector 2d representing the values multiplying the dimensions respectively in x, y.
     /// \return A scaling matrix which can multiply 2D coordinates (or object vertices) increasing its magnitude/length/scale according to the values given by scale
-    static inline Matrix ScaleMatrix(const Vector2D<T> &scale) {
+    static inline Matrix ScaleMatrix(const Vector2<T> &scale) {
         auto m = Matrix<T, Columns>::Identity();
         for (int i = 0; i < 2; ++i) {
             m.at(i, i) = scale.ToArray()[i];
@@ -234,7 +234,7 @@ public:
     /// Creates a matrix which can be used to alter the magnitude/length/scale of a given 3D coordinate or object vertices
     /// \param scale Vector 3d representing the values multiplying the dimensions respectively in x, y, z.
     /// \return A scaling matrix which can multiply 3D coordinates (or object vertices) increasing its magnitude/length/scale according to the values given by scale
-    static inline Matrix ScaleMatrix(const Vector3D<T> &scale) {
+    static inline Matrix ScaleMatrix(const Vector3<T> &scale) {
         auto m = Matrix<T, Columns>::Identity();
         for (int i = 0; i < 3; ++i) {
             m.at(i, i) = scale.ToArray()[i];
@@ -246,7 +246,7 @@ public:
     /// \param axis Axis on the 2D system origin around in which the rotation will be applying.
     /// \param angle Rotation angle in degrees
     /// \return A rotation Matrix which can multiply a 2D coordinate to obtain the new rotated coordinate.
-    static inline Matrix RotationMatrix(float angle, const Vector2D<T> &axis) {
+    static inline Matrix RotationMatrix(float angle, const Vector2<T> &axis) {
         Quaternion q(angle, axis);
         return Matrix<T, Rows, Columns>(q);
     }
@@ -255,7 +255,7 @@ public:
     /// \param axis Axis on the 3D system origin around in which the rotation will be applying.
     /// \param angle Rotation angle in degrees
     /// \return A rotation Matrix which can multiply a 3D coordinate to obtain the new rotated coordinate.
-    static inline Matrix RotationMatrix(float angle, const Vector3D<T> &axis) {
+    static inline Matrix RotationMatrix(float angle, const Vector3<T> &axis) {
         Quaternion q(angle, axis);
         return Matrix<T, Rows, Columns>(q);
     }

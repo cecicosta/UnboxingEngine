@@ -1,6 +1,6 @@
 #ifndef LIGHTSOURCE_H
 #define LIGHTSOURCE_H
-#include "Vector3Df.h"
+#include "UVector.h"
 #include <GL/gl.h>
 
 #define SPOT  0

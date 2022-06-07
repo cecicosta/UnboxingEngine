@@ -30,24 +30,24 @@ static inline void mat4x4_ortho(float *out, float left, float right, float botto
 #undef T
 }
 
-void Camera::CastRayFromScreen(int scr_x, int scr_y, Vector3Df &point, Vector3Df &dir) const {
+void Camera::CastRayFromScreen(int scr_x, int scr_y, Vector3f &point, Vector3f &dir) const {
     //We calculate the ratio of mWindow coordinate by its respective axi size - i.g. scr_x/width
     //This ratio multiplies the near plane size in the same axi - i.g. 2*right.
     //The result is then subtracted by the plane origin to bring it to the world coordinate system - i.g. -left.
     float x = (2.0f * mRight) * (static_cast<float>(scr_x) / mWidth) - mLeft;
     float y = (2.0f * mBottom) * (static_cast<float>(scr_y) / mHeight) + mTop;
 
-    dir = (mWorldToCamTransformation * Vector3Df(x, y, mZNear)) - mPosition;
+    dir = (mWorldToCamTransformation * Vector3f(x, y, mZNear)) - mPosition;
     point = mPosition;
 }
 
-Vector3Df Camera::ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const {
-    Vector3Df point, direction;
+Vector3f Camera::ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const {
+    Vector3f point, direction;
     CastRayFromScreen(scr_x, scr_y, point, direction);
     return point + direction * zFar;
 }
 
-void Camera::SetCamera(const Vector3Df &pos, float ang, const Vector3Df &axi, const Vector3Df &point) {
+void Camera::SetCamera(const Vector3f &pos, float ang, const Vector3f &axi, const Vector3f &point) {
     mDirection = Matrix4f::RotationMatrix(ang, axi) * mDirection;
     mUp = Matrix4f::RotationMatrix(ang, axi) * mUp;
 
@@ -63,25 +63,25 @@ void Camera::SetCamera(const Vector3Df &pos, float ang, const Vector3Df &axi, co
     mTransformation = mWorldToCamTransformation.Inverse();
 }
 
-void Camera::FPSCamera(const Vector3Df &movement, const Vector3Df &rotation) {
+void Camera::FPSCamera(const Vector3f &movement, const Vector3f &rotation) {
     const float x = movement.x;
     const float y = movement.y;
     const float z = movement.z;
 
     //Obter o eixo y atual da câmera
-    Vector3Df x_axis = mDirection.CrossProduct(mUp).Normalized();
+    Vector3f x_axis = mDirection.CrossProduct(mUp).Normalized();
 
     //Atualizar as proriedades da camera
     mDirection = Matrix4f::RotationMatrix(rotation.y, x_axis) * mDirection;
     mUp = Matrix4f::RotationMatrix(rotation.y, x_axis) * mUp;
     //Atualizar as proriedades da camera
-    mDirection = Matrix4f::RotationMatrix(rotation.x, Vector3Df(0, 1, 0)) * mDirection;
-    mUp = Matrix4f::RotationMatrix(rotation.x, Vector3Df(0, 1, 0)) * mUp;
+    mDirection = Matrix4f::RotationMatrix(rotation.x, Vector3f(0, 1, 0)) * mDirection;
+    mUp = Matrix4f::RotationMatrix(rotation.x, Vector3f(0, 1, 0)) * mUp;
 
     //Atualiza a matrix de transformação da câmera
     mWorldToCamTransformation = Matrix4f::TranslationMatrix(mPosition * -1) * mWorldToCamTransformation;
     mWorldToCamTransformation = Matrix4f::RotationMatrix(rotation.y, x_axis) * mWorldToCamTransformation;
-    mWorldToCamTransformation = Matrix4f::RotationMatrix(rotation.x, Vector3Df(0, 1, 0)) * mWorldToCamTransformation;
+    mWorldToCamTransformation = Matrix4f::RotationMatrix(rotation.x, Vector3f(0, 1, 0)) * mWorldToCamTransformation;
 
     //Transçada a em seu sistema local
     mPosition = mPosition - x_axis.Normalized() * x - mUp.Normalized() * y - mDirection.Normalized() * z;

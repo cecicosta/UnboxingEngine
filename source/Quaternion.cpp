@@ -1,6 +1,6 @@
 #include "Quaternion.h"
 
-#include "Vector3Df.h"
+#include "UVector.h"
 
 #include <cmath>
 
@@ -8,15 +8,15 @@ constexpr static float s_PI = 3.14159265359;
 
 Quaternion::Quaternion() = default;
 
-Quaternion::Quaternion(const Vector3Df &v)
-    : Vector3Df(v)
+Quaternion::Quaternion(const Vector3f &v)
+    : Vector3f(v)
     , w(0) {}
 
-Quaternion::Quaternion(const Vector2Df &v)
-    : Vector3Df(v.x, v.y, 0)
+Quaternion::Quaternion(const Vector2f &v)
+    : Vector3f(v.x, v.y, 0)
     , w(0) {}
 
-Quaternion::Quaternion(float angle, Vector3Df axi) {
+Quaternion::Quaternion(float angle, Vector3f axi) {
     float angle_rad = s_PI * angle / 180.0f;
 
     axi = axi.Normalized();
@@ -28,14 +28,14 @@ Quaternion::Quaternion(float angle, Vector3Df axi) {
     z = axi.z;
 }
 
-Quaternion::Quaternion(float angle, const Vector2Df &axi)
-    : Quaternion(angle, Vector3Df(axi.x, axi.y, 0)) {}
+Quaternion::Quaternion(float angle, const Vector2f &axi)
+    : Quaternion(angle, Vector3f(axi.x, axi.y, 0)) {}
 
-Quaternion::Quaternion(float angle, const Vector3D<int> &axi)
-    : Quaternion(angle, Vector3Df(static_cast<float>(axi.x), static_cast<float>(axi.y), static_cast<float>(axi.z))) {}
+Quaternion::Quaternion(float angle, const Vector3<int> &axi)
+    : Quaternion(angle, Vector3f(static_cast<float>(axi.x), static_cast<float>(axi.y), static_cast<float>(axi.z))) {}
 
-Quaternion::Quaternion(float angle, const Vector2D<int> &axi)
-    : Quaternion(angle, Vector2Df(static_cast<float>(axi.x), static_cast<float>(axi.y))) {}
+Quaternion::Quaternion(float angle, const Vector2<int> &axi)
+    : Quaternion(angle, Vector2f(static_cast<float>(axi.x), static_cast<float>(axi.y))) {}
 
 Quaternion::Quaternion(float w, float x, float y, float z) {
     this->w = w;
@@ -83,10 +83,10 @@ Quaternion operator*(float escalar, const Quaternion &v) {
 }
 
 Quaternion operator*(const Quaternion &q1, const Quaternion &q2) {
-    Vector3Df v1(q1.x, q1.y, q1.z);
-    Vector3Df v2(q2.x, q2.y, q2.z);
+    Vector3f v1(q1.x, q1.y, q1.z);
+    Vector3f v2(q2.x, q2.y, q2.z);
     float w = q1.w * q2.w - v1.DotProduct(v2);
-    Vector3Df v = q1.w * v2 + q2.w * v1 + v1.CrossProduct(v2);
+    Vector3f v = q1.w * v2 + q2.w * v1 + v1.CrossProduct(v2);
 
     return {w, v.x, v.y, v.z};
 }
@@ -117,9 +117,9 @@ Quaternion Quaternion::inverso() {
 }
 
 //Retorna o angulo de rotação em um determinado eixo
-Vector3Df Quaternion::Euler() {
+Vector3f Quaternion::Euler() {
     float PI = 3.1415;
-    Vector3Df ang;
+    Vector3f ang;
     float test = x * y + z * w;
     if (test > 0.499) {// singularity at north pole
         ang.y = 2 * atan2(x, w);

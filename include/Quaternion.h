@@ -1,19 +1,19 @@
 #pragma once
-#include "Vector3Df.h"
+#include "UVector.h"
 
-class Quaternion : public Vector3Df {
+class Quaternion : public Vector3f {
 public:
     float w{};
 
     Quaternion();
-    explicit Quaternion(const Vector3Df &v);
-    explicit Quaternion(const Vector2Df &v);
+    explicit Quaternion(const Vector3f &v);
+    explicit Quaternion(const Vector2f &v);
     Quaternion(float w, float x, float y, float z);
 
-    Quaternion(float angle, Vector3Df axi);
-    Quaternion(float angle, const Vector3D<int>& axi);
-    Quaternion(float angle, const Vector2Df& axi);
-    Quaternion(float angle, const Vector2D<int>& axi);
+    Quaternion(float angle, Vector3f axi);
+    Quaternion(float angle, const Vector3<int>& axi);
+    Quaternion(float angle, const Vector2f & axi);
+    Quaternion(float angle, const Vector2<int>& axi);
 
     friend Quaternion operator+(const Quaternion &v1, const Quaternion &v2);
 
@@ -36,5 +36,5 @@ public:
     Quaternion inverso();
 
     //Retorna os angulos de rotação de euler
-    Vector3Df Euler();
+    Vector3f Euler();
 };

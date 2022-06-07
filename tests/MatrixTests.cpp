@@ -44,7 +44,7 @@ TEST(MatrixTest, intantiate_array) {//NOLINT (gtest static memory warning for te
 }
 
 TEST(MatrixTest, instantiate_matrix3f_with_vector2d) {//NOLINT (gtest static memory warning for test_info_)
-    Vector2Df vector2d(2, 4);
+    Vector2f vector2d(2, 4);
     Matrix3f matrix(vector2d);
 
     ASSERT_EQ(matrix.at(0, 2), vector2d.x);
@@ -53,7 +53,7 @@ TEST(MatrixTest, instantiate_matrix3f_with_vector2d) {//NOLINT (gtest static mem
 }
 
 TEST(MatrixTest, instantiate_matrix4f_with_vector3d) {//NOLINT (gtest static memory warning for test_info_)
-    Vector3Df vector3d(2, 4, 5);
+    Vector3f vector3d(2, 4, 5);
     Matrix4f matrix(vector3d);
 
     ASSERT_EQ(matrix.at(0, 3), vector3d.x);
@@ -79,7 +79,7 @@ TEST(MatrixTest, create_identity_matrix) {//NOLINT (gtest static memory warning 
 
 //NOLINTNEXTLINE (gtest static memory warning for test_info_)
 TEST(MatrixTest, create_rotation_matrix_from_quarernion) {
-    Quaternion q(35, Vector3Df(1, 0, 0));
+    Quaternion q(35, Vector3f(1, 0, 0));
     Matrix3f rotation_matrix = Matrix3f::RotationMatrix(q.normalizado());
 
     Matrix3f expected_solution{1.00000, 0.00000, 0.00000,
