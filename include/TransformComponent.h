@@ -12,25 +12,24 @@ public:
     TransformComponent();
     ~TransformComponent() override = default;
 
-    [[nodiscard]] TransformComponent* GetParent() const;
     [[nodiscard]] const Vector3f& GetPosition() const;
     [[nodiscard]] const Vector3f& GetScale() const;
     [[nodiscard]] const Quaternion& GetRotation() const;
-    [[nodiscard]] const Matrix4f&GetTransformation() const;
+    [[nodiscard]] Matrix4f GetTransformation() const;
 
-    void SetParent(TransformComponent*);
     void SetPosition(const Vector3f&);
     void SetScale(const Vector3f&);
     void SetRotation(const Quaternion&);
-    void SetTransformation(const Matrix4f&);
+
+    void Translate(const Vector3f& position);
+    void Scale(float scale);
+    void Rotate(const Quaternion& rotation);
+    void Rotate(float degrees, const Vector3f& axi);
 
 private:
-    TransformComponent* m_parent;
-    std::vector<TransformComponent*> m_children;
     Vector3f m_position;
     Vector3f m_scale;
     Quaternion m_rotation;
-    Matrix4f m_transformation;
 };
 
 }// namespace unboxing_engine
