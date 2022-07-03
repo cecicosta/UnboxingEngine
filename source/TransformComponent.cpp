@@ -23,6 +23,9 @@ void TransformComponent::SetParent(TransformComponent *parent) {
     m_parent = parent;
 }
 void TransformComponent::SetPosition(const Vector3f &position) {
+    m_transformation = Matrix4f::TranslationMatrix(this->m_position * -1) * m_transformation;
+    m_transformation = Matrix4f::TranslationMatrix(position) * m_transformation;
+    this->m_position = position;
     m_position = position;
 }
 void TransformComponent::SetScale(const Vector3f &scale) {

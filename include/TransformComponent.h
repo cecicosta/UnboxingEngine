@@ -26,6 +26,7 @@ public:
 
 private:
     TransformComponent* m_parent;
+    std::vector<TransformComponent*> m_children;
     Vector3f m_position;
     Vector3f m_scale;
     Quaternion m_rotation;

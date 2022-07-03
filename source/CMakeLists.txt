@@ -6,12 +6,13 @@ include_directories(
 )
 set(SOURCES
         ${SOURCES}
-        ./Composite.cpp
-        ./Camera.cpp
-        ./meshbuffer.cpp
-        ./Quaternion.cpp
+        Composite.cpp
+        Camera.cpp
+        meshbuffer.cpp
+        Quaternion.cpp
         UVector.cpp
-        ../include/TransformComponent.h)
+        TransformComponent.cpp
+        SceneElement.cpp)
 set(HEADERS
         ${HEADERS}
         ../include/Camera.h
@@ -26,7 +27,9 @@ set(HEADERS
         ../include/CustomTypes.h
         ../include/Composite.h
         ../include/texture.h
-        ../include/UVector.h)
+        ../include/UVector.h
+        ../include/TransformComponent.h
+        ../include/SceneElement.h)
 message("Source files: ${SOURCES}")
 add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES})
 target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})

@@ -21,6 +21,7 @@ namespace unboxing_engine {
 
     class Composite : public IComposite {
     public:
+        Composite() = default;
         ~Composite() override = default;
 
         template<class T>
