@@ -1,4 +1,4 @@
-#include "IComposite.h"
+#include "SceneComposite.h"
 
 #include <gtest/gtest.h>
 
@@ -29,7 +29,7 @@ class ComponentSystemFixture : public testing::Test {
 public:
     ~ComponentSystemFixture() override = default;
 protected:
-    unboxing_engine::Composite composite;
+    unboxing_engine::SceneComposite composite;
 };
 
 TEST_F(ComponentSystemFixture, add_and_recover_component) {
