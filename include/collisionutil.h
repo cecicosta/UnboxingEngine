@@ -1,7 +1,7 @@
-#include "SceneElement.h"
+#include "MeshBuffer.h"
+#include "SceneComposite.h"
 #include "UVector.h"
 #include "lista.h"
-#include "meshbuffer.h"
 #include "octree.h"
 
 #define SIMPLE_NOSIMPLE   0

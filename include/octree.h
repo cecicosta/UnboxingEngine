@@ -1,9 +1,9 @@
 #ifndef OCTREE_H
 #define OCTREE_H
-#include "meshbuffer.h"
+#include "MeshBuffer.h"
 #define MAX_FACES 10000
+#include "SceneComposite.h"
 #include "lista.h"
-#include "SceneElement.h"
 
 class branch
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "Composite.h"
+#include "IComposite.h"
 
 #include "Matrix.h"
 #include "Quaternion.h"

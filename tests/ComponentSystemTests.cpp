@@ -1,4 +1,4 @@
-#include "Composite.h"
+#include "IComposite.h"
 
 #include <gtest/gtest.h>
 

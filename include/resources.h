@@ -5,12 +5,12 @@
 #define   MODEL 1
 #define    FONT 2
 
-#include <string>
-#include <stdio.h>
-#include "lista.h"
-#include "glm.h"
+#include "MeshBuffer.h"
 #include "UnboxingEngine.h"
-#include "meshbuffer.h"
+#include "glm.h"
+#include "lista.h"
+#include <stdio.h>
+#include <string>
 
 /*Carrega previamente os recursos do editor, objetos e texturas.*/
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "meshbuffer.h"
+#include "MeshBuffer.h"
 
 namespace primitive_utils {
 

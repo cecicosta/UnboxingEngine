@@ -1,4 +1,4 @@
-#include "SceneElement.h"
+#include "SceneComposite.h"
 #include "UVector.h"
 #include "sphere.h"
 /*

@@ -8,9 +8,9 @@
 #define PRETO 2
 #define INF 10000000
 
+#include "SceneComposite.h"
 #include "mazeGenerator.h"
 #include "mazeUtil.h"
-#include "SceneElement.h"
 
 typedef struct aresta
 {

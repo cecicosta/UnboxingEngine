@@ -1,9 +1,9 @@
 #include "UnboxingEngine.h"
 
 #include <Camera.h>
-#include <Composite.h>
 #include <CoreEvents.h>
-#include <meshbuffer.h>
+#include <IComposite.h>
+#include <MeshBuffer.h>
 
 #include <GL/glew.h>
 #include <SDL.h>

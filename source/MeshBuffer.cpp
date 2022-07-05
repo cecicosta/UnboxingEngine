@@ -1,6 +1,6 @@
-#include "meshbuffer.h"
-#include <memory>
+#include "MeshBuffer.h"
 #include <cassert>
+#include <memory>
 //
 //CMeshBuffer *CMeshBuffer::createMeshBufferOBJ(GLMmodel *model) {
 //    if (model == nullptr) {
