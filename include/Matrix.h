@@ -5,6 +5,7 @@
 #include "UVector.h"
 
 #include <cstdint>
+#include <cstring>
 
 template<typename T, int Rows, int Columns = Rows>
 class Matrix {
@@ -25,7 +26,7 @@ public:
     /// Creates a Matrix from a list of values
     /// \param matrix vector with size equal to the number of rows x columns the Matrix will have, and of corresponding type
     explicit Matrix(const std::vector<T> &matrix) {
-        memcpy_s(A, Rows * Columns * sizeof(T), data(matrix), matrix.size() * sizeof(T));
+        memcpy(A, data(matrix), Rows * Columns * sizeof(T));
     }
 
     /// Creates translation Matrix from Vector<T, Size>, given Matrix<T, Rows, Columns>
@@ -277,7 +278,7 @@ public:
     Matrix<T, Rows, Columns> &operator=(const Matrix<T, Rows, Columns> &m) {
         if (this != &m) {
             size_t size = Rows * Columns * sizeof(T);
-            memcpy_s(A, size, m.A, size);
+            memcpy(A, m.A, size);
         }
         return *this;
     }
