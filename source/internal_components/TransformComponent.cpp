@@ -1,4 +1,4 @@
-#include "TransformComponent.h"
+#include "internal_components/TransformComponent.h"
 
 namespace unboxing_engine {
 TransformComponent::TransformComponent() {

@@ -10,11 +10,11 @@ set(SOURCES
         MeshBuffer.cpp
         Quaternion.cpp
         UVector.cpp
-        TransformComponent.cpp
+        internal_components/TransformComponent.cpp
         SceneNode.cpp
         SceneComposite.cpp
-        collisionutil.cpp
-        )
+        #collisionutil.cpp
+        ../include/internal_components/IColliderComponent.h)
 set(HEADERS
         ${HEADERS}
         ../include/Camera.h
@@ -29,11 +29,12 @@ set(HEADERS
         ../include/CustomTypes.h
         ../include/IComposite.h
         ../include/UVector.h
-        ../include/TransformComponent.h
+        ../include/internal_components/TransformComponent.h
         ../include/SceneComposite.h
         ../include/SceneNode.h
         ../include/texture.h
-        ../include/collisionutil.h)
+        #../include/collisionutil.h
+        )
 
 message("Source files: ${SOURCES}")
 add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES})

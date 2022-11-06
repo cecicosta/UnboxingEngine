@@ -2,6 +2,7 @@
 
 #include "IComposite.h"
 #include "SceneNode.h"
+#include "internal_components/IComponent.h"
 
 #include <memory>
 #include <string>

@@ -50,7 +50,7 @@ include_directories(
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp)
-target_link_libraries(unboxing_engine unboxing_engine_src_lib SDL2main glew SDL2 z SDL2_image SDL2_ttf)
+target_link_libraries(unboxing_engine unboxing_engine_src_lib SDL2main glew SDL2 SDL2_image SDL2_ttf)
 
 if (WIN32)
     #Copy OpenGL wrapper dll after building

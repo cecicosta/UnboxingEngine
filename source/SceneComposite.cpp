@@ -1,4 +1,5 @@
 #include "SceneComposite.h"
+#include "internal_components/IComponent.h"
 
 namespace unboxing_engine {
 

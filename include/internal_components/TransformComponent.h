@@ -1,6 +1,7 @@
 #pragma once
 #include "IComposite.h"
 
+#include "IComponent.h"
 #include "Matrix.h"
 #include "Quaternion.h"
 #include "UVector.h"

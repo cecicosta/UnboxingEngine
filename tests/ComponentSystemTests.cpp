@@ -1,4 +1,5 @@
 #include "SceneComposite.h"
+#include "internal_components/IComponent.h"
 
 #include <gtest/gtest.h>
 
@@ -6,7 +7,7 @@
 
 ///about 'initialization of test_info_' warning: https://github.com/google/googletest/issues/2442#issuecomment-852972215
 
-class MockComponent : public unboxing_engine::IComponent {
+class MockComponent : public IComponent {
 public:
     explicit MockComponent(uint8_t id) : m_Id(id) {}
     ~MockComponent() override = default;
@@ -15,7 +16,7 @@ private:
     uint8_t m_Id = 0;
 };
 
-class MockComponentOther : public unboxing_engine::IComponent {
+class MockComponentOther : public IComponent {
 public:
     explicit MockComponentOther(uint8_t id) : m_Id(id) {}
     ~MockComponentOther() override = default;

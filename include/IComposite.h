@@ -1,16 +1,12 @@
 #pragma once
 
+#include "internal_components/IComponent.h"
 #include <cstddef>
 #include <cstdint>
 
 namespace unboxing_engine {
 
-    class IComponent {
-    public:
-        virtual ~IComponent() = default;
-    };
-
-    class IComposite {
+class IComposite {
     public:
         virtual ~IComposite() = default;
         virtual void AddComponent(IComponent &component) = 0;
