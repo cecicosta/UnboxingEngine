@@ -27,7 +27,7 @@ namespace unboxing_engine {
             "}\n";
 
     static const char *fragment_shader_source =
-            "#version 130\n"
+            "#version 150\n"
             "in vec4 v_color;\n"
             "out vec4 o_color;\n"
             "void main() {\n"
@@ -614,7 +614,6 @@ namespace unboxing_engine {
         std::cout << "Get error count: " << error_count++ << std::endl;
         if (gl_error != 0) {
             std::cout << "Code: " << gl_error << std::endl;
-            std::cout << "Message: " << gluErrorString(gl_error) << std::endl;
         }
     }
     void CCore::RenderCanvas() {
