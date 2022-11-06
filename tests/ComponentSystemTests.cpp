@@ -60,6 +60,8 @@ TEST_F(ComponentSystemFixture, can_hold_and_recover_multiple_objects_of_differen
     ASSERT_EQ(componentOther->GetIdAsString(), "5");
 }
 
+
+
 TEST_F(ComponentSystemFixture, can_remove_component_of_specified_type) {
     MockComponent mockComponent(1);
     MockComponentOther mockComponentOther(5);

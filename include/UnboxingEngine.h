@@ -8,11 +8,10 @@
 
 #include "Camera.h"
 #include "IEngine.h"
+#include "texture.h"
 #include "Matrix.h"
 #include "Quaternion.h"
 #include "UVector.h"
-#include "sphere.h"
-#include "texture.h"
 
 #include <cmath>
 #include <cstdint>

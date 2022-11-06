@@ -15,8 +15,8 @@
  */
 
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <gl/GL.h>
+#include <gl/GLU.h>
 #include <string>
 
 using namespace std;

@@ -13,6 +13,7 @@ set(SOURCES
         TransformComponent.cpp
         SceneNode.cpp
         SceneComposite.cpp
+        collisionutil.cpp
         )
 set(HEADERS
         ${HEADERS}
@@ -27,11 +28,12 @@ set(HEADERS
         ../include/Quaternion.h
         ../include/CustomTypes.h
         ../include/IComposite.h
-        ../include/texture.h
         ../include/UVector.h
         ../include/TransformComponent.h
         ../include/SceneComposite.h
-        ../include/SceneNode.h)
+        ../include/SceneNode.h
+        ../include/texture.h
+        ../include/collisionutil.h)
 
 message("Source files: ${SOURCES}")
 add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES})

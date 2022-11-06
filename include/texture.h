@@ -1,5 +1,4 @@
-#ifndef H_TEXTURE
-#define H_TEXTURE
+#pragma once
 
 #include <cstdint>
 
@@ -13,7 +12,3 @@ class Texture
     std::uint32_t texID;
     int type;
 };
-
-
-#endif // H_TEXTURE
-

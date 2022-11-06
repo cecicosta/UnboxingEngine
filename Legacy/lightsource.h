@@ -1,7 +1,7 @@
 #ifndef LIGHTSOURCE_H
 #define LIGHTSOURCE_H
 #include "UVector.h"
-#include <GL/gl.h>
+#include <gl/GL.h>
 
 #define SPOT  0
 #define POINT 1

@@ -1,9 +1,9 @@
-#include "boundingbox.h"
+#include "Legacy/boundingbox.h"
+#include "Legacy/collisionutil.h"
+#include "Legacy/draw.h"
+#include "Legacy/lista.h"
 #include <GL/gl.h>
 #include <stdio.h>
-#include "draw.h"
-#include "lista.h"
-#include "collisionutil.h"
 
 BoundingBox::BoundingBox()
 {

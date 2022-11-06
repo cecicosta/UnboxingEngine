@@ -1,10 +1,10 @@
 #include "mazeGenerator.h"
 
+#include "MyList.h"
+#include <iostream>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <iostream>
-#include "MyList.h"
 
 using namespace std;
 
@@ -28,11 +28,11 @@ void Labirinto::ronald_lab()
     int floor=3; //Variavel que marca o caminho percorrido ja percorrido pelo auxiliar atraves do labirinto.
     int escolha[4];
     int cont=0;
-    //Criação da pilhas usadas para guardar os caminhos percorridos pelo labirinto.
+    //Criaï¿½ï¿½o da pilhas usadas para guardar os caminhos percorridos pelo labirinto.
     List<Matriz::node*> *caminho_1 = new List<Matriz::node*>();
     List<Matriz::node*> *caminho_2 = new List<Matriz::node*>();
 
-    Matriz::node *aux[6]; //Vetor de nós auxiliares.
+    Matriz::node *aux[6]; //Vetor de nï¿½s auxiliares.
     aux[5]=aux[3]=matriz.prim->baixo->direita;
     aux[6]=aux[4]=matriz.ult->cima->esquerda;
     aux[0]=matriz.prim;
@@ -56,17 +56,17 @@ void Labirinto::ronald_lab()
 
     j=2;
 
-    //Laço que define o percurso feito desde a entrada e desde a saida atravez do labirinto.
+    //Laï¿½o que define o percurso feito desde a entrada e desde a saida atravez do labirinto.
     while(aux[3]->cima->valor!=j&&aux[3]->cima->valor!=j&&aux[3]->cima->valor!=j&&aux[3]->cima->valor!=j)
     {
 
-        //Laço para subir a pilha caso o caminho esteja trancado.
+        //Laï¿½o para subir a pilha caso o caminho esteja trancado.
         do
         {
 
         aux[3]->valor=floor;
 
-        //Condições de escolha da proxima celula a ser percorrida.
+        //Condiï¿½ï¿½es de escolha da proxima celula a ser percorrida.
         if(aux[3]->cima->cima!=NULL&&aux[3]->cima->cima->valor!=floor)
             escolha[cont++]=1;
         if(aux[3]->direita->direita!=NULL&&aux[3]->direita->direita->valor!=floor)
@@ -126,7 +126,7 @@ void Labirinto::ronald_lab()
         j=i;
     }
 
-    //Percorre toda a matriz abrindo a celulas trancadas aplicando o percurso em cada uma até que todo o labirinto esteja conectado.
+    //Percorre toda a matriz abrindo a celulas trancadas aplicando o percurso em cada uma atï¿½ que todo o labirinto esteja conectado.
     floor=4;
     aux[1]=aux[0]=matriz.prim->baixo->direita;
     for(i=1;i<matriz.x;i=i+2)
