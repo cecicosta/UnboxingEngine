@@ -13,8 +13,9 @@ set(SOURCES
         internal_components/TransformComponent.cpp
         SceneNode.cpp
         SceneComposite.cpp
+        BoundingBox.cpp
         #collisionutil.cpp
-        ../include/internal_components/IColliderComponent.h)
+        ../include/internal_components/IColliderComponent.h ../include/internal_components/BoundingBoxColliderComponent.h)
 set(HEADERS
         ${HEADERS}
         ../include/Camera.h
@@ -33,6 +34,7 @@ set(HEADERS
         ../include/SceneComposite.h
         ../include/SceneNode.h
         ../include/texture.h
+        ../include/BoundingBox.h
         #../include/collisionutil.h
         )
 

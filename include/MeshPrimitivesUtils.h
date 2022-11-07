@@ -16,19 +16,19 @@ namespace primitive_utils {
         InsertCoordinates(++vertices, ++offset, arg...);
     }
 
-
     //Create a cube mesh
     [[nodiscard]] CMeshBuffer *Cube() {
         auto mesh = new CMeshBuffer();
+        mesh->boundingBox = BoundingBox(Vector3f(-0.5f, -0.5f, -0.5f), Vector3f(0.5f, 0.5f, 0.5f));
         mesh->nvertices = 8;
         mesh->nnormals = 12;
         mesh->ntexcoords = 24;
         mesh->nfaces = 12;
-        mesh->vertices = new float[3 * mesh->nvertices];
-        mesh->triangles = new unsigned int[3 * mesh->nfaces];
-        mesh->normals = new float[3 * mesh->nnormals];
-        mesh->texcoords = new float[2 * mesh->ntexcoords];
-        mesh->faces = new face[mesh->nfaces];
+        mesh->vertices = mesh->boundingBox.GetVertices();
+        mesh->triangles = mesh->boundingBox.GetTriangles();
+        mesh->normals.resize(3 * mesh->nnormals);
+        mesh->texcoords.resize(2 * mesh->ntexcoords);
+        mesh->faces.resize(mesh->nfaces);
 
         uint vertexOffset = 0;
         uint textureOffset = 0;
@@ -43,18 +43,18 @@ namespace primitive_utils {
         InsertCoordinates(mesh->faces[fNormalOffset].normal, fNormalOffset, 0, 0, 1);
         // Bottom Left Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.0f, 0.0f);
-        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset,  -0.5f, -0.5f, 0.5f);
+        //InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset,  -0.5f, -0.5f, 0.5f);
         // Bottom Right Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.333f, 0.0f);
-        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset,  0.5f, -0.5f, 0.5f);
+        //InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset,  0.5f, -0.5f, 0.5f);
         // Top Right Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.333f, 0.5f);
-        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, 0.5f, 0.5f);
+        //InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, 0.5f, 0.5f);
         // Top Left Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.0f, 0.5f);
-        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, -0.5f, 0.5f, 0.5f);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 0, 1, 2);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 2, 3, 0);
+        //InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, -0.5f, 0.5f, 0.5f);
+        //InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 0, 1, 2);
+        //InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 2, 3, 0);
 
         // Back Face (1,2)
         InsertCoordinates(&mesh->normals[normalOffset], normalOffset, 0, 0, -1);
@@ -62,18 +62,18 @@ namespace primitive_utils {
         InsertCoordinates(mesh->faces[1].normal, fNormalOffset, 0, 0, -1);
         // Bottom Right Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.666f, 0.0f);
-        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, -0.5f, -0.5f, -0.5f);
+        //InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, -0.5f, -0.5f, -0.5f);
         // Top Right Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.666f, 0.5f);
-        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, -0.5f, 0.5f, -0.5f);
+        //InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, -0.5f, 0.5f, -0.5f);
         // Top Left Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.333f, 0.5f);
-        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, 0.5f, -0.5f);
+        //InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, 0.5f, -0.5f);
         // Bottom Left Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.333f, 0.0f);
-        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, -0.5f, -0.5f);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 4, 5, 6);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 6, 7, 4);
+        //InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, -0.5f, -0.5f);
+        //InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 4, 5, 6);
+        //InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 6, 7, 4);
 
         // Top Face (1,3)
         InsertCoordinates(&mesh->normals[normalOffset], normalOffset, 0, 1, 0);
@@ -91,8 +91,8 @@ namespace primitive_utils {
 //        // Top Right Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 1.0f, 0.5f);
 //        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, 0.5f, -0.5f);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 3, 2, 6);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 6, 5, 3);
+        //InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 3, 2, 6);
+        //InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 6, 5, 3);
 
         
         // Bottom Face (2,1)
@@ -112,8 +112,8 @@ namespace primitive_utils {
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.333f, 0.5f);
 //        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, -0.5f, -0.5f, 0.5f);
         
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 0, 4, 7);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 7, 1, 0);
+//        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 0, 4, 7);
+//        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 7, 1, 0);
         
         
         // Right face (2,2)
@@ -133,8 +133,8 @@ namespace primitive_utils {
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.333f, 0.5f);
 //        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, 0.5f, -0.5f, 0.5f);
         
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 7, 6, 2);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 2, 1, 7);
+//        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 7, 6, 2);
+//        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 2, 1, 7);
 
         // Left Face (2,3)
         InsertCoordinates(&mesh->normals[normalOffset], normalOffset, -1, 0, 0);
@@ -153,8 +153,8 @@ namespace primitive_utils {
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0.666f, 1.0f);
 //        InsertCoordinates(&mesh->vertices[vertexOffset], vertexOffset, -0.5f, 0.5f, -0.5f);
         
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 3, 5, 4);
-        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 4, 0, 3);
+//        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 3, 5, 4);
+//        InsertCoordinates(&mesh->triangles[triangleOffset], triangleOffset, 4, 0, 3);
         
         return mesh;
     }

@@ -593,13 +593,13 @@ namespace unboxing_engine {
             glBindVertexArray(data.vao);
 
             glBindBuffer(GL_ARRAY_BUFFER, data.vbo);
-            glBufferData(GL_ARRAY_BUFFER, 3 * data.mMeshBuffer->nvertices * sizeof(float), data.mMeshBuffer->vertices, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, 3 * data.mMeshBuffer->nvertices * sizeof(float), data.mMeshBuffer->vertices.data(), GL_DYNAMIC_DRAW);
 
             glEnableVertexAttribArray(attrib_position);
             glVertexAttribPointer(attrib_position, 3, GL_FLOAT, GL_FALSE, 0, (void *) (0));
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * data.mMeshBuffer->nfaces * sizeof(unsigned int), data.mMeshBuffer->triangles, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * data.mMeshBuffer->nfaces * sizeof(unsigned int), data.mMeshBuffer->triangles.data(), GL_DYNAMIC_DRAW);
 
             glBindVertexArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
