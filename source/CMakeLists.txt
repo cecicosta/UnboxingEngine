@@ -14,8 +14,8 @@ set(SOURCES
         SceneNode.cpp
         SceneComposite.cpp
         BoundingBox.cpp
-        #collisionutil.cpp
-        ../include/internal_components/IColliderComponent.h ../include/internal_components/BoundingBoxColliderComponent.h)
+        collisionutil.cpp
+        ../include/internal_components/IColliderComponent.h ../include/internal_components/BoundingBoxColliderComponent.h internal_components/IBoundingBoxColliderComponent.cpp)
 set(HEADERS
         ${HEADERS}
         ../include/Camera.h
@@ -35,7 +35,7 @@ set(HEADERS
         ../include/SceneNode.h
         ../include/texture.h
         ../include/BoundingBox.h
-        #../include/collisionutil.h
+        ../include/collisionutil.h
         )
 
 message("Source files: ${SOURCES}")

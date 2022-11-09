@@ -1,4 +1,5 @@
 #include "collisionutil.h"
+#include "internal_components/IColliderComponent.h"
 
 #include <cmath>
 
@@ -9,21 +10,20 @@ void CCollisionManager::RegisterMesh(const CMeshBuffer &sceneNode, const SceneCo
     mSceneComposite.try_emplace(sceneComposite.id, sceneComposite);
 }
 
-bool collut::rayWithObject(vector3D point, vector3D ray, int objectID, vector3D &intersection, face &poly) {
+bool CCollisionManager::rayWithObject(const Vector3f& point, const Vector3f& ray, int objectID, Vector3f &intersection, face &poly) {
 
 
-    octree *oct = objects.getByID(objectID);
-    List<vector3D> intersecList;
-    List<face> intersecFaceList;
+    auto oct = mSceneComposite.find(objectID);
+    std::vector<Vector3f> intersecList;
+    std::vector<face> intersecFaceList;
 
-    if (oct == NULL) {
-        intersection = vector3D(99999999, 99999999, 99999999);
+    if (oct == mSceneComposite.end()) {
         return false;
     }
 
 
-    List<branch> galhos;
-    vector3D intersecbox;
+    std::vector<branch> galhos;
+    Vector3f intersecbox;
     if (oct->root->box.intersectionWithRay(point, ray, intersecbox))
         galhos.add(oct->root);
 
@@ -48,14 +48,14 @@ bool collut::rayWithObject(vector3D point, vector3D ray, int objectID, vector3D 
             //v4 = mb->vertices[u->faces[i]->vertex[3]].coord;
 
 
-            vector3D vert1(v1[0], v1[1], v1[2]);
-            vector3D vert2(v2[0], v2[1], v2[2]);
-            vector3D vert3(v3[0], v3[1], v3[2]);
-            //vector3D vert4(v4[0], v4[1], v4[2]);
+            Vector3f vert1(v1[0], v1[1], v1[2]);
+            Vector3f vert2(v2[0], v2[1], v2[2]);
+            Vector3f vert3(v3[0], v3[1], v3[2]);
+            //Vector3f vert4(v4[0], v4[1], v4[2]);
 
 
-            vector3D normal = (vert2 - vert1).vetorial(vert3 - vert1).normalizado();
-            vector3D ponto = vert1;
+            Vector3f normal = (vert2 - vert1).CrossProduct(vert3 - vert1).Normalized();
+            Vector3f ponto = vert1;
 
             //Coeficientes da equação do plano
             double a = normal.x;
@@ -66,11 +66,11 @@ bool collut::rayWithObject(vector3D point, vector3D ray, int objectID, vector3D 
             //Parametro t calculado a aprtir da equação do plano
             double t = -(d + a * point.x + b * point.y + c * point.z) / (a * ray.x + b * ray.y + c * ray.z);
 
-            vector3D tempIntersec = point + t * ray;
+            Vector3f tempIntersec = point + t * ray;
 
 
             if (isInsideTriangle(vert1, vert2, vert3, tempIntersec)) {
-                vector3D *intersection = new vector3D(tempIntersec.x, tempIntersec.y, tempIntersec.z);
+                Vector3f *intersection = new Vector3f(tempIntersec.x, tempIntersec.y, tempIntersec.z);
                 intersecList.add(intersection, ((int) t * 1000000));
                 intersecFaceList.add(u->faces[i], ((int) t * 1000000));
             }
@@ -78,7 +78,7 @@ bool collut::rayWithObject(vector3D point, vector3D ray, int objectID, vector3D 
 
             //            if( u->faces[i]->n == 4 && isInsideTriangle(vert3, vert4, vert1, tempIntersec) )
             //            {
-            //                vector3D *intersection = new vector3D(tempIntersec.x, tempIntersec.y, tempIntersec.z);
+            //                Vector3f *intersection = new Vector3f(tempIntersec.x, tempIntersec.y, tempIntersec.z);
             //                intersecList.add(intersection, ((int)t*1000000) );
             //                intersecFaceList.add(u->faces[i], ((int)t*1000000) );
             //            }
@@ -96,13 +96,13 @@ bool collut::rayWithObject(vector3D point, vector3D ray, int objectID, vector3D 
 
     return false;
 }
-void collut::rayWithAllObjects(vector3D point, vector3D ray, List<int> &objectsID, List<vector3D> &intersections, List<face> &faces) {
+void CCollisionManager::rayWithAllObjects(Vector3f point, Vector3f ray, List<int> &objectsID, List<Vector3f> &intersections, List<face> &faces) {
 }
 
-bool collut::rayWithTriangle(vector3D point, vector3D ray, vector3D v1, vector3D v2, vector3D v3, vector3D &intersection) {
+bool CCollisionManager::rayWithTriangle(Vector3f point, Vector3f ray, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f &intersection) {
 
-    vector3D normal = (v2 - v1).vetorial(v3 - v1).normalizado();
-    vector3D ponto = v1;
+    Vector3f normal = (v2 - v1).CrossProduct(v3 - v1).Normalized();
+    Vector3f ponto = v1;
 
     //Coeficientes da equação do plano
     double a = normal.x;
@@ -113,7 +113,7 @@ bool collut::rayWithTriangle(vector3D point, vector3D ray, vector3D v1, vector3D
     //Parametro t calculado a aprtir da equação do plano
     double t = -(d + a * point.x + b * point.y + c * point.z) / (a * ray.x + b * ray.y + c * ray.z);
 
-    vector3D tempIntersec = point + t * ray;
+    Vector3f tempIntersec = point + t * ray;
 
     if (isInsideTriangle(v1, v2, v3, tempIntersec)) {
         intersection = tempIntersec;
@@ -123,11 +123,15 @@ bool collut::rayWithTriangle(vector3D point, vector3D ray, vector3D v1, vector3D
     return false;
 }
 //Fazer a inversão e pegar através do ID. Fazer retornar a normal e os trés vertices do triangulo
-bool collut::betweenObjects(int id1, int id2, int parameter, List<vector3D> &intersections, List<vector3D> &triangles) {
-    SceneElement *e1 = SEObjects.getByID(id1);
-    SceneElement *e2 = SEObjects.getByID(id2);
+bool CCollisionManager::betweenObjects(int id1, int id2, int parameter, std::vector<Vector3f> &intersections, std::vector<Vector3f> &triangles) {
+    auto e1 = mSceneComposite.find(id1);
+    auto e2 = mSceneComposite.find(id2);
+    if (e1 == mSceneComposite.end() || e2 == mSceneComposite.end()) {
+        return false;
+    }
+
     bool coll = false;
-    vector3D intersection;
+    Vector3f intersection;
     if (parameter == NOSIMPLE_SIMPLE && (e1->getType() == NOSIMPLE && e2->getType() == SIMPLE || e1->getType() == SIMPLE && e2->getType() == NOSIMPLE)) {
         if (e1->getType() == SIMPLE) {
             SceneElement *e = e1;
@@ -136,20 +140,19 @@ bool collut::betweenObjects(int id1, int id2, int parameter, List<vector3D> &int
         }
 
 
-        octree *oct = objects.getByID(e1->getID());
-        List<vector3D> intersecList;
-        List<face> intersecFaceList;
+        auto oct = e1->second.GetComponent<IColliderComponent>();
+        std::vector<Vector3f> intersecList;
+        std::vector<face> intersecFaceList;
 
-        if (oct == NULL) {
-            intersection = vector3D(99999999, 99999999, 99999999);
+        if (oct == nullptr) {
             return false;
         }
 
         sphere reg = (sphere) e2->reg;
         reg.position = e1->getMatrix().inverse() * reg.position;//Checar se essa é a maneira certa de colocar o vetor no sistema de referencia do outro objeto
 
-        List<branch> galhos;
-        vector3D intersecbox;
+        std::vector<branch> galhos;
+        Vector3f intersecbox;
         if (oct->root->box.intersectionWithSphere(reg)) {
             galhos.add(oct->root);
         }
@@ -170,9 +173,9 @@ bool collut::betweenObjects(int id1, int id2, int parameter, List<vector3D> &int
 
                 //face *f = u->faces[i];
 
-                vector3D v1(mb->vertices[u->faces[i]->vertex[0]].coord);
-                vector3D v2(mb->vertices[u->faces[i]->vertex[1]].coord);
-                vector3D v3(mb->vertices[u->faces[i]->vertex[2]].coord);
+                Vector3f v1(mb->vertices[u->faces[i]->vertex[0]].coord);
+                Vector3f v2(mb->vertices[u->faces[i]->vertex[1]].coord);
+                Vector3f v3(mb->vertices[u->faces[i]->vertex[2]].coord);
                 //printf("%d\n", i);
                 //                glColor3f(1,0,0);
                 //                glBegin(GL_TRIANGLES);
@@ -184,10 +187,10 @@ bool collut::betweenObjects(int id1, int id2, int parameter, List<vector3D> &int
 
 
                 if (sphereWithTriangle(reg, v1, v2, v3, intersection)) {
-                    intersections.add(new vector3D(e1->getMatrix() * intersection));
-                    triangles.add(new vector3D(v1));
-                    triangles.add(new vector3D(v2));
-                    triangles.add(new vector3D(v3));
+                    intersections.add(new Vector3f(e1->getMatrix() * intersection));
+                    triangles.add(new Vector3f(v1));
+                    triangles.add(new Vector3f(v2));
+                    triangles.add(new Vector3f(v3));
                     coll = true;
                 }
             }
@@ -196,17 +199,17 @@ bool collut::betweenObjects(int id1, int id2, int parameter, List<vector3D> &int
             //printf("(%f,%f,%f)\n",  e1->getPosition().x,  e1->getPosition().y,  e1->getPosition().z);
             //        for(int i=0; i<mb->nfaces; i++ )
             //        {
-            //            vector3D v1(mb->vertices[ mb->faces[i].vertex[0] ].coord );
-            //            vector3D v2(mb->vertices[ mb->faces[i].vertex[1] ].coord );
-            //            vector3D v3(mb->vertices[ mb->faces[i].vertex[2] ].coord );
+            //            Vector3f v1(mb->vertices[ mb->faces[i].vertex[0] ].coord );
+            //            Vector3f v2(mb->vertices[ mb->faces[i].vertex[1] ].coord );
+            //            Vector3f v3(mb->vertices[ mb->faces[i].vertex[2] ].coord );
             //            //printf("%d\n", i);
             //
             //            if( sphereWithTriangle(reg, v1,v2,v3, intersection) )
             //            {
-            //                intersections.add(new vector3D(e1->getMatrix()*intersection));
-            //                triangles.add(new vector3D(v1));
-            //                triangles.add(new vector3D(v2));
-            //                triangles.add(new vector3D(v3));
+            //                intersections.add(new Vector3f(e1->getMatrix()*intersection));
+            //                triangles.add(new Vector3f(v1));
+            //                triangles.add(new Vector3f(v2));
+            //                triangles.add(new Vector3f(v3));
             //                coll = true;
             //            }
             //        }
@@ -217,7 +220,7 @@ bool collut::betweenObjects(int id1, int id2, int parameter, List<vector3D> &int
         sphere reg1 = e1->reg;
         sphere reg2 = e2->reg;
         if ((reg1.position - reg2.position).modulo() <= reg1.radius + reg2.radius) {
-            intersections.add(new vector3D((reg2.position - reg1.position).normalizado() * reg1.radius + reg1.position));
+            intersections.add(new Vector3f((reg2.position - reg1.position).Normalized() * reg1.radius + reg1.position));
             return true;
         }
     }
@@ -225,20 +228,20 @@ bool collut::betweenObjects(int id1, int id2, int parameter, List<vector3D> &int
 }
 
 
-bool collut::isInsideTriangle(vector3D v1, vector3D v2, vector3D v3, vector3D intersection) {
+bool CCollisionManager::isInsideTriangle(Vector3f v1, Vector3f v2, Vector3f v3, Vector3f intersection) {
     //Checa se a coordenada está limitada pelo triangulo
-    double area = (v2 - v1).vetorial(v3 - v1).modulo() * 0.5;
-    vector3D vet1 = intersection - v1;
-    vector3D vet2 = v2 - v1;
-    double area1 = vet1.vetorial(vet2).modulo() * 0.5 / area;
+    double area = (v2 - v1).CrossProduct(v3 - v1).modulo() * 0.5;
+    Vector3f vet1 = intersection - v1;
+    Vector3f vet2 = v2 - v1;
+    double area1 = vet1.CrossProduct(vet2).modulo() * 0.5 / area;
 
     vet1 = intersection - v1;
     vet2 = v3 - v1;
-    double area2 = vet1.vetorial(vet2).modulo() * 0.5 / area;
+    double area2 = vet1.CrossProduct(vet2).modulo() * 0.5 / area;
 
     vet1 = intersection - v3;
     vet2 = v2 - v3;
-    double area3 = vet1.vetorial(vet2).modulo() * 0.5 / area;
+    double area3 = vet1.CrossProduct(vet2).modulo() * 0.5 / area;
 
     //Condição para que o ponto esteja contido no triangulo
     if (area1 + area2 + area3 <= 1.00001)
@@ -247,20 +250,20 @@ bool collut::isInsideTriangle(vector3D v1, vector3D v2, vector3D v3, vector3D in
     return false;
 }
 
-bool collut::sphereWithTriangle(sphere spr, vector3D v1, vector3D v2, vector3D v3, vector3D &intersection) {
-    vector3D normal = (v2 - v1).vetorial(v3 - v1).normalizado();
+bool CCollisionManager::sphereWithTriangle(sphere spr, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f &intersection) {
+    Vector3f normal = (v2 - v1).CrossProduct(v3 - v1).Normalized();
     float a = normal.x;
     float b = normal.y;
     float c = normal.z;
 
     float d = -a * v1.x - b * v1.y - c * v1.z;
 
-    vector3D p = spr.position;
+    Vector3f p = spr.position;
 
     float lambda = (-d - p.escalar(normal)) / pow(normal.modulo(), 2.0);
 
     //Projeção ortogonal do centro da esfera ao plano.
-    vector3D projecao = p + normal * lambda;
+    Vector3f projecao = p + normal * lambda;
 
     if (spr.isInside(projecao)) {
         if (isInsideTriangle(v1, v2, v3, projecao)) {
@@ -321,84 +324,6 @@ bool BoundingBox::isInside(const Vector3f &point) {
     return true;
 }
 
-bool BoundingBox::intersectionWithRay(const Vector3f& point, const Vector3f& ray, Vector3f &intersection) {
-    std::vector<Vector3f> intersec;
-    Vector3f pontos[12];
-
-    for (int i = 0; i < 6; i++) {
-        Vector3f v1 = vertices[faces[i][0]];
-        Vector3f v2 = vertices[faces[i][1]];
-        Vector3f v3 = vertices[faces[i][2]];
-        Vector3f v4 = vertices[faces[i][3]];
-
-        Vector3f normal = (v2 - v1).CrossProduct(v3 - v1).Normalized();
-
-        Vector3f ponto = v1;
-
-        float a = normal.x;
-        float b = normal.y;
-        float c = normal.z;
-        float d = -(a * ponto.x + b * ponto.y + c * ponto.z);
-
-        float t = -(d + a * point.x + b * point.y + c * point.z) / (a * ray.x + b * ray.y + c * ray.z);
-
-        Vector3f inter = point + t * ray;
-
-
-        if (isInsideTriangle(v1, v2, v3, inter)) {
-            pontos[i] = inter;
-            //intersec.push_back(&pontos[i], (int) (point - inter).Length());
-        }
-        normal = (v4 - v3).CrossProduct(v1 - v3).Normalized();
-
-        ponto = v3;
-
-        a = normal.x;
-        b = normal.y;
-        c = normal.z;
-        d = -(a * ponto.x + b * ponto.y + c * ponto.z);
-
-        t = -(d + a * point.x + b * point.y + c * point.z) / (a * ray.x + b * ray.y + c * ray.z);
-
-        inter = point + t * ray;
-
-        if (isInsideTriangle(v3, v4, v1, inter)) {
-            pontos[2 * i] = inter;
-            //intersec.add(&pontos[2 * i], (int) (point - inter).Length());
-        }
-    }
-
-    if (!intersec.empty()) {
-        //        intersection = *(intersec.get(0));
-        return true;
-    }
-    intersection = Vector3f(9999999, 9999999, 9999999);
-
-    return false;
-}
-
-
-bool BoundingBox::isInsideTriangle(const Vector3f& v1, const Vector3f& v2, const Vector3f& v3, const Vector3f& intersection) {
-    //Checa se a coordenada está limitada pelo triangulo
-    float area = (v2 - v1).CrossProduct(v3 - v1).Length() * 0.5f;
-    Vector3f vet1 = intersection - v1;
-    Vector3f vet2 = v2 - v1;
-    float area1 = vet1.CrossProduct(vet2).Length() * 0.5f / area;
-
-    vet1 = intersection - v1;
-    vet2 = v3 - v1;
-    float area2 = vet1.CrossProduct(vet2).Length() * 0.5f / area;
-
-    vet1 = intersection - v3;
-    vet2 = v2 - v3;
-    float area3 = vet1.CrossProduct(vet2).Length() * 0.5f / area;
-
-    //Condição para que o ponto esteja contido no triangulo
-    if (area1 + area2 + area3 <= 1.001f)
-        return true;
-
-    return false;
-}
 
 
 bool BoundingBox::intersectionWithSphere(sphere esf) {
@@ -410,10 +335,10 @@ bool BoundingBox::intersectionWithSphere(sphere esf) {
         Vector3f v4 = vertices[faces[i][3]];
 
         Vector3f intersection;
-        if (collut::sphereWithTriangle(esf, v1, v2, v3, intersection)) {
+        if (CCollisionManager::sphereWithTriangle(esf, v1, v2, v3, intersection)) {
             return true;
         }
-        if (collut::sphereWithTriangle(esf, v3, v4, v1, intersection)) {
+        if (CCollisionManager::sphereWithTriangle(esf, v3, v4, v1, intersection)) {
             return true;
         }
         if (this->isInside(esf.position)) {

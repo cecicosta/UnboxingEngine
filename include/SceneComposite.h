@@ -20,13 +20,13 @@ public:
     template<class T>
     void AddComponent(T &component);
     template<class T>
-    T *GetComponent();
+    T *GetComponent() const;
     template<class T>
     void RemoveComponent();
 
 private:
     void AddComponent(IComponent &component) override;
-    IComponent *GetComponent(const size_t &hash) override;
+    IComponent *GetComponent(const size_t &hash) const override;
     void RemoveComponent(const size_t &hash) override;
 
     //TODO: Try to improve memory allocation management. Potentially suboptimal with reallocation, copy and fragmentation of memory for new added components.
@@ -39,7 +39,7 @@ void SceneComposite::AddComponent(T &component) {
 }
 
 template<class T>
-T *SceneComposite::GetComponent() {
+T *SceneComposite::GetComponent() const {
     return dynamic_cast<T *>(GetComponent(typeid(T).hash_code()));
 }
 

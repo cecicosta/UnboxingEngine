@@ -7,7 +7,7 @@ void SceneComposite::AddComponent(IComponent &component) {
     m_components.push_back(&component);
 }
 
-IComponent *SceneComposite::GetComponent(const size_t &hash) {
+IComponent *SceneComposite::GetComponent(const size_t &hash) const {
     auto it = std::find_if(m_components.begin(), m_components.end(), [&hash](IComponent* component) {
         return typeid(*component).hash_code() == hash;
     });

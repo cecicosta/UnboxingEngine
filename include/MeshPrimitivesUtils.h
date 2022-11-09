@@ -30,13 +30,11 @@ namespace primitive_utils {
         mesh->texcoords.resize(2 * mesh->ntexcoords);
         mesh->faces.resize(mesh->nfaces);
 
-        uint vertexOffset = 0;
         uint textureOffset = 0;
         uint normalOffset = 0;
         uint fNormalOffset = 0;
         uint vNormalIdOffset = 0;
-        uint triangleOffset = 0;
-        
+
         // Front Face (1,1)
         InsertCoordinates(&mesh->normals[normalOffset], normalOffset, 0, 0, 1);
         InsertCoordinates(mesh->faces[vNormalIdOffset].vnormal, vNormalIdOffset, 0, 0, 0, 0);
