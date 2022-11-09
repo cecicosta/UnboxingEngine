@@ -29,7 +29,9 @@ add_executable(unboxing_engine_minimal_unit_tests
         ../include/UVector.h
         ../source/UVector.cpp
         ../include/MathUtils.h
-        ../include/internal_components/TransformComponent.h)
+        ../include/BoundingBox.h
+        ../source/BoundingBox.cpp
+        ../include/internal_components/TransformComponent.h AlgorithmsTests.cpp)
 target_link_libraries(unboxing_engine_minimal_unit_tests
         gtest
         gmock
