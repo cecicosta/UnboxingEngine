@@ -31,7 +31,7 @@ add_executable(unboxing_engine_minimal_unit_tests
         ../include/MathUtils.h
         ../include/BoundingBox.h
         ../source/BoundingBox.cpp
-        ../include/internal_components/TransformComponent.h AlgorithmsTests.cpp)
+        ../include/internal_components/TransformComponent.h AlgorithmsTests.cpp BoundingBoxTest.cpp)
 target_link_libraries(unboxing_engine_minimal_unit_tests
         gtest
         gmock

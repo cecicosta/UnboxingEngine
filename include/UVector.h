@@ -30,6 +30,8 @@ public:
 
     Vector<T, Axis> &operator=(const Vector<T, Axis> &v);
 
+    bool operator==(const Vector<T, Axis> &other) const;
+
     [[nodiscard]] T Length() const;
 
     [[nodiscard]] Vector<T, Axis> Normalized() const;

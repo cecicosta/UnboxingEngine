@@ -90,6 +90,10 @@ template<class T, int Axis>
 const T *Vector<T, Axis>::ToArray() const {
     return &values[0];
 }
+template<class T, int Axis>
+bool Vector<T, Axis>::operator==(const Vector<T, Axis> &other) const {
+    return x == other.x && y == other.y && z == other.z;
+}
 
 template class Vector<int, 2>;
 template class Vector<int, 3>;

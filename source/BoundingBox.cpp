@@ -16,47 +16,53 @@ BoundingBox::BoundingBox(const Vector3f &first, const Vector3f &second)
 void BoundingBox::SetTriangles() {
     mFaces.resize(36);
 
-    mFaces[0] = 0;
-    mFaces[1] = 1;
-    mFaces[2] = 2;
-    mFaces[3] = 2;
-    mFaces[4] = 3;
-    mFaces[5] = 0;
+    //Front
+    mFaces[0] = 3;
+    mFaces[1] = 2;
+    mFaces[2] = 6;
+    mFaces[3] = 6;
+    mFaces[4] = 5;
+    mFaces[5] = 3;
 
-    mFaces[6] = 4;
-    mFaces[7] = 5;
-    mFaces[8] = 6;
-    mFaces[9] = 6;
-    mFaces[10] = 7;
-    mFaces[11] = 4;
+    //Back
+    mFaces[6] = 0;
+    mFaces[7] = 4;
+    mFaces[8] = 7;
+    mFaces[9] = 7;
+    mFaces[10] = 1;
+    mFaces[11] = 0;
 
-    mFaces[12] = 3;
-    mFaces[13] = 2;
+    //Top
+    mFaces[12] = 4;
+    mFaces[13] = 5;
     mFaces[14] = 6;
     mFaces[15] = 6;
-    mFaces[16] = 5;
-    mFaces[17] = 3;
+    mFaces[16] = 7;
+    mFaces[17] = 4;
 
+    //Bottom
     mFaces[18] = 0;
-    mFaces[19] = 4;
-    mFaces[20] = 7;
-    mFaces[21] = 7;
-    mFaces[22] = 1;
+    mFaces[19] = 1;
+    mFaces[20] = 2;
+    mFaces[21] = 2;
+    mFaces[22] = 3;
     mFaces[23] = 0;
 
-    mFaces[24] = 7;
-    mFaces[25] = 6;
-    mFaces[26] = 2;
-    mFaces[27] = 2;
-    mFaces[28] = 1;
-    mFaces[29] = 7;
+    //Right
+    mFaces[24] = 1;
+    mFaces[25] = 7;
+    mFaces[26] = 6;
+    mFaces[27] = 6;
+    mFaces[28] = 2;
+    mFaces[29] = 1;
 
-    mFaces[30] = 3;
-    mFaces[31] = 5;
-    mFaces[32] = 4;
-    mFaces[33] = 4;
-    mFaces[34] = 0;
-    mFaces[35] = 3;
+    //Left
+    mFaces[30] = 0;
+    mFaces[31] = 3;
+    mFaces[32] = 5;
+    mFaces[33] = 5;
+    mFaces[34] = 4;
+    mFaces[35] = 0;
 }
 
 void BoundingBox::SetVertices(const Vector3f &first, const Vector3f &second) {
@@ -64,34 +70,34 @@ void BoundingBox::SetVertices(const Vector3f &first, const Vector3f &second) {
 
     mVertices[0] = &first.x;
     mVertices[1] = &first.y;
-    mVertices[2] = &second.z;
+    mVertices[2] = &first.z;
 
     mVertices[3] = &second.x;
     mVertices[4] = &first.y;
-    mVertices[5] = &second.z;
+    mVertices[5] = &first.z;
 
     mVertices[6] = &second.x;
-    mVertices[7] = &second.y;
+    mVertices[7] = &first.y;
     mVertices[8] = &second.z;
 
     mVertices[9] = &first.x;
-    mVertices[10] = &second.y;
+    mVertices[10] = &first.y;
     mVertices[11] = &second.z;
 
     mVertices[12] = &first.x;
-    mVertices[13] = &first.y;
+    mVertices[13] = &second.y;
     mVertices[14] = &first.z;
 
     mVertices[15] = &first.x;
     mVertices[16] = &second.y;
-    mVertices[17] = &first.z;
+    mVertices[17] = &second.z;
 
     mVertices[18] = &second.x;
     mVertices[19] = &second.y;
-    mVertices[20] = &first.z;
+    mVertices[20] = &second.z;
 
     mVertices[21] = &second.x;
-    mVertices[22] = &first.y;
+    mVertices[22] = &second.y;
     mVertices[23] = &first.z;
 }
 
@@ -119,6 +125,15 @@ std::vector<float> BoundingBox::GetVertices() const {
 
 std::vector<unsigned int> BoundingBox::GetTriangles() const {
     return {mFaces};
+}
+
+std::vector<unsigned int> BoundingBox::GetVertexIdList(EFace face) const {
+    return { mFaces.begin() + static_cast<unsigned int>(face)*6, mFaces.begin() + static_cast<unsigned int>(face)*6 + 6 };
+}
+
+Vector3f BoundingBox::GetVertex(EFace face, int vIndex) {
+    auto vIndexList = GetVertexIdList(face);
+    return {*mVertices[vIndexList[vIndex]*3], *mVertices[(vIndexList[vIndex])*3 + 1], *mVertices[(vIndexList[vIndex])*3 + 2]};
 }
 
 BoundingBox& BoundingBox::operator=(const BoundingBox &other) {
