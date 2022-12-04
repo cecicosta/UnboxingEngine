@@ -1,6 +1,13 @@
 #Google tests
 enable_testing()
 
+target_sources(gtest PUBLIC
+    ${CMAKE_SOURCE_DIR}/third_party/googletest
+)
+
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
+
 include_directories(
         ./tests
         ../include
@@ -15,7 +22,7 @@ add_executable(
 
 target_link_libraries(
         unboxing_engine_tests
-        unboxing_engine_src_lib
+        unboxing_engine_src_lib 
         gtest
         gmock
 )
@@ -37,8 +44,8 @@ target_link_libraries(unboxing_engine_minimal_unit_tests
         gmock
 )
 
-add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests)
-#gtest_discover_tests(unboxing_engine_tests)
+add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests --exe unboxing_engine_tests.exe)
+#gtest_discover_tests(TARGET unboxing_engine_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
 
 if (WIN32)
     #Copy dll after building
