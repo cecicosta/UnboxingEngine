@@ -20,16 +20,53 @@ bool hasProjectionOverEdge(const Vector2f &start, const Vector2f &end, const Vec
     return max > 0 && min < axisLength;
 }
 
-static bool CheckEdgeAgainstBoxCollision(const std::vector<Vector2f> &box1, const Vector2f &c, const Vector2f &d, const Vector2f &direction, Vector2f& escape, Vector2f& normalOut) {
-    Vector2f v1 = box1[0];
-    Vector2f v2 = box1[1];
-    Vector2f v3 = box1[2];
-    Vector2f v4 = box1[3];
+
+bool foo(const std::vector<Vector2f>& box, const Vector2f& c, const Vector2f& d, const Vector2f& direction, Vector2f& outNormal) {
+    //FIRST PART - Choose a edge potentially crossed by the trajectory
+    auto edge = box[1] - box[0]; //v2 - v1;
+    auto pivot = box[0]; //v1
+    auto normal = edge.Normalized();
+    normal = Vector2f(normal.y, -normal.x);//Rotate the edge clockwise to obtain the normal
+    //The potentially colliding edge must have a normal with projection to the oposite side of the direction
+    if ((normal).DotProduct(direction) > 0) {
+        //Pick the oposite edge
+        edge = box[3] - box[2]; //v4 - v3;
+        pivot = box[2]; // v3;
+        normal = edge.Normalized();
+        normal = Vector2f(normal.y, -normal.x);
+    }
+
+    //SECOND PART - Verify if the trajectory cross the edge at a calculated dt, where dt is calculated as a multiplier factor where the ray defined by the trajectory would cross the line containing the edge
+    //Used to calculate if a trajectory cross with a given edge of the box
+    auto toPivot = pivot - d;
+    auto pivotProjection = (toPivot).DotProduct(normal);
+    auto edgeDirProjection = (c - d).Normalized().DotProduct(normal);
+    auto dt = pivotProjection / edgeDirProjection;//Edge necessary dt throught the normal projection (minimum distance direction to cross the face)
+    auto lineRayCrossFace = d + (c - d).Normalized() * dt;
+    auto pivotToPointProjectionLength = (lineRayCrossFace - pivot).DotProduct(edge.Normalized());
+
+
+    //The extremes might represent and edge case of collision with corners
+    if (pivotToPointProjectionLength >= 0 && pivotToPointProjectionLength <= edge.Length()) {
+        //Collision and intersection with face confirmed. Normal obtained. Consider the need or not of performing the next checking.
+        outNormal = normal;
+        return true;
+    }
+    return false;
+}
+
+//CheckTrajectoryAgainstBox
+static bool CheckEdgeAgainstBoxCollision(const std::vector<Vector2f> &box, const Vector2f &c, const Vector2f &d, Vector2f& escape, Vector2f& normalOut) {
+    Vector2f v1 = box[0];
+    Vector2f v2 = box[1];
+    Vector2f v3 = box[2];
+    Vector2f v4 = box[3];
+    auto direction = (d - c).Normalized();
     
     auto GetEscapeVectorOposeToMovement = [&](std::pair<float, float> projectionValues) {
         Vector2f edgeDir = (v2 - v1).Normalized();
         Vector2f escape1 = - projectionValues.second*edgeDir;
-        Vector2f escape2 = (v2 -v1) - projectionValues.first*edgeDir;
+        Vector2f escape2 = (v2 - v1) - projectionValues.first*edgeDir;
         return (escape1).DotProduct(direction) < 0 ? escape1 : escape2;
     };
     
@@ -39,72 +76,16 @@ static bool CheckEdgeAgainstBoxCollision(const std::vector<Vector2f> &box1, cons
     if(hasProjectionOverEdge(v1, v2, c, d, projectionValues)) {
         auto escapeV1 = GetEscapeVectorOposeToMovement(projectionValues);
         
-        auto edge = v2 - v1;
-        auto pivot = v1;
-        auto normal = edge.Normalized();
-        normal = Vector2f(normal.y, -normal.x); //Rotate the edge clockwise to obtain the normal
-        //The potentially colliding edge must have a normal with projection to the oposite side of the direction
-        if((normal).DotProduct(direction) > 0) {
-            //Pick the oposite edge
-            edge = v4 - v3;
-            pivot = v3;
-            normal = edge.Normalized();
-            normal = Vector2f(normal.y, -normal.x);
-        }
-        auto toPivot = pivot - d;
-        auto pivotProjection = (toPivot).DotProduct(normal);
-        auto edgeDirProjection = (c-d).Normalized().DotProduct(normal);
-        auto dt = pivotProjection/edgeDirProjection; //Edge necessary dt throught the normal projection (minimum distance direction to cross the face)
-        auto lineRayCrossFace = c + (c-d).Normalized()*dt;
-        auto pivotToPointProjectionLength = (lineRayCrossFace - pivot).DotProduct(edge.Normalized());
-        
- 
-        //The extremes might represent and edge case of collision with corners
-        if((lineRayCrossFace - d).Length() <= (d-c).Length() && pivotToPointProjectionLength >= 0 && pivotToPointProjectionLength <= edge.Length()) {
-            //Collision and intersection with face confirmed. Normal obtained. Consider the need or not of performing the next checking.
-            normalOut = normal;
-            return true;
-        }
-        
         if (hasProjectionOverEdge(v2, v3, c, d, projectionValues)) {
             auto escapeV2 = GetEscapeVectorOposeToMovement(projectionValues);
             float escape_v1_project_dir = (escapeV1).DotProduct(direction);
             float escape_v2_project_dir = (escapeV2).DotProduct(direction);
             escape = (direction * escape_v1_project_dir) + (direction * escape_v2_project_dir);
             
-            
-            edge = v3 - v2;
-            pivot = v2;
-            normal = edge.Normalized();
-            normal = Vector2f(normal.y, -normal.x); //Rotate the edge clockwise to obtain the normal
-            //The potentially colliding edge must have a normal with projection to the oposite side of the direction
-            if((normal).DotProduct(direction) > 0) {
-                //Pick the oposite edge
-                edge = v1 - v4;
-                pivot = v4;
-                normal = edge.Normalized();
-                normal = Vector2f(normal.y, -normal.x);
-            }
-            toPivot = pivot - d;
-            pivotProjection = (toPivot).DotProduct(normal);
-            edgeDirProjection = (c-d).Normalized().DotProduct(normal);
-            dt = pivotProjection/edgeDirProjection; //Edge necessary dt throught the normal projection (minimum distance direction to cross the face)
-            lineRayCrossFace = c + (c-d).Normalized()*dt;
-            pivotToPointProjectionLength = (lineRayCrossFace - pivot).DotProduct(edge.Normalized());
-            
-
-            //The extremes might represent and edge case of collision with corners
-            if((lineRayCrossFace - d).Length() <= (d-c).Length() && pivotToPointProjectionLength >= 0 && pivotToPointProjectionLength <= edge.Length()) {
-                //Collision and intersection with face confirmed. Normal obtained. Consider the need or not of performing the next checking.
-                normalOut = normal;
-                return true;
-            }
-            
-            
-            hasIntersection = true;
+            return foo(box, c, d, direction, normalOut) || foo({box[1], box[2], box[3], box[0]}, c, d, direction, normalOut);
         }
     }
-    return hasIntersection;
+    return false;
 }
 
 
@@ -123,7 +104,7 @@ bool CheckBoxToBoxCollision(std::vector<Vector2f> box1, std::vector<Vector2f> bo
         //Since the bounding box is a rectangulum, calculating the projection to one triangle, by symmetry, the other triangle will also contain the projection
         Vector2f escape;
         Vector2f normal;
-        hasIntersection = CheckEdgeAgainstBoxCollision(box1, c, d, direction, escape, normal);
+        hasIntersection = CheckEdgeAgainstBoxCollision(box1, c, d, escape, normal);
     }
     return hasIntersection;
 }
@@ -147,6 +128,22 @@ bool AssessIntersectionBoxWithRay(const BoundingBox &boundingBox, const Vector3f
     upper = Vector3f(upper.x / rayDir.x, upper.y / rayDir.y, upper.z / rayDir.z);
     return upper.x > 0 && upper.y > 0 && upper.z > 0;
 }
+
+TEST(GeneralCollisionHelpers, TraceTrajectoryIntoBox_CollisionDetected) {
+    std::vector<Vector2f> box{
+        {-10.f, 4.2f}, {-4.3f, 0.5f}, {-2.f, 4.f}, {-7.5f, 7.5f}};
+    //Vector2f start(-9, 1);
+    //Vector2f end(-9.5, 4.5);
+
+    Vector2f start(-11, 6);
+    Vector2f end(-6, 8);
+    Vector2f direction(Vector2f(-5, -2) - Vector2f(-8, -4));
+    Vector2f normal, escape;
+    
+    //ASSERT_FALSE(MyCollision::hasProjectionOverEdge(start, end, {-10.f, 4.2f}, {-4.3f, 0.5f}, value));
+    ASSERT_TRUE(MyCollision::CheckEdgeAgainstBoxCollision(box, start, end, escape, normal));
+}
+
 
 TEST(GeneralCollisionHelpers, HasIntersectionOverEdge_TRUE) {
     Vector2f p1(3, 5);
