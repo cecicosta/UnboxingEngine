@@ -17,7 +17,7 @@ bool hasProjectionOverEdge(const Vector2f &start, const Vector2f &end, const Vec
     float max = std::max(p1ProjectionOverAxis, p2ProjectionOverAxis);
     float min = std::min(p1ProjectionOverAxis, p2ProjectionOverAxis);
     projectionLimits = std::pair(min, max);
-    return max > 0 && min < axisLength;
+    return max > 0 && min < axisLength; 
 }
 
 
