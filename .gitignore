@@ -6,3 +6,6 @@
 /third_party/SDL/
 /third_party/SDL_image/
 /third_party/SDL_ttf/
+/out/build/x64-Debug
+/.vs
+/.vscode
