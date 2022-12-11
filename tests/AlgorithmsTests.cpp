@@ -14,6 +14,15 @@ struct SCollisionResult {
     Vector2f escape; //Vector to which direction and lenth the collision can be undone
 };
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="start"></param>
+/// <param name="end"></param>
+/// <param name="p1"></param>
+/// <param name="p2"></param>
+/// <param name="projectionLimits"></param>
+/// <returns></returns>
 bool hasProjectionOverEdge(const Vector2f &start, const Vector2f &end, const Vector2f &p1, const Vector2f &p2, std::pair<float, float>& projectionLimits) {
     Vector2f axis = end - start;
     float axisLength = axis.Length();
@@ -26,7 +35,14 @@ bool hasProjectionOverEdge(const Vector2f &start, const Vector2f &end, const Vec
     return max > 0 && min < axisLength;
 }
 
-
+/// <summary>
+/// 
+/// </summary>
+/// <param name="l1_point"></param>
+/// <param name="l1_dir"></param>
+/// <param name="l2_point"></param>
+/// <param name="l2_dir"></param>
+/// <returns></returns>
 Vector2f findIntersectionBetweenLines(const Vector2f &l1_point, const Vector2f& l1_dir, const Vector2f &l2_point, const Vector2f & l2_dir) {
     auto l1_ortogonal_axis = Vector2f(l1_dir.y, -l1_dir.x);//Rotate the edge clockwise to obtain the normal
     auto distance_l2_to_l1 = l1_point - l2_point;
@@ -109,13 +125,19 @@ SCollisionResult findEdgesHitOnTrajectory(const std::vector<Vector2f>& vertices,
     return {};
 }
 
-//CheckTrajectoryAgainstBox
-static SCollisionResult CheckTrajectoryAgainstBox(const std::vector<Vector2f> &box, const Vector2f &c, const Vector2f &d) {
+/// <summary>
+/// 
+/// </summary>
+/// <param name="box"></param>
+/// <param name="c"></param>
+/// <param name="d"></param>
+/// <param name="direction"></param>
+/// <returns></returns>
+static SCollisionResult checkSegmentCollisionAgainstBox(const std::vector<Vector2f> &box, const Vector2f &c, const Vector2f &d, const Vector2f& direction) {
     Vector2f v1 = box[0];
     Vector2f v2 = box[1];
     Vector2f v3 = box[2];
     Vector2f v4 = box[3];
-    auto direction = (d - c).Normalized();
     
     auto GetEscapeVectorOposeToMovement = [&](std::pair<float, float> projected_vertices, const Vector2f& v1, const Vector2f& v2) {
         Vector2f edgeDir = (v2 - v1).Normalized();
@@ -134,8 +156,11 @@ static SCollisionResult CheckTrajectoryAgainstBox(const std::vector<Vector2f> &b
             auto escapeV2 = GetEscapeVectorOposeToMovement(projectionValues, v2, v3);
             float escape_v1_project_dir = (escapeV1).DotProduct(direction);
             float escape_v2_project_dir = (escapeV2).DotProduct(direction);
-            auto escape = (direction * escape_v1_project_dir) + (direction * escape_v2_project_dir);
-            auto result = findEdgesHitOnTrajectory({box[0], box[1], box[2], box[3], box[0]}, c, d);
+
+            auto escape = std::abs(escape_v1_project_dir) < std::abs(escape_v2_project_dir) ? 
+               findIntersectionBetweenLines({0, 0}, direction, escapeV1, Vector2f(escapeV1.y, -escapeV1.x).Normalized()) : 
+                findIntersectionBetweenLines({0, 0}, direction, escapeV2, Vector2f(escapeV2.y, -escapeV2.x).Normalized());
+            auto result = findEdgesHitOnTrajectory({box[0], box[1], box[2], box[3]}, c, d);
             result.escape = escape;
 
             return result;
@@ -144,7 +169,13 @@ static SCollisionResult CheckTrajectoryAgainstBox(const std::vector<Vector2f> &b
     return {};
 }
 
-
+/// <summary>
+/// 
+/// </summary>
+/// <param name="box1"></param>
+/// <param name="box2"></param>
+/// <param name="direction"></param>
+/// <returns></returns>
 bool CheckBoxToBoxCollision(std::vector<Vector2f> box1, std::vector<Vector2f> box2, const Vector2f& direction) {
     if(box1.size() < 4 && box2.size() < 4) {
         return false;
@@ -160,7 +191,7 @@ bool CheckBoxToBoxCollision(std::vector<Vector2f> box1, std::vector<Vector2f> bo
         //Since the bounding box is a rectangulum, calculating the projection to one triangle, by symmetry, the other triangle will also contain the projection
         Vector2f escape;
         Vector2f normal;
-        hasIntersection = CheckTrajectoryAgainstBox(box1, c, d).vertices.size() > 0;
+        hasIntersection = findEdgesHitOnTrajectory(box1, c, d).vertices.size() > 0;
     }
     return hasIntersection;
 }
@@ -178,6 +209,7 @@ static std::vector<Vector2f> GetBoxVerticesFromCircleTrajectory(const Vector2f& 
 
 }
 
+
 bool AssessIntersectionBoxWithRay(const BoundingBox &boundingBox, const Vector3f &raySrc, const Vector3f &rayDir) {
     //Derivative from p >= min, p >= max, p within [min, max], the 2 points defining the box. And p = O + Dx/Dt, from the ray, with p representing any point of intersection
     Vector3f upper = (boundingBox.getFirst() + boundingBox.getSecond()) - 2 * raySrc;
@@ -185,9 +217,27 @@ bool AssessIntersectionBoxWithRay(const BoundingBox &boundingBox, const Vector3f
     return upper.x > 0 && upper.y > 0 && upper.z > 0;
 }
 
+TEST(GeneralCollisionHelpers, TraceTrajectoryIntoBox_) {
+    std::vector<Vector2f> box{
+        {-9.7, 4.1}, {-4.16f, 0.59f}, {-2.f, 4.f}, {-7.5f, 7.5f}};
+
+    Vector2f start(-11, 6);
+    Vector2f end(-6, 8);
+    Vector2f direction = Vector2f(1.5f, 0.5f).Normalized();
+    auto result = MyCollision::checkSegmentCollisionAgainstBox(box, start, end, direction);
+    if (result.vertices.size() == 2) {
+        ASSERT_EQ(result.vertices[0], box[3]);
+        ASSERT_EQ(result.vertices[1], box[0]);
+    }
+    ASSERT_FLOAT_EQ(result.intersection.x, -7.5873);
+    ASSERT_FLOAT_EQ(result.intersection.y, 7.3650794);
+    ASSERT_FLOAT_EQ(result.escape.x, -1.5581235);
+    ASSERT_FLOAT_EQ(result.escape.y, -0.51937455);
+}
+
 TEST(GeneralCollisionHelpers, TraceTrajectoryIntoBox_ValidateIntersectionResults) {
     std::vector<Vector2f> box{
-        {-10.f, 4.2f}, {-4.3f, 0.5f}, {-2.f, 4.f}, {-7.5f, 7.5f}};
+        {-9.7, 4.1}, {-4.16f, 0.59f}, {-2.f, 4.f}, {-7.5f, 7.5f}};
 
     Vector2f start(-11, 6);
     Vector2f end(-6, 8);
@@ -197,8 +247,8 @@ TEST(GeneralCollisionHelpers, TraceTrajectoryIntoBox_ValidateIntersectionResults
         ASSERT_EQ(result.vertices[0], box[3]);
         ASSERT_EQ(result.vertices[1], box[0]);
     }    
-    ASSERT_FLOAT_EQ(result.intersection.x, -7.6086955);
-    ASSERT_FLOAT_EQ(result.intersection.y, 7.3565216);
+    ASSERT_FLOAT_EQ(result.intersection.x, -7.5873);
+    ASSERT_FLOAT_EQ(result.intersection.y, 7.3650794);
 }
 
 
