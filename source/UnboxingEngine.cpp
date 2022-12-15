@@ -19,10 +19,11 @@ namespace unboxing_engine {
     static const char *vertex_shader_source =
             "#version 150 core\n"
             "in vec3 i_position;\n"
+            "uniform vec4 color;\n"
             "out vec4 v_color;\n"
             "uniform mat4 u_projection_matrix;\n"
             "void main() {\n"
-            "    v_color = vec4(0.5 + i_position.y, 0.5 + i_position.y, 0.5 + i_position.z, 1.0);\n"
+            "    v_color = color;\n"
             "    gl_Position = u_projection_matrix * vec4( i_position.x, i_position.y, i_position.z, 1.0 );\n"
             "}\n";
 
@@ -48,7 +49,7 @@ namespace unboxing_engine {
         }
     }
     void CCore::Run() {
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         while (!HasQuit()) {
             glClear(GL_COLOR_BUFFER_BIT);
 
@@ -69,9 +70,10 @@ namespace unboxing_engine {
             listener->OnPreRender();
         }
 
-        camera->mTransformation = Matrix4f::RotationMatrix(1, Vector3f(1, 0, 0)) * camera->mTransformation;
         glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, camera->mTransformation.ToArray());
+            
         for (auto &&data: mRenderQueue) {
+            glUniform4fv(glGetUniformLocation(program, "color"), 1, data.mMeshBuffer->material.materialDif);
             glBindVertexArray(data.vao);
             glDrawElements(GL_TRIANGLES, data.mMeshBuffer->nfaces * 3, GL_UNSIGNED_INT, nullptr);
         }
@@ -130,7 +132,7 @@ namespace unboxing_engine {
     }
 
     void CCore::CreateView() const {
-        glClearColor(0.0f, 0.0f, 0.0f, 0.5f);// Clear The Background Color Out Blue
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);// Clear The Background Color Out Blue
                                              //    glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
                                              //    glEnable(GL_BLEND);
                                              //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending

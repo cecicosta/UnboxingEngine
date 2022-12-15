@@ -18,7 +18,7 @@ if (WIN32)
     set(BUILD_SHARED_LIBS TRUE)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    configure_file(./third_party/freetype-windows-binaries/release\ dll/win64/freetype.dll ${CMAKE_BINARY_DIR}/Debug COPYONLY)
+    configure_file(./third_party/freetype-windows-binaries/release\ dll/win64/freetype.dll ${CMAKE_BINARY_DIR} COPYONLY)
 
 else()
     set(PNG_ARM_NEON off)
@@ -57,6 +57,6 @@ if (WIN32)
     add_custom_command(
             TARGET unboxing_engine
             POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/Debug/glew32d.dll ${CMAKE_BINARY_DIR}/Debug
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
     )
 endif ()

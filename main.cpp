@@ -9,7 +9,9 @@ int main(int argc, char *argv[]) {
     engine.Start();
 
     auto cube = primitive_utils::Cube();
+    cube->material.materialDif[0] = 1;
     engine.RegisterSceneElement(*cube);
+
 
     engine.Run();
     engine.Release();
