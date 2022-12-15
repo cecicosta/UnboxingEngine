@@ -30,7 +30,7 @@ class ComponentSystemFixture : public testing::Test {
 public:
     ~ComponentSystemFixture() override = default;
 protected:
-    unboxing_engine::SceneComposite composite;
+    unboxing_engine::CSceneComposite composite;
 };
 
 TEST_F(ComponentSystemFixture, add_and_recover_component) {

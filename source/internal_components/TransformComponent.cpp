@@ -1,7 +1,9 @@
 #include "internal_components/TransformComponent.h"
 
 namespace unboxing_engine {
-TransformComponent::TransformComponent() {
+TransformComponent::TransformComponent()
+    : m_position(0, 0, 0)
+    , m_scale(1, 1, 1) {
 }
 
 const Vector3f &TransformComponent::GetPosition() const {

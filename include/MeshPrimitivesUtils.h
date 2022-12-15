@@ -2,7 +2,7 @@
 
 #include "MeshBuffer.h"
 
-namespace primitive_utils {
+namespace unboxing_engine::primitive_utils {
 
     template<typename  T1, typename  T2>
     void InsertCoordinates(T1 *vertices, uint &offset, T2 v) {

@@ -143,34 +143,57 @@ SCollisionResult<T, dimension> findEdgesHitOnTrajectory(const std::vector<Vector
 /// <param name="direction"></param>
 /// <returns></returns>
 template <typename T, int dimension>
-static SCollisionResult<T, dimension> checkSegmentCollisionAgainstRect(const std::vector<Vector<T, dimension>> &box, const Vector<T, dimension> &c, const Vector<T, dimension> &d, const Vector<T, dimension> &direction) {   
-    auto find_escape_vector_component_oposing_direction = [&direction](std::pair<float, float> projected_vertices, const Vector<T, dimension> &edge) {
+static SCollisionResult<T, dimension> checkSegmentCollisionAgainstRect(const std::vector<Vector<T, dimension>> &box, const Vector<T, dimension> &c, const Vector<T, dimension> &d, const Vector<T, dimension> &direction) {
+
+     auto find_edge_escape_vector = [&](std::pair<float, float> projected_vertices, const std::vector<Vector<T, dimension>> vertices, Vector<T, dimension> &escape, Vector<T, dimension> &adjacent_edge_dir) {
+        auto edge = vertices[1] - vertices[0];
         auto edge_direction = edge.Normalized();
-        auto escape_towards = - projected_vertices.second*edge_direction;
-        auto escape_backwards = edge - projected_vertices.first*edge_direction;
-        return (escape_towards).DotProduct(direction) < 0 ? escape_towards : escape_backwards;
+        escape = -projected_vertices.second * edge_direction;//Pointing towards v0
+        adjacent_edge_dir = (vertices[0] - vertices[3]).Normalized();
+        if (escape.DotProduct(direction) < 0) {
+            escape = edge - projected_vertices.first * edge_direction;//pointing towards v1
+            adjacent_edge_dir = (vertices[2] - vertices[1]).Normalized();
+        }
     };
+
     
     bool hasIntersection = false;
-    std::vector<float> projected_points;
-    
-    if (findProjectedPointsOverSegment(box[0], box[1], {c, d}, projected_points)) {
-        assert(projected_points.size() == 2 && "Number of projected points do not match expectation.");
-        auto escape_component_v1_v2 = find_escape_vector_component_oposing_direction({projected_points[0], projected_points[1]}, box[1] - box[0]);
 
-        projected_points.clear();
-        if (findProjectedPointsOverSegment(box[1], box[2], {c, d}, projected_points)) {
-            assert(projected_points.size() == 2 && "Number of projected points do not match expectation.");
-            auto escape_component_v2_v3 = find_escape_vector_component_oposing_direction({projected_points[0], projected_points[1]}, box[2] - box[1]);
-            T escape_v1_project_dir = (escape_component_v1_v2).DotProduct(direction);
-            T escape_v2_project_dir = (escape_component_v2_v3).DotProduct(direction);
+    std::vector<float> projected_points_on_v1_v2;
+    if (findProjectedPointsOverSegment(box[0], box[1], {c, d}, projected_points_on_v1_v2)) {
+        assert(projected_points_on_v1_v2.size() == 2 && "Number of projected points do not match expectation.");
+        std::vector<float> projected_points_on_v2_v3;
+        if (findProjectedPointsOverSegment(box[1], box[2], {c, d}, projected_points_on_v2_v3)) {
+            assert(projected_points_on_v2_v3.size() == 2 && "Number of projected points do not match expectation.");
 
-            auto escape = std::abs(escape_v1_project_dir) < std::abs(escape_v2_project_dir) ? 
-               findIntersectionBetweenLines({0, 0}, direction, escape_component_v1_v2, Vector<T, dimension>(escape_component_v1_v2.y, -escape_component_v1_v2.x, escape_component_v1_v2.z).Normalized()) : 
-                findIntersectionBetweenLines({0, 0}, direction, escape_component_v2_v3, Vector<T, dimension>(escape_component_v2_v3.y, -escape_component_v2_v3.x, escape_component_v2_v3.z).Normalized());
-            auto result = findEdgesHitOnTrajectory({box[0], box[1], box[2], box[3]}, c, d);
-            result.escape = escape;
 
+            //escape gives a point from which the segment defined by the adjacent edge, starts.
+            //A vector contrary to the direction must cross that segment at some point to revert the collision.
+            //To find the point where it cross, we calculate the intersection between the direction and the segment.
+            Vector<T, dimension> escape_v1, adjacent_edge_direction_v1, escape_v2, adjacent_edge_direction_v2;
+            find_edge_escape_vector(
+                {projected_points_on_v1_v2[0], projected_points_on_v1_v2[1]}, 
+                box, 
+                escape_v1, 
+                adjacent_edge_direction_v1);
+            //Adjacent edge now is considered main edge
+            find_edge_escape_vector(
+                {projected_points_on_v2_v3[0], projected_points_on_v2_v3[1]}, 
+                {box[1], box[2], box[3], box[0]}, 
+                escape_v2, 
+                adjacent_edge_direction_v2);
+            
+            SCollisionResult<T, dimension> result;
+            Vector<float, dimension> escape;
+            if (std::abs(escape_v1.DotProduct(direction)) < std::abs(escape_v2.DotProduct(direction))) {
+                result.escape = findIntersectionBetweenLines({0, 0, 0}, direction, escape_v1, adjacent_edge_direction_v1);
+                result.normal = -1*adjacent_edge_direction_v1;
+                result.intersection = box[1] + result.escape.DotProduct(adjacent_edge_direction_v1) * (box[2] - box[1]).Normalized();
+            } else {
+                result.escape = findIntersectionBetweenLines({0, 0, 0}, direction, escape_v2, adjacent_edge_direction_v2);
+                result.normal = -1*adjacent_edge_direction_v2;
+                result.intersection = box[2] + result.escape.DotProduct(adjacent_edge_direction_v2) * (box[3] - box[2]).Normalized();
+            }
             return result;
         }
     }

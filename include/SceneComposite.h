@@ -10,12 +10,12 @@
 
 namespace unboxing_engine {
 
-class SceneComposite : public SceneNode, public IComposite {
+class CSceneComposite : public SceneNode, public IComposite {
 public:
     int id{};
 
-    SceneComposite() = default;
-    ~SceneComposite() override = default;
+    CSceneComposite() = default;
+    ~CSceneComposite() override = default;
 
     template<class T>
     void AddComponent(T &component);
@@ -34,17 +34,17 @@ private:
 };
 
 template<class T>
-void SceneComposite::AddComponent(T &component) {
+void CSceneComposite::AddComponent(T &component) {
     m_components.push_back(&component);
 }
 
 template<class T>
-T *SceneComposite::GetComponent() const {
+T *CSceneComposite::GetComponent() const {
     return dynamic_cast<T *>(GetComponent(typeid(T).hash_code()));
 }
 
 template<class T>
-void SceneComposite::RemoveComponent() {
+void CSceneComposite::RemoveComponent() {
     RemoveComponent(typeid(T).hash_code());
 }
 

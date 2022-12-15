@@ -5,6 +5,8 @@
 
 #include <memory>
 
+namespace unboxing_engine {
+
 typedef unsigned int uint;
 typedef struct face {
     uint id;
@@ -35,3 +37,4 @@ public:
     [[nodiscard]] std::unique_ptr<float*> &&GetVertexDataArray() const;
 };
 
+}// namespace unboxing_engine

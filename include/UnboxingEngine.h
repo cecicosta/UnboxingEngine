@@ -28,9 +28,10 @@ class SDL_Surface;
 union SDL_Event;
 class SDL_Rect;
 class SDL_Window;
-class CMeshBuffer;
 
 namespace unboxing_engine {
+class CMeshBuffer;
+class CSceneComposite;
 
 class CCore : public IEngine, public CEventDispatcher {
 public:
@@ -51,7 +52,7 @@ public:
     ///
     void UnregisterEventListener(UListener<>& listener);
     ///
-    void RegisterSceneElement(const CMeshBuffer& mesh);
+    void RegisterSceneElement(const CSceneComposite& sceneComposite);
     ///Writes objects geometry to be rendered
     void WritePendingRenderData();
 
@@ -106,10 +107,11 @@ private:
 
     ///Rendering opengl buffer handlers
     struct SRenderContext {
-        explicit SRenderContext(const CMeshBuffer& mesh) : mMeshBuffer(&mesh) {}
+        explicit SRenderContext(const CSceneComposite &sceneComposite);
         std::uint32_t vao = -1; //Refers to the whole render context, including geometry, shaders and parameters
         std::uint32_t vbo = -1; //Buffer handler for geometry
         std::uint32_t ebo = -1; //Buffer handler for geometry vertex indices
+        const CSceneComposite &mSceneComposite;
         const CMeshBuffer *mMeshBuffer = nullptr;
     };
     std::vector<SRenderContext> mRenderQueue;
