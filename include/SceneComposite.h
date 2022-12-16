@@ -35,8 +35,8 @@ private:
 
 template<class T>
 void CSceneComposite::AddComponent(T &component) {
+    static_assert(std::is_base_of_v<IComponent, T>);
     auto key = typeid(T).hash_code();
-
     AddComponent(key, reinterpret_cast<IComponent&>(component));
 }
 
