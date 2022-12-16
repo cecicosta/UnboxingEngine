@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <string>
-#include <vector>
+#include <map>
 
 namespace unboxing_engine {
 
@@ -25,17 +25,19 @@ public:
     void RemoveComponent();
 
 private:
-    void AddComponent(IComponent &component) override;
-    IComponent *GetComponent(const size_t &hash) const override;
-    void RemoveComponent(const size_t &hash) override;
+    void AddComponent(std::size_t hash, IComponent &component) override;
+    IComponent *GetComponent(std::size_t hash) const override;
+    void RemoveComponent(std::size_t hash) override;
 
     //TODO: Try to improve memory allocation management. Potentially suboptimal with reallocation, copy and fragmentation of memory for new added components.
-    std::vector<IComponent *> m_components;
+    std::map<std::size_t, IComponent*> m_components;
 };
 
 template<class T>
 void CSceneComposite::AddComponent(T &component) {
-    m_components.push_back(&component);
+    auto key = typeid(T).hash_code();
+
+    AddComponent(key, reinterpret_cast<IComponent&>(component));
 }
 
 template<class T>

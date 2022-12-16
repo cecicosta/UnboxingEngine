@@ -5,15 +5,14 @@
 namespace unboxing_engine {
 class CMeshBuffer;
 
-class IRenderComponent {
+class IRenderComponent : public IComponent {
 public:
     virtual ~IRenderComponent() = default;
 
     virtual const CMeshBuffer &GetMeshBuffer() const = 0;
 };
 
-class CDefaultMeshRenderComponent : public IComponent
-    , public IRenderComponent {
+class CDefaultMeshRenderComponent : public IRenderComponent {
 public:
     CDefaultMeshRenderComponent(const CMeshBuffer &meshBuffer)
         : mMeshBuffer(meshBuffer) {}

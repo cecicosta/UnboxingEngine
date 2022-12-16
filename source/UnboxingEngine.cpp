@@ -76,13 +76,14 @@ void CCore::Render() {
     }
 
     for (auto &&data: mRenderQueue) {
-        if (!data.mMeshBuffer) {
-            continue;
+        if (auto render = data.mSceneComposite.GetComponent<IRenderComponent>()) {
+           
+            auto meshBuffer = render->GetMeshBuffer();
+            glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (camera->mTransformation * data.mSceneComposite.GetTransformation()).ToArray());
+            glUniform4fv(glGetUniformLocation(program, "color"), 1, meshBuffer.material.materialDif);
+            glBindVertexArray(data.vao);
+            glDrawElements(GL_TRIANGLES, meshBuffer.nfaces * 3, GL_UNSIGNED_INT, nullptr);
         }
-        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (camera->mTransformation * data.mSceneComposite.GetTransformation()).ToArray());
-        glUniform4fv(glGetUniformLocation(program, "color"), 1, data.mMeshBuffer->material.materialDif);
-        glBindVertexArray(data.vao);
-        glDrawElements(GL_TRIANGLES, data.mMeshBuffer->nfaces * 3, GL_UNSIGNED_INT, nullptr);
     }
     RenderCanvas();
 
@@ -595,6 +596,13 @@ void CCore::CreateBasicShader() {
 
 void CCore::WritePendingRenderData() {
     for (auto &&data: mPendingWriteQueue) {
+        auto render = data.mSceneComposite.GetComponent<IRenderComponent>();
+        if (!render) {
+            continue;
+        }
+        // For now, render are obligated to have a CMeshBuffer
+        auto meshBuffer = render->GetMeshBuffer();
+
         glGenVertexArrays(1, &data.vao);
         glGenBuffers(1, &data.vbo);
         glGenBuffers(1, &data.ebo);
@@ -602,21 +610,23 @@ void CCore::WritePendingRenderData() {
         glBindVertexArray(data.vao);
 
         glBindBuffer(GL_ARRAY_BUFFER, data.vbo);
-        glBufferData(GL_ARRAY_BUFFER, 3 * data.mMeshBuffer->nvertices * sizeof(float), data.mMeshBuffer->vertices.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 3 * meshBuffer.nvertices * sizeof(float), meshBuffer.vertices.data(), GL_DYNAMIC_DRAW);
 
         glEnableVertexAttribArray(attrib_position);
         glVertexAttribPointer(attrib_position, 3, GL_FLOAT, GL_FALSE, 0, (void *) (0));
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * data.mMeshBuffer->nfaces * sizeof(unsigned int), data.mMeshBuffer->triangles.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * meshBuffer.nfaces * sizeof(unsigned int), meshBuffer.triangles.data(), GL_DYNAMIC_DRAW);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         mRenderQueue.emplace_back(data);
-    };
+    }
+
     mPendingWriteQueue.clear();
 }
+
 void CCore::GetError() {
     static int error_count = 0;
     auto gl_error = glGetError();
@@ -644,10 +654,7 @@ void CCore::UnregisterEventListener(UListener<> &listener) {
 
 //TODO: Find a better way to store and retrieve the components. The render cannot be retrieved from its common interface with the current method
 CCore::SRenderContext::SRenderContext(const CSceneComposite &sceneComposite)
-    : mSceneComposite(sceneComposite)
-    , mMeshBuffer(sceneComposite.GetComponent<CDefaultMeshRenderComponent>() != nullptr ? 
-        &sceneComposite.GetComponent<CDefaultMeshRenderComponent>()->GetMeshBuffer() : 
-        nullptr) {}
+    : mSceneComposite(sceneComposite) {}
 
 
 }//namespace unboxing_engine

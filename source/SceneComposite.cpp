@@ -3,21 +3,17 @@
 
 namespace unboxing_engine {
 
-void CSceneComposite::AddComponent(IComponent &component) {
-    m_components.push_back(&component);
+void CSceneComposite::AddComponent(std::size_t hash, IComponent &component) {
+    m_components.try_emplace(hash, &component);
 }
 
-IComponent *CSceneComposite::GetComponent(const size_t &hash) const {
-    auto it = std::find_if(m_components.begin(), m_components.end(), [&hash](IComponent* component) {
-        return typeid(*component).hash_code() == hash;
-    });
-    return it != m_components.end() ? *it : nullptr;
+IComponent *CSceneComposite::GetComponent(std::size_t hash) const {
+    auto it = m_components.find(hash);
+    return it != m_components.end() ? it->second : nullptr;
 }
 
-void CSceneComposite::RemoveComponent(const size_t &hash) {
-    auto it = std::find_if(m_components.begin(), m_components.end(), [&hash](IComponent* component) {
-        return typeid(*component).hash_code() == hash;
-    });
+void CSceneComposite::RemoveComponent(std::size_t hash) {
+    auto it = m_components.find(hash);
     if(it != m_components.end()) {
         m_components.erase(it);
     }

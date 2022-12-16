@@ -112,7 +112,6 @@ private:
         std::uint32_t vbo = -1; //Buffer handler for geometry
         std::uint32_t ebo = -1; //Buffer handler for geometry vertex indices
         const CSceneComposite &mSceneComposite;
-        const CMeshBuffer *mMeshBuffer = nullptr;
     };
     std::vector<SRenderContext> mRenderQueue;
     std::vector<SRenderContext> mPendingWriteQueue;

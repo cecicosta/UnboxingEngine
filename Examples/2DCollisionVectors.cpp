@@ -13,8 +13,8 @@ int main(int argc, char *argv[]) {
 
     auto cube = primitive_utils::Cube();
     cube->material.materialDif[0] = 1;
-    CDefaultMeshRenderComponent renderComponent(*cube);
-    composite.AddComponent(renderComponent);
+    std::unique_ptr<IRenderComponent> renderComponent = std::make_unique<CDefaultMeshRenderComponent>(*cube);
+    composite.AddComponent(*renderComponent);
 
     engine.RegisterSceneElement(composite);
 
