@@ -244,7 +244,7 @@ static std::vector<Vector2f> GetBoxVerticesFromCircleTrajectory(const Vector2f& 
 
 }
 
-bool AssessIntersectionBoxWithRay(const BoundingBox &boundingBox, const Vector3f &raySrc, const Vector3f &rayDir) {
+bool AssessIntersectionBoxWithRay(const CBoundingBox3D &boundingBox, const Vector3f &raySrc, const Vector3f &rayDir) {
     //Derivative from p >= min, p >= max, p within [min, max], the 2 points defining the box. And p = O + Dx/Dt, from the ray, with p representing any point of intersection
     Vector3f upper = (boundingBox.getFirst() + boundingBox.getSecond()) - 2 * raySrc;
     upper = Vector3f(upper.x / rayDir.x, upper.y / rayDir.y, upper.z / rayDir.z);
@@ -312,7 +312,7 @@ TEST(CubeRayIntersectionTest, DetectIntersection) {
     Vector3f raySrc(0, -1, 3);
     Vector3f rayEnd(1, 1, -1);
 
-    ASSERT_TRUE(AssessIntersectionBoxWithRay(BoundingBox(first, second), raySrc, rayEnd - raySrc));
+    ASSERT_TRUE(AssessIntersectionBoxWithRay(CBoundingBox3D(first, second), raySrc, rayEnd - raySrc));
 }
 
 TEST(CubeRayIntersectionTest, NoIntersection) {
@@ -322,7 +322,7 @@ TEST(CubeRayIntersectionTest, NoIntersection) {
     Vector3f raySrc(0, -1, 3);
     Vector3f rayEnd(1, 1, 4);
 
-    ASSERT_FALSE(AssessIntersectionBoxWithRay(BoundingBox(first, second), raySrc, rayEnd - raySrc));
+    ASSERT_FALSE(AssessIntersectionBoxWithRay(CBoundingBox3D(first, second), raySrc, rayEnd - raySrc));
 }
 
 TEST(CubeRayIntersectionTest, CloseCallNoIntersection) {
@@ -332,7 +332,7 @@ TEST(CubeRayIntersectionTest, CloseCallNoIntersection) {
     Vector3f raySrc(0, -1, 3);
     Vector3f rayEnd(-0.1, 1, -4);
 
-    ASSERT_FALSE(AssessIntersectionBoxWithRay(BoundingBox(first, second), raySrc, rayEnd - raySrc));
+    ASSERT_FALSE(AssessIntersectionBoxWithRay(CBoundingBox3D(first, second), raySrc, rayEnd - raySrc));
 }
 
 TEST(CubeRayIntersectionTest, TangentIntersection) {
@@ -342,13 +342,13 @@ TEST(CubeRayIntersectionTest, TangentIntersection) {
     Vector3f raySrc(0, -1, 3);
     Vector3f rayEnd(0, 1, -4);
 
-    ASSERT_TRUE(AssessIntersectionBoxWithRay(BoundingBox(first, second), raySrc, rayEnd - raySrc));
+    ASSERT_TRUE(AssessIntersectionBoxWithRay(CBoundingBox3D(first, second), raySrc, rayEnd - raySrc));
 }
 
 //The algorithms is designed so to consider the boxes with its transformations applied
 TEST(CubeRayIntersectionTest, FaceBoxIntersection) {
-    BoundingBox box1(Vector3f(0, 0, 0), Vector3f(5, 7, 5));
-    BoundingBox box2(Vector3f(0, 0, 4.9), Vector3f(8, 10, 9));
+    CBoundingBox3D box1(Vector3f(0, 0, 0), Vector3f(5, 7, 5));
+    CBoundingBox3D box2(Vector3f(0, 0, 4.9), Vector3f(8, 10, 9));
     Vector3f direction;
 
     auto find_escape_vector_component_oposing_direction = [&direction](std::pair<float, float> projected_vertices, const Vector3f &edge) {

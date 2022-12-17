@@ -12,11 +12,11 @@ enum EFace : size_t {
     LEFT
 };
 
-class BoundingBox {
+class CBoundingBox3D {
 public:
-    BoundingBox()  = default;
-    BoundingBox(const Vector3f &first, const Vector3f &second);
-    BoundingBox(const BoundingBox& other);
+    CBoundingBox3D()  = default;
+    CBoundingBox3D(const Vector3f &first, const Vector3f &second);
+    CBoundingBox3D(const CBoundingBox3D& other);
 
     [[nodiscard]] Vector3f getFirst() const;
     [[nodiscard]] Vector3f getSecond() const;
@@ -27,7 +27,7 @@ public:
     [[nodiscard]] std::vector<unsigned int> GetTriangles() const;
     [[nodiscard]] std::vector<unsigned int> GetVertexIdList(EFace face) const;
 
-    BoundingBox& operator=(const BoundingBox& other);
+    CBoundingBox3D& operator=(const CBoundingBox3D& other);
 private:
     void SetVertices(const Vector3f &first, const Vector3f &second);
     void SetTriangles();

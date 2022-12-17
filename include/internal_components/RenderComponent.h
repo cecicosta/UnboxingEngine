@@ -10,6 +10,7 @@ public:
     virtual ~IRenderComponent() = default;
 
     virtual const CMeshBuffer &GetMeshBuffer() const = 0;
+    virtual void Render() const = 0;
 };
 
 class CDefaultMeshRenderComponent : public IRenderComponent {
@@ -19,6 +20,7 @@ public:
     ~CDefaultMeshRenderComponent() override = default;
 
     const CMeshBuffer &GetMeshBuffer() const override { return mMeshBuffer; }
+    void Render() const override;
 
 private:
     const CMeshBuffer &mMeshBuffer;

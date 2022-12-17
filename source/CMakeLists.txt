@@ -10,11 +10,13 @@ set(SOURCES
         MeshBuffer.cpp
         Quaternion.cpp
         UVector.cpp
-        internal_components/TransformComponent.cpp
         SceneNode.cpp
         SceneComposite.cpp
         BoundingBox.cpp
-        
+        BoundingBox2D.cpp
+        internal_components/RenderComponent.cpp
+        internal_components/TransformComponent.cpp
+
         #collisionutil.cpp
         #../include/internal_components/IColliderComponent.h 
         #../include/internal_components/BoundingBoxColliderComponent.h 
@@ -40,9 +42,10 @@ set(HEADERS
         ../include/texture.h
         ../include/BoundingBox.h
         ../include/material.h
+        ../include/BoundingBox2D.h
         #../include/collisionutil.h
         )
 
 message("Source files: ${SOURCES}")
-add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES})
+add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES} "internal_components/RenderComponent.cpp")
 target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})

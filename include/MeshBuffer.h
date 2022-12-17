@@ -20,7 +20,7 @@ typedef struct face {
 class CMeshBuffer {
 
 public:
-    BoundingBox boundingBox;
+    CBoundingBox3D boundingBox;
     std::vector<float> vertices;
     std::vector<float> texcoords;
     std::vector<float> normals;

@@ -2,7 +2,8 @@
 
 #include <algorithm>
 
-BoundingBox::BoundingBox(const Vector3f &first, const Vector3f &second)
+
+CBoundingBox3D::CBoundingBox3D(const Vector3f &first, const Vector3f &second)
 : mFaces(36)
 , mVertices(24)
 , mFirst(first)
@@ -13,7 +14,7 @@ BoundingBox::BoundingBox(const Vector3f &first, const Vector3f &second)
     SetTriangles();
 }
 
-void BoundingBox::SetTriangles() {
+void CBoundingBox3D::SetTriangles() {
     mFaces.resize(36);
 
     //Front
@@ -65,7 +66,7 @@ void BoundingBox::SetTriangles() {
     mFaces[35] = 0;
 }
 
-void BoundingBox::SetVertices(const Vector3f &first, const Vector3f &second) {
+void CBoundingBox3D::SetVertices(const Vector3f &first, const Vector3f &second) {
     mVertices.resize(24);
 
     mVertices[0] = &first.x;
@@ -101,21 +102,21 @@ void BoundingBox::SetVertices(const Vector3f &first, const Vector3f &second) {
     mVertices[23] = &first.z;
 }
 
-BoundingBox::BoundingBox(const BoundingBox &other) : BoundingBox::BoundingBox(other.getFirst(), other.getSecond()) {}
+CBoundingBox3D::CBoundingBox3D(const CBoundingBox3D &other) : CBoundingBox3D::CBoundingBox3D(other.getFirst(), other.getSecond()) {}
 
-Vector3f BoundingBox::getFirst() const {
+Vector3f CBoundingBox3D::getFirst() const {
     return mFirst;
 }
 
-Vector3f BoundingBox::getSecond() const {
+Vector3f CBoundingBox3D::getSecond() const {
     return mSecond;
 }
 
-Vector3f BoundingBox::getPivot() const {
+Vector3f CBoundingBox3D::getPivot() const {
     return mPivot;
 }
 
-std::vector<float> BoundingBox::GetVertices() const {
+std::vector<float> CBoundingBox3D::GetVertices() const {
     std::vector<float> cpy(mVertices.size());
     std::transform(mVertices.begin(), mVertices.end(), cpy.begin(), [](const float* v){
         return *v;
@@ -123,20 +124,20 @@ std::vector<float> BoundingBox::GetVertices() const {
     return cpy;
 }
 
-std::vector<unsigned int> BoundingBox::GetTriangles() const {
+std::vector<unsigned int> CBoundingBox3D::GetTriangles() const {
     return {mFaces};
 }
 
-std::vector<unsigned int> BoundingBox::GetVertexIdList(EFace face) const {
+std::vector<unsigned int> CBoundingBox3D::GetVertexIdList(EFace face) const {
     return { mFaces.begin() + static_cast<unsigned int>(face)*6, mFaces.begin() + static_cast<unsigned int>(face)*6 + 6 };
 }
 
-Vector3f BoundingBox::GetVertex(EFace face, int vIndex) {
+Vector3f CBoundingBox3D::GetVertex(EFace face, int vIndex) {
     auto vIndexList = GetVertexIdList(face);
     return {*mVertices[vIndexList[vIndex]*3], *mVertices[(vIndexList[vIndex])*3 + 1], *mVertices[(vIndexList[vIndex])*3 + 2]};
 }
 
-BoundingBox& BoundingBox::operator=(const BoundingBox &other) {
+CBoundingBox3D& CBoundingBox3D::operator=(const CBoundingBox3D &other) {
     mFirst = other.mFirst;
     mSecond = other.mSecond;
     mPivot = ((mFirst + mSecond) / 2);
