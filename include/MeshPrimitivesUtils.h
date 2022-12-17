@@ -2,6 +2,8 @@
 
 #include "MeshBuffer.h"
 
+#include "UVector.h"
+
 namespace unboxing_engine::primitive_utils {
 
     template<typename  T1, typename  T2>
@@ -16,10 +18,53 @@ namespace unboxing_engine::primitive_utils {
         InsertCoordinates(++vertices, ++offset, arg...);
     }
 
+    void AddVetex(CMeshBuffer &mesh, Vector3f point) {
+        uint vertexOffset = 3 * mesh.nvertices;
+        InsertCoordinates(&mesh.vertices[vertexOffset], vertexOffset, point.x, point.y, point.z);
+        if (mesh.nvertices > 0) {
+            uint elementOffset = 2 * mesh.nfaces;
+            //Adding dummy vertice to complete a triangle while the render cannot only render lines 
+            InsertCoordinates(&mesh.vertices[vertexOffset], vertexOffset, point.x, point.y, point.z);
+            mesh.nvertices++;
+            InsertCoordinates(&mesh.triangles[elementOffset], elementOffset, mesh.nvertices - 2, mesh.nvertices - 1, mesh.nvertices);
+            mesh.nfaces++;
+        }
+        mesh.nvertices++;
+    }
+
+    template<typename T>
+    void DrawLines(CMeshBuffer &mesh, const T& point) {
+        AddVetex(mesh, point);
+    }
+
+    template<typename T, typename... Args>
+    void DrawLines(CMeshBuffer &mesh, const T &point,Args... points) {
+        AddVetex(mesh, point);
+        DrawLines(mesh, points...);
+    }
+
+    //Create a cube mesh
+    template <typename T, typename... Args>
+    [[nodiscard]] std::unique_ptr<CMeshBuffer> DrawLines(const T &point_1, Args... points) {
+        auto mesh = std::make_unique<CMeshBuffer>();
+        constexpr std::size_t n = sizeof...(Args) + 1;
+        mesh->nnormals = 0;
+        mesh->ntexcoords = 0;
+        mesh->nfaces = 0;
+        mesh->vertices.resize(3 * 2 * (n));
+        mesh->triangles.resize(3 * (n-1));
+        mesh->nvertices = 0;
+
+        //mesh->boundingBox = BoundingBox(Vector3f(-0.5f, -0.5f, -0.5f), Vector3f(0.5f, 0.5f, 0.5f));
+        AddVetex(*mesh, point_1);
+        DrawLines(*mesh, points...);
+        return mesh;
+    }
+
     //Create a cube mesh
     [[nodiscard]] CMeshBuffer *Cube() {
         auto mesh = new CMeshBuffer();
-        mesh->boundingBox = BoundingBox(Vector3f(-0.5f, -0.5f, -0.5f), Vector3f(0.5f, 0.5f, 0.5f));
+        mesh->boundingBox = CBoundingBox3D(Vector3f(-0.5f, -0.5f, -0.5f), Vector3f(0.5f, 0.5f, 0.5f));
         mesh->nvertices = 8;
         mesh->nnormals = 12;
         mesh->ntexcoords = 24;

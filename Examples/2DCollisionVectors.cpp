@@ -12,16 +12,16 @@ int main(int argc, char *argv[]) {
     CSceneComposite box;
     CSceneComposite line;
 
-    auto line_mesh = primitive_utils::DrawLines(Vector3f(1,1,0), Vector3f(-1,-1,0));
+    auto line_mesh = primitive_utils::DrawLines(Vector3f(0.5f, 0.5f, 0), Vector3f(-0.5f, -0.5, 0), Vector3f(-0.3, 0, 0));
     std::unique_ptr<IRenderComponent> lineRenderComponent = std::make_unique<CDefaultMeshRenderComponent>(*line_mesh);
     line.AddComponent(*lineRenderComponent);
     engine.RegisterSceneElement(line);
 
-    auto box_mesh = primitive_utils::Cube();
-    box_mesh->material.materialDif[0] = 1;
-    std::unique_ptr<IRenderComponent> boxRenderComponent = std::make_unique<CDefaultMeshRenderComponent>(*box_mesh);
-    box.AddComponent(*boxRenderComponent);
-    engine.RegisterSceneElement(box);
+    //auto box_mesh = primitive_utils::Cube();
+    //box_mesh->material.materialDif[0] = 1;
+    //std::unique_ptr<IRenderComponent> boxRenderComponent = std::make_unique<CDefaultMeshRenderComponent>(*box_mesh);
+    //box.AddComponent(*boxRenderComponent);
+    //engine.RegisterSceneElement(box);
 
 
     engine.Run();
