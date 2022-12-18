@@ -6,23 +6,26 @@
 
 using namespace unboxing_engine;
 
+std::unique_ptr<CSceneComposite> CreateObject(CCore& engine, const CMeshBuffer& mesh) {
+    std::unique_ptr<CSceneComposite> line = std::make_unique<CSceneComposite>();
+    std::unique_ptr<IRenderComponent> lineRenderComponent = std::make_unique<CDefaultMeshRenderComponent>(mesh);
+    line->AddComponent(std::move(lineRenderComponent));
+    engine.RegisterSceneElement(*line);
+    return std::move(line);
+}
+
 int main(int argc, char *argv[]) {
     CCore engine(640, 480, 32);
     engine.Start();
-    CSceneComposite box;
-    CSceneComposite line;
+    auto line_mesh = primitive_utils::Lines(Vector3f(0.5f, 0, 0), Vector3f(-0.5f, 0, 0));
+    auto line = CreateObject(engine, *line_mesh);
 
-    auto line_mesh = primitive_utils::DrawLines(Vector3f(0.5f, 0.5f, 0), Vector3f(-0.5f, -0.5, 0), Vector3f(-0.3, 0, 0));
-    std::unique_ptr<IRenderComponent> lineRenderComponent = std::make_unique<CDefaultMeshRenderComponent>(*line_mesh);
-    line.AddComponent(*lineRenderComponent);
-    engine.RegisterSceneElement(line);
 
-    //auto box_mesh = primitive_utils::Cube();
-    //box_mesh->material.materialDif[0] = 1;
-    //std::unique_ptr<IRenderComponent> boxRenderComponent = std::make_unique<CDefaultMeshRenderComponent>(*box_mesh);
-    //box.AddComponent(*boxRenderComponent);
-    //engine.RegisterSceneElement(box);
 
+    auto box_mesh = primitive_utils::Cube();
+    box_mesh->material.materialDif[0] = 1;
+    auto box = CreateObject(engine, *box_mesh);
+    box->SetScale({0.5f, 0.5f, 0.5f});
 
     engine.Run();
     engine.Release();

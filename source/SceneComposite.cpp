@@ -3,13 +3,13 @@
 
 namespace unboxing_engine {
 
-void CSceneComposite::AddComponent(std::size_t hash, IComponent &component) {
-    m_components.try_emplace(hash, &component);
+void CSceneComposite::AddComponent(std::size_t hash, std::unique_ptr<IComponent> component) {
+    m_components.try_emplace(hash, std::move(component));
 }
 
 IComponent *CSceneComposite::GetComponent(std::size_t hash) const {
     auto it = m_components.find(hash);
-    return it != m_components.end() ? it->second : nullptr;
+    return it != m_components.end() ? it->second.get() : nullptr;
 }
 
 void CSceneComposite::RemoveComponent(std::size_t hash) {

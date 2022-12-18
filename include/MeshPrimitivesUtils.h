@@ -33,31 +33,31 @@ namespace unboxing_engine::primitive_utils {
     }
 
     template<typename T>
-    void DrawLines(CMeshBuffer &mesh, const T& point) {
+    void Lines(CMeshBuffer &mesh, const T& point) {
         AddVetex(mesh, point);
     }
 
     template<typename T, typename... Args>
-    void DrawLines(CMeshBuffer &mesh, const T &point,Args... points) {
+    void Lines(CMeshBuffer &mesh, const T &point,Args... points) {
         AddVetex(mesh, point);
-        DrawLines(mesh, points...);
+        Lines(mesh, points...);
     }
 
     //Create a cube mesh
     template <typename T, typename... Args>
-    [[nodiscard]] std::unique_ptr<CMeshBuffer> DrawLines(const T &point_1, Args... points) {
+    [[nodiscard]] std::unique_ptr<CMeshBuffer> Lines(const T &point_1, Args... points) {
         auto mesh = std::make_unique<CMeshBuffer>();
         constexpr std::size_t n = sizeof...(Args) + 1;
         mesh->nnormals = 0;
         mesh->ntexcoords = 0;
         mesh->nfaces = 0;
-        mesh->vertices.resize(3 * 2 * (n));
+        mesh->vertices.resize(3 * 2 * n - 3);
         mesh->triangles.resize(3 * (n-1));
         mesh->nvertices = 0;
 
         //mesh->boundingBox = BoundingBox(Vector3f(-0.5f, -0.5f, -0.5f), Vector3f(0.5f, 0.5f, 0.5f));
         AddVetex(*mesh, point_1);
-        DrawLines(*mesh, points...);
+        Lines(*mesh, points...);
         return mesh;
     }
 
