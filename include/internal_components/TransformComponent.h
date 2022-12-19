@@ -27,6 +27,9 @@ public:
     void Rotate(const Quaternion& rotation);
     void Rotate(float degrees, const Vector3f& axi);
 
+    void OnAttached(IComposite &) override {}
+    void OnDetached() override{};
+
 private:
     Vector3f m_position;
     Vector3f m_scale;

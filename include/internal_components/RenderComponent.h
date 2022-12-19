@@ -22,6 +22,8 @@ public:
     const CMeshBuffer &GetMeshBuffer() const override { return mMeshBuffer; }
     void Render() const override;
 
+    void OnAttached(IComposite &) override {}
+    void OnDetached() override{};
 private:
     const CMeshBuffer &mMeshBuffer;
 };

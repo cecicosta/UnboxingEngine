@@ -4,7 +4,9 @@
 namespace unboxing_engine {
 
 void CSceneComposite::AddComponent(std::size_t hash, std::unique_ptr<IComponent> component) {
+    auto &ref = *component;    
     m_components.try_emplace(hash, std::move(component));
+    ref.OnAttached(*this);
 }
 
 IComponent *CSceneComposite::GetComponent(std::size_t hash) const {
@@ -15,6 +17,7 @@ IComponent *CSceneComposite::GetComponent(std::size_t hash) const {
 void CSceneComposite::RemoveComponent(std::size_t hash) {
     auto it = m_components.find(hash);
     if(it != m_components.end()) {
+        it->second->OnDetached();
         m_components.erase(it);
     }
 }
