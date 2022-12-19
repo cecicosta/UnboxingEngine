@@ -77,10 +77,10 @@ void CCore::Render() {
     }
 
     for (auto &&data: mRenderQueue) {
-        if (auto render = data.mSceneComposite.GetComponent<IRenderComponent>()) {
+        if (auto render = data.mSceneComposite->GetComponent<IRenderComponent>()) {
            
             auto meshBuffer = render->GetMeshBuffer();
-            glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (camera->mTransformation * data.mSceneComposite.GetTransformation()).ToArray());
+            glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (camera->mTransformation * data.mSceneComposite->GetTransformation()).ToArray());
             glUniform4fv(glGetUniformLocation(program, "color"), 1, meshBuffer.material.materialDif);
             glBindVertexArray(data.vao);
             glDrawElements(GL_TRIANGLES, meshBuffer.nfaces * 3, GL_UNSIGNED_INT, nullptr);
@@ -597,7 +597,7 @@ void CCore::CreateBasicShader() {
 
 void CCore::WritePendingRenderData() {
     for (auto &&data: mPendingWriteQueue) {
-        auto render = data.mSceneComposite.GetComponent<IRenderComponent>();
+        auto render = data.mSceneComposite->GetComponent<IRenderComponent>();
         if (!render) {
             continue;
         }
@@ -661,19 +661,23 @@ void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
     }
 
     auto findRenderContext = [&sceneComposite](const SRenderContext &context) {
-        if (context.mSceneComposite.id == sceneComposite.id) {
+        if (context.mSceneComposite->id == sceneComposite.id) {
             return true;
         }
         return false;
     };
-    auto it = std::find_if(mPendingWriteQueue.begin(), mPendingWriteQueue.end(), findRenderContext);
-    if (it != mPendingWriteQueue.end()) {
-        mPendingWriteQueue.erase(it);
+    {
+        auto it = std::find_if(mPendingWriteQueue.begin(), mPendingWriteQueue.end(), findRenderContext);
+        if (it != mPendingWriteQueue.end()) {
+            mPendingWriteQueue.erase(it);
+        }
     }
-    auto it = std::find_if(mRenderQueue.begin(), mRenderQueue.end(), findRenderContext);
-    if (it != mPendingWriteQueue.end()) {
-        ReleaseRenderData(*it);
-        mRenderQueue.erase(it);
+    {
+        auto it = std::find_if(mRenderQueue.begin(), mRenderQueue.end(), findRenderContext);
+        if (it != mPendingWriteQueue.end()) {
+            ReleaseRenderData(*it);
+            mRenderQueue.erase(it);
+        }
     }
 }
 
@@ -687,7 +691,7 @@ void CCore::UnregisterEventListener(UListener<> &listener) {
 
 //TODO: Find a better way to store and retrieve the components. The render cannot be retrieved from its common interface with the current method
 CCore::SRenderContext::SRenderContext(const CSceneComposite &sceneComposite)
-    : mSceneComposite(sceneComposite) {}
+    : mSceneComposite(&sceneComposite) {}
 
 
 }//namespace unboxing_engine

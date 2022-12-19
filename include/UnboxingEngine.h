@@ -40,7 +40,7 @@ class CCore : public IEngine, public CEventDispatcher {
         std::uint32_t vao = -1;//Refers to the whole render context, including geometry, shaders and parameters
         std::uint32_t vbo = -1;//Buffer handler for geometry
         std::uint32_t ebo = -1;//Buffer handler for geometry vertex indices
-        const CSceneComposite &mSceneComposite;
+        const CSceneComposite *mSceneComposite;
     };
 
 
