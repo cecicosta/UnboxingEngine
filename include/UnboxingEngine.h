@@ -12,7 +12,6 @@
 #include "Matrix.h"
 #include "Quaternion.h"
 #include "UVector.h"
-
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -20,6 +19,7 @@
 #include <iostream>
 
 #include <EventDispatcher.h>
+#include "systems/CollisionSystem.h"
 
 #define L_BUTTON 0
 #define R_BUTTON 1
@@ -34,6 +34,16 @@ class CMeshBuffer;
 class CSceneComposite;
 
 class CCore : public IEngine, public CEventDispatcher {
+    ///Rendering opengl buffer handlers
+    struct SRenderContext {
+        explicit SRenderContext(const CSceneComposite &sceneComposite);
+        std::uint32_t vao = -1;//Refers to the whole render context, including geometry, shaders and parameters
+        std::uint32_t vbo = -1;//Buffer handler for geometry
+        std::uint32_t ebo = -1;//Buffer handler for geometry vertex indices
+        const CSceneComposite &mSceneComposite;
+    };
+
+
 public:
     CCore(uint32_t width, uint32_t height, uint32_t bpp);
     ~CCore() override = default;
@@ -53,7 +63,8 @@ public:
     void UnregisterEventListener(UListener<>& listener);
     ///
     void RegisterSceneElement(const CSceneComposite& sceneComposite);
-    ///Writes objects geometry to be rendered
+    void UnregisterSceneElement(const CSceneComposite &sceneComposite);
+    ///Register object to interact with the basic engine systems throught its existing components
     void WritePendingRenderData();
 
     ///Destroy opengl context, window and finish SDL subsystems
@@ -68,7 +79,7 @@ private:
 
     void CreateView() const;
     void CreateBasicShader();
-
+    
     ///Load texture into the engine resources manager
     Texture *LoadTexture(char *filename);
     ///Convert um SDL_surface to opengl texture
@@ -96,6 +107,9 @@ private:
     ///The control keys used are wasd for movement and mouse for direction.
     void UpdateFlyingController();
 
+    ///
+    void ReleaseRenderData(SRenderContext &context);
+
     ///Retrieve and log opengl errors
     static void GetError() ;
 
@@ -104,15 +118,7 @@ private:
 
     ///Basic shader handler
     std::uint32_t program = -1;
-
-    ///Rendering opengl buffer handlers
-    struct SRenderContext {
-        explicit SRenderContext(const CSceneComposite &sceneComposite);
-        std::uint32_t vao = -1; //Refers to the whole render context, including geometry, shaders and parameters
-        std::uint32_t vbo = -1; //Buffer handler for geometry
-        std::uint32_t ebo = -1; //Buffer handler for geometry vertex indices
-        const CSceneComposite &mSceneComposite;
-    };
+    ///
     std::vector<SRenderContext> mRenderQueue;
     std::vector<SRenderContext> mPendingWriteQueue;
 
@@ -134,6 +140,9 @@ private:
         int cursorState[3]{0, 0, 0};
     };
     SCursor mCursor;
+
+    //Handle objects with a ICollisionComponent registered
+    systems::CollisionSystem mCollisionSystem;
 
     ///Keyboard input attributes
     std::uint8_t const *keyState = nullptr;

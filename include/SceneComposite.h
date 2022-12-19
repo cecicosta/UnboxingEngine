@@ -14,7 +14,7 @@ class CSceneComposite : public SceneNode, public IComposite {
 public:
     int id{};
 
-    CSceneComposite() = default;
+    CSceneComposite();
     CSceneComposite(const CSceneComposite &) = delete;
     ~CSceneComposite() override = default;
 

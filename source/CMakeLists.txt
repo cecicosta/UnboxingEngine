@@ -47,5 +47,5 @@ set(HEADERS
         )
 
 message("Source files: ${SOURCES}")
-add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES} "internal_components/RenderComponent.cpp")
+add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES} "internal_components/RenderComponent.cpp" "systems/CollisionSystem.cpp")
 target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})

@@ -20,8 +20,6 @@ int main(int argc, char *argv[]) {
     auto line_mesh = primitive_utils::Lines(Vector3f(0.5f, 0, 0), Vector3f(-0.5f, 0, 0));
     auto line = CreateObject(engine, *line_mesh);
 
-
-
     auto box_mesh = primitive_utils::Cube();
     box_mesh->material.materialDif[0] = 1;
     auto box = CreateObject(engine, *box_mesh);

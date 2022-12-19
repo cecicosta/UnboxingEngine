@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "internal_components/RenderComponent.h"
+#include "internal_components/IColliderComponent.h"
 
 
 namespace unboxing_engine {
@@ -601,7 +602,7 @@ void CCore::WritePendingRenderData() {
             continue;
         }
         // For now, render are obligated to have a CMeshBuffer
-        auto meshBuffer = render->GetMeshBuffer();
+        auto meshBuffer = render->GetMeshBuffer();       
 
         glGenVertexArrays(1, &data.vao);
         glGenBuffers(1, &data.vbo);
@@ -627,6 +628,12 @@ void CCore::WritePendingRenderData() {
     mPendingWriteQueue.clear();
 }
 
+void CCore::ReleaseRenderData(SRenderContext& context) {
+    glDeleteVertexArrays(1, &context.vao);
+    glDeleteBuffers(1, &context.vbo);
+    glDeleteBuffers(1, &context.ebo);
+}
+
 void CCore::GetError() {
     static int error_count = 0;
     auto gl_error = glGetError();
@@ -641,7 +648,33 @@ void CCore::RenderCanvas() {
 }
 
 void CCore::RegisterSceneElement(const CSceneComposite &sceneComposite) {
+    if (auto collider = sceneComposite.GetComponent<internal_components::IColliderComponent>()) {
+        mCollisionSystem.RegisterListener(*collider);
+    }
+
     mPendingWriteQueue.emplace_back(SRenderContext(sceneComposite));
+}
+
+void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
+    if (auto collider = sceneComposite.GetComponent<internal_components::IColliderComponent>()) {
+        mCollisionSystem.UnregisterListener(*collider);
+    }
+
+    auto findRenderContext = [&sceneComposite](const SRenderContext &context) {
+        if (context.mSceneComposite.id == sceneComposite.id) {
+            return true;
+        }
+        return false;
+    };
+    auto it = std::find_if(mPendingWriteQueue.begin(), mPendingWriteQueue.end(), findRenderContext);
+    if (it != mPendingWriteQueue.end()) {
+        mPendingWriteQueue.erase(it);
+    }
+    auto it = std::find_if(mRenderQueue.begin(), mRenderQueue.end(), findRenderContext);
+    if (it != mPendingWriteQueue.end()) {
+        ReleaseRenderData(*it);
+        mRenderQueue.erase(it);
+    }
 }
 
 void CCore::RegisterEventListener(UListener<> &listener) {

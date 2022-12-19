@@ -8,6 +8,6 @@ public:
     virtual ~IComponent() = default;
 
     virtual void OnAttached(IComposite &) = 0;
-    virtual void OnDetached();
+    virtual void OnDetached() = 0;
 };
 }// namespace unboxing_engine

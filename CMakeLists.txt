@@ -50,7 +50,7 @@ include_directories(
         ./third_party/glew-2.1.0/include)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp "include/internal_components/RenderComponent.h")
+add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp "include/internal_components/RenderComponent.h" "include/systems/CollisionSystem.h")
 target_link_libraries(unboxing_engine unboxing_engine_src_lib SDL2main glew SDL2 SDL2_image SDL2_ttf)
 
 if (WIN32)
