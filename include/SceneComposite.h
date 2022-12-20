@@ -9,13 +9,13 @@
 
 namespace unboxing_engine {
 
-class CSceneComposite : public SceneNode {
+class CSceneComposite : public CSceneNode {
 public:
     int id{};
 
     CSceneComposite();
     CSceneComposite(const CSceneComposite &) = delete;
-    ~CSceneComposite() = default;
+    ~CSceneComposite() override = default;
 
     template<class T>
     void AddComponent(std::unique_ptr<T> component) ;

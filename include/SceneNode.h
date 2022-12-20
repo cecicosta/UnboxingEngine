@@ -6,8 +6,10 @@
 
 namespace unboxing_engine {
 
-class SceneNode {
+class CSceneNode {
 public:
+    virtual ~CSceneNode() = default;
+
     void SetPosition(const Vector3f& position);
     void SetScale(const Vector3f& scale);
     void SetRotation(const Quaternion& rotation);
@@ -18,14 +20,14 @@ public:
     [[nodiscard]] Quaternion GetRotation() const;
     [[nodiscard]] Matrix4f GetTransformation() const;
 
-    void SetParent(SceneNode* parent);
+    void SetParent(CSceneNode* parent);
 
-    SceneNode* GetParent();
-    std::vector<SceneNode*> GetChildren();
+    CSceneNode* GetParent();
+    std::vector<CSceneNode*> GetChildren();
 
 protected:
-    SceneNode* m_parent = nullptr;
-    std::vector<SceneNode*> m_children;
+    CSceneNode* m_parent = nullptr;
+    std::vector<CSceneNode*> m_children;
     TransformComponent m_transform;
 };
 }// namespace unboxing_engine
