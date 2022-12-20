@@ -3,7 +3,6 @@
 #include "SceneComposite.h"
 #include <Camera.h>
 #include <CoreEvents.h>
-#include <IComposite.h>
 #include <MeshBuffer.h>
 
 #include <GL/glew.h>

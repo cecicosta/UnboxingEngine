@@ -24,7 +24,7 @@ public:
     std::vector<SceneNode*> GetChildren();
 
 protected:
-    SceneNode* m_parent;
+    SceneNode* m_parent = nullptr;
     std::vector<SceneNode*> m_children;
     TransformComponent m_transform;
 };

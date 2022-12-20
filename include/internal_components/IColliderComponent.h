@@ -11,7 +11,7 @@ class IColliderComponent : public IComponent
 public:
     ~IColliderComponent() override = default;
 
-    [[nodiscard]] virtual bool HasCollided() const = 0;
+    [[nodiscard]] virtual bool HasCollided(const IColliderComponent &other) const = 0;
 };
 
 }// namespace unboxing_engine::internal_components

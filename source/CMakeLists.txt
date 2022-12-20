@@ -6,6 +6,9 @@ include_directories(
 )
 set(SOURCES
         ${SOURCES}
+        internal_components/RenderComponent.cpp
+        internal_components/TransformComponent.cpp
+        internal_components/BoundingBoxColliderComponent.cpp
         Camera.cpp
         MeshBuffer.cpp
         Quaternion.cpp
@@ -14,16 +17,16 @@ set(SOURCES
         SceneComposite.cpp
         BoundingBox.cpp
         BoundingBox2D.cpp
-        internal_components/RenderComponent.cpp
-        internal_components/TransformComponent.cpp
-
         #collisionutil.cpp
-        #../include/internal_components/IColliderComponent.h 
-        #../include/internal_components/BoundingBoxColliderComponent.h 
-        #internal_components/IBoundingBoxColliderComponent.cpp
+
 )
 set(HEADERS
         ${HEADERS}
+        ../include/internal_components/IRenderComponent.h
+        ../include/internal_components/RenderComponent.h
+        ../include/internal_components/IColliderComponent.h 
+        ../include/internal_components/BoundingBoxColliderComponent.h 
+        ../include/internal_components/TransformComponent.h
         ../include/Camera.h
         ../include/IEngine.h
         ../include/EventDispatcher.h
@@ -34,9 +37,8 @@ set(HEADERS
         ../include/MeshBuffer.h
         ../include/Quaternion.h
         ../include/CustomTypes.h
-        ../include/IComposite.h
+        
         ../include/UVector.h
-        ../include/internal_components/TransformComponent.h
         ../include/SceneComposite.h
         ../include/SceneNode.h
         ../include/texture.h

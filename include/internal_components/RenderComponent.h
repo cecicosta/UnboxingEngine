@@ -1,17 +1,10 @@
 #pragma once
 
+#include "internal_components/IRenderComponent.h"
 #include "IComponent.h"
 
 namespace unboxing_engine {
 class CMeshBuffer;
-
-class IRenderComponent : public IComponent {
-public:
-    virtual ~IRenderComponent() = default;
-
-    virtual const CMeshBuffer &GetMeshBuffer() const = 0;
-    virtual void Render() const = 0;
-};
 
 class CDefaultMeshRenderComponent : public IRenderComponent {
 public:
@@ -22,7 +15,7 @@ public:
     const CMeshBuffer &GetMeshBuffer() const override { return mMeshBuffer; }
     void Render() const override;
 
-    void OnAttached(IComposite &) override {}
+    void OnAttached(CSceneComposite &) override {}
     void OnDetached() override{};
 private:
     const CMeshBuffer &mMeshBuffer;

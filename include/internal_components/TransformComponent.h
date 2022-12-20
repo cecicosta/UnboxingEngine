@@ -1,5 +1,4 @@
 #pragma once
-#include "IComposite.h"
 
 #include "IComponent.h"
 #include "Matrix.h"
@@ -27,7 +26,7 @@ public:
     void Rotate(const Quaternion& rotation);
     void Rotate(float degrees, const Vector3f& axi);
 
-    void OnAttached(IComposite &) override {}
+    void OnAttached(CSceneComposite &) override {}
     void OnDetached() override{};
 
 private:
