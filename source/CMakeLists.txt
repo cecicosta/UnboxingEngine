@@ -8,7 +8,9 @@ set(SOURCES
         ${SOURCES}
         internal_components/RenderComponent.cpp
         internal_components/TransformComponent.cpp
-        internal_components/BoundingBoxColliderComponent.cpp
+        internal_components/BoundingBox2DColliderComponent.cpp
+        internal_components/SegmentColliderComponent.cpp
+        internal_components/RayColliderComponent.cpp
         Camera.cpp
         MeshBuffer.cpp
         Quaternion.cpp
@@ -18,14 +20,15 @@ set(SOURCES
         BoundingBox.cpp
         BoundingBox2D.cpp
         #collisionutil.cpp
-
 )
 set(HEADERS
         ${HEADERS}
         ../include/internal_components/IRenderComponent.h
         ../include/internal_components/RenderComponent.h
         ../include/internal_components/IColliderComponent.h 
-        ../include/internal_components/BoundingBoxColliderComponent.h 
+        ../include/internal_components/BoundingBox2DColliderComponent.h
+        ../include/internal_components/SegmentColliderComponent.h
+        ../include/internal_components/RayColliderComponent.h
         ../include/internal_components/TransformComponent.h
         ../include/Camera.h
         ../include/IEngine.h
@@ -37,7 +40,6 @@ set(HEADERS
         ../include/MeshBuffer.h
         ../include/Quaternion.h
         ../include/CustomTypes.h
-        
         ../include/UVector.h
         ../include/SceneComposite.h
         ../include/SceneNode.h
@@ -49,5 +51,5 @@ set(HEADERS
         )
 
 message("Source files: ${SOURCES}")
-add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES} "internal_components/RenderComponent.cpp" "systems/CollisionSystem.cpp")
+add_library(${BINARY_FILENAME}_lib STATIC ${SOURCES} "internal_components/RenderComponent.cpp" "systems/CollisionSystem.cpp" "internal_components/SegmentColliderComponent.cpp" "internal_components/RayColliderComponent.cpp")
 target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})

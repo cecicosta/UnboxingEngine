@@ -1,7 +1,10 @@
-#include "internal_components/BoundingBoxColliderComponent.h"
+#include "internal_components/BoundingBox2DColliderComponent.h"
 
+#include "SceneComposite.h"
 #include "algorithms/CollisionAlgorithms.h"
 #include "internal_components/IRenderComponent.h"
+
+#include <assert.h>
 
 namespace unboxing_engine::internal_components {
 
@@ -15,11 +18,10 @@ void CBoxColliderComponent2D::OnAttached(CSceneComposite& composite) {
 }
 
 bool CBoxColliderComponent2D::HasCollided(const Vector2f &p1, const Vector2f p2) {
-    /* if (!mComposite || mComposite->GetComponent<IRenderComponent>()) {
-        return nullptr;
+    assert(mComposite && "CSceneComposite has not been attached.");
+    if (auto render = mComposite->GetComponent<IRenderComponent>()) {
+        //algorithms::checkSegmentCollisionAgainstRect(render->GetMeshBuffer().vertices, p1, p2);
     }
-
-    algorithms::checkSegmentCollisionAgainstRect(mComposite->)*/
     return false;
 }
 

@@ -1,5 +1,12 @@
 #pragma once
 
+#include "UVector.h"
+#include "BoundingBox.h"
+#include "BoundingBox2D.h"
+
+#include <vector>
+#include <algorithm>
+
 namespace unboxing_engine::algorithms {
 
 template<typename T, int dimension>
@@ -243,4 +250,5 @@ static bool AssessIntersectionBoxWithRay(const CBoundingBox3D &boundingBox, cons
     upper = Vector3f(upper.x / rayDir.x, upper.y / rayDir.y, upper.z / rayDir.z);
     return upper.x > 0 && upper.y > 0 && upper.z > 0;
 }
+
 }// namespace unboxing_engine::algorithms
