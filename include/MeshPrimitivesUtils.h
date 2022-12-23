@@ -64,7 +64,7 @@ namespace unboxing_engine::primitive_utils {
     //Create a cube mesh
     [[nodiscard]] CMeshBuffer *Cube() {
         auto mesh = new CMeshBuffer();
-        mesh->boundingBox = CBoundingBox3D(Vector3f(-0.5f, -0.5f, -0.5f), Vector3f(0.5f, 0.5f, 0.5f));
+        mesh->boundingBox = CBoundingBox3D(Vector3f(-0.5f, -0.5f, 0), Vector3f(0.5f, 0.5f, 0));
         mesh->nvertices = 8;
         mesh->nnormals = 12;
         mesh->ntexcoords = 24;

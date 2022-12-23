@@ -1,12 +1,12 @@
 #pragma once
 
-#include "UVector.h"
 #include "BoundingBox.h"
 #include "BoundingBox2D.h"
+#include "UVector.h"
 
-#include <vector>
 #include <algorithm>
-
+#include <assert.h>
+#include <vector>
 namespace unboxing_engine::algorithms {
 
 template<typename T, int dimension>
@@ -16,6 +16,74 @@ struct SCollisionResult {
     Vector<T, dimension> intersection;         // Intersection point
     Vector<T, dimension> escape;               //Vector to which direction and lenth the collision can be undone
 };
+
+template<typename T, int dimension>
+bool isInsideTriangle(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &p) {
+    assert(vertices.size() >= 3 && "A triangle is expected to have 3 vertices.");
+
+    auto edge_a = vertices[2] - vertices[0];
+    auto edge_b = vertices[1] - vertices[0];
+    auto edge_a_length = edge_a.Length();
+    auto edge_b_length = edge_b.Length();
+    auto edge_b_normalized = edge_b / edge_b_length;
+    auto edge_a_normalized = edge_a / edge_a_length;
+
+    auto is_inside = [](const std::vector<Vector<T, dimension>> &vertices, const auto &p) {
+        auto edge_a = vertices[2] - vertices[0];
+        auto edge_b = vertices[1] - vertices[0];
+        auto edge_a_length = edge_a.Length();
+        auto edge_b_length = edge_b.Length();
+        auto edge_a_normalized = edge_a / edge_a_length;
+        auto edge_b_normalized = edge_b / edge_b_length;
+
+        auto v0_p = p - vertices[0];
+        auto projection_p_b = v0_p.DotProduct(edge_b_normalized);
+
+        if (projection_p_b >= 0 && projection_p_b <= edge_b_length) {
+            auto projection_p_a = v0_p.DotProduct(edge_a_normalized);
+            return projection_p_a / edge_a_length + projection_p_b / edge_b_length <= 1;
+        }
+        return false;
+    };
+
+    auto projection_a_b = edge_a.DotProduct(edge_b_normalized);
+    //If right angle is on the vertex 0, the projection between ortogonal segments is 0.
+    if (projection_a_b == 0) {
+        return is_inside({vertices[0], vertices[1], vertices[2]}, p);
+    }
+    //If right angle is on the vertex 1, the projection of its oposite segment, v0v2, should equals its adjacenet segment, v0v1, length
+    if (projection_a_b == edge_b_length) {
+        return is_inside({vertices[1], vertices[2], vertices[0]}, p);
+    }
+    //If right angle is on the vertex 2, the projection of its oposite segment, v0v1, should equals its adjacenet segment, v0v2, length
+    auto projection_b_a = edge_b.DotProduct(edge_a.Normalized());
+    if (projection_b_a == edge_a_length) {
+        return is_inside({vertices[2], vertices[0], vertices[1]}, p);
+    }
+    //If projection of edge a over b, is less than edge b length, splits the triangle on the edge b to vertice 1
+    if (projection_a_b > 0 && projection_a_b < edge_b_length) {
+        auto p0 = vertices[0] + edge_b_normalized * projection_a_b;
+        return is_inside({p0, vertices[2], vertices[0]}, p) ||
+               is_inside({p0, vertices[1], vertices[2]}, p);
+    }
+    //If projection of edge b over a, is less than edge a length, splits the triangle on the edge a to vertice 1
+    if (projection_b_a > 0 && projection_b_a < edge_a_length) {
+        auto p0 = vertices[0] + edge_a_normalized * projection_b_a;
+        return is_inside({p0, vertices[0], vertices[1]}, p) ||
+               is_inside({p0, vertices[1], vertices[2]}, p);
+    }
+    auto edge_c = vertices[2] - vertices[1];
+    auto edge_c_length = edge_c.Length();
+    auto edge_c_normalized = edge_c.Normalized();
+    edge_b = -1*edge_b;
+    auto projection_b_c = edge_b.DotProduct(edge_c_normalized);
+    //If projection of edge b over a, is less than edge a length, splits the triangle on the edge a to vertice 1
+    if (projection_b_c > 0 && projection_b_c < edge_c_length) {
+        auto p0 = vertices[1] + edge_c_normalized * projection_b_c;
+        return is_inside({p0, vertices[2], vertices[0]}, p) ||
+               is_inside({p0, vertices[0], vertices[1]}, p);
+    }
+}
 
 /// <summary>
 ///

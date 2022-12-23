@@ -8,7 +8,7 @@ namespace unboxing_engine {
 class CSceneComposite;
 }
 
-namespace unboxing_engine::internal_components {
+namespace unboxing_engine {
 
 class CBoxColliderComponent2D : public IColliderComponent {
 public:
@@ -21,6 +21,7 @@ public:
     [[nodiscard]] bool HasCollided(const IColliderComponent &other) const override;
 
     //IComponent
+    const CSceneComposite *GetSceneComposite() const override { return mComposite; }
     void OnAttached(CSceneComposite& composite) override;
     void OnDetached() override;
 
@@ -32,4 +33,4 @@ private:
     CBoundingBox3D mBoundingBox;
     CSceneComposite *mComposite = nullptr;
 };
-}// namespace unboxing_engine::internal_components
+}// namespace unboxing_engine

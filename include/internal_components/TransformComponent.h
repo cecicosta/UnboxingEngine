@@ -26,6 +26,7 @@ public:
     void Rotate(const Quaternion& rotation);
     void Rotate(float degrees, const Vector3f& axi);
 
+    const CSceneComposite *GetSceneComposite() const override { return nullptr; }
     void OnAttached(CSceneComposite &) override {}
     void OnDetached() override{};
 

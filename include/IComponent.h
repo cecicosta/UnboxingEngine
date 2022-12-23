@@ -7,6 +7,7 @@ class IComponent {
 public:
     virtual ~IComponent() = default;
 
+    virtual const CSceneComposite *GetSceneComposite() const = 0;
     virtual void OnAttached(CSceneComposite &) = 0;
     virtual void OnDetached() = 0;
 };

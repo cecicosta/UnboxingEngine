@@ -45,7 +45,9 @@ typedef enum t_attrib_id {
 
 CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
     : camera(std::make_unique<Camera>(width, height, 70.0f, 1.f, 1.f))
-    , BPP(bpp) {}
+    , BPP(bpp) {
+    RegisterEventListener(mCollisionSystem);
+}
 
 void CCore::Start() {
     CreateWindow();
@@ -647,16 +649,16 @@ void CCore::RenderCanvas() {
 }
 
 void CCore::RegisterSceneElement(const CSceneComposite &sceneComposite) {
-    if (auto collider = sceneComposite.GetComponent<internal_components::IColliderComponent>()) {
-        mCollisionSystem.RegisterListener(*collider);
+    if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
+        mCollisionSystem.RegisterCollider(*collider);
     }
 
     mPendingWriteQueue.emplace_back(SRenderContext(sceneComposite));
 }
 
 void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
-    if (auto collider = sceneComposite.GetComponent<internal_components::IColliderComponent>()) {
-        mCollisionSystem.UnregisterListener(*collider);
+    if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
+        mCollisionSystem.UnregisterCollider(*collider);
     }
 
     auto findRenderContext = [&sceneComposite](const SRenderContext &context) {

@@ -315,7 +315,7 @@ public:
     }
 
     Vector<T, Columns - 1> operator*(const Vector<T, Columns - 1> &v) const {
-        T res[Columns - 1];
+        T res[Columns];
         for (int i = 0; i < Columns; ++i) {
             T soma = this->at(i, Columns);
             for (int j = 0; j < Columns; ++j) {

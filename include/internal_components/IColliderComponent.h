@@ -4,7 +4,7 @@
 #include "systems/CollisionSystem.h"
 #include "EventDispatcher.h" 
 
-namespace unboxing_engine::internal_components {
+namespace unboxing_engine {
 
 class IColliderComponent : public IComponent
     , public UListener<systems::IIntersectsEventListener> {

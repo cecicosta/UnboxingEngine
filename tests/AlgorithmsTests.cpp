@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <algorithms/CollisionAlgorithms.h>
 #include <BoundingBox.h>
 #include <UVector.h>
 
@@ -249,6 +250,38 @@ bool AssessIntersectionBoxWithRay(const CBoundingBox3D &boundingBox, const Vecto
     Vector3f upper = (boundingBox.getFirst() + boundingBox.getSecond()) - 2 * raySrc;
     upper = Vector3f(upper.x / rayDir.x, upper.y / rayDir.y, upper.z / rayDir.z);
     return upper.x > 0 && upper.y > 0 && upper.z > 0;
+}
+
+TEST(TriangleCollision, IsInsideRightAngleTriangle) {
+    std::vector<Vector2f> triangle{{-23.27499, 11.4315},
+                         {-13.28368, 3.52394},
+                         {-9.6, 8.2}};
+
+    ASSERT_TRUE(unboxing_engine::algorithms::isInsideTriangle(triangle, Vector2f(-11.36868, 7.17424)));
+}
+
+TEST(TriangleCollision, IsOutsideRightAngleTriangle) {
+    std::vector<Vector2f> triangle{{-23.27499, 11.4315},
+                         {-13.28368, 3.52394},
+                         {-9.6, 8.2}};
+
+    ASSERT_FALSE(unboxing_engine::algorithms::isInsideTriangle(triangle, Vector2f(-10.33469, 8.6107)));
+}
+
+TEST(TriangleCollision, IsInsideGenericTriangle) {
+    std::vector<Vector2f> triangle{{13.01983, -5.81032},
+                                   {31.53435, -8.5663},
+                                   {6.30654, 15.81351}};
+
+    ASSERT_TRUE(unboxing_engine::algorithms::isInsideTriangle(triangle, Vector2f(7.8612, 13.62286)));
+}
+
+TEST(TriangleCollision, IsOutsideGenericTriangle) {
+    std::vector<Vector2f> triangle{{13.01983, -5.81032},
+                                   {31.53435, -8.5663},
+                                   {6.30654, 15.81351}};
+
+    ASSERT_FALSE(unboxing_engine::algorithms::isInsideTriangle(triangle, Vector2f(8.92119, -1.99435)));
 }
 
 TEST(GeneralCollisionHelpers, TraceTrajectoryIntoBox_) {

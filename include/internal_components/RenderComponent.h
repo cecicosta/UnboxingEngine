@@ -15,9 +15,12 @@ public:
     const CMeshBuffer &GetMeshBuffer() const override { return mMeshBuffer; }
     void Render() const override;
 
-    void OnAttached(CSceneComposite &) override {}
-    void OnDetached() override{};
+    const CSceneComposite *GetSceneComposite() const override { return mSceneComposite; }
+    void OnAttached(CSceneComposite &sceneComposite) override { mSceneComposite = &sceneComposite; }
+    void OnDetached() override { mSceneComposite = nullptr; };
+
 private:
     const CMeshBuffer &mMeshBuffer;
+    CSceneComposite *mSceneComposite;
 };
 }// namespace unboxing_engine
