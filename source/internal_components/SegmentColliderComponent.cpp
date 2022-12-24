@@ -60,6 +60,10 @@ std::vector<Vector3f> ApplyTransformationToVerticesArray(const std::vector<float
     return transformed_vertices;
 }
 
+void CSegmentColliderComponent::OnIntersects() {
+
+}
+
 bool CSegmentColliderComponent::HasCollided(const CBoxColliderComponent2D &other) const {
     if (!mSceneComposite || !mMeshBuffer) {
         return false;
@@ -69,13 +73,13 @@ bool CSegmentColliderComponent::HasCollided(const CBoxColliderComponent2D &other
     if (auto other_composite = other.GetSceneComposite(); 
         auto other_render = other_composite->GetComponent<IRenderComponent>()) {        
         other_transformed_vertices = ApplyTransformationToVerticesArray(other_render->GetMeshBuffer().vertices, other_composite->GetTransformation());
-        assert(other_transformed_vertices.size() == 8 && "Geometry invalid for CBoxColliderComponent2D");
+        assert(other_transformed_vertices.size() == 4 && "Geometry invalid for CBoxColliderComponent2D");
     } else {
         return false;
     }
     
     auto this_vertices = ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation()); 
-    auto result = this_vertices.size() == 2 ? algorithms::findEdgesHitOnTrajectory<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true) 
+    auto result = this_vertices.size() >= 2 ? algorithms::findEdgesHitOnTrajectory<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true) 
         : unboxing_engine::algorithms::SCollisionResult<float, 3>();
     return result.vertices.size() > 0;
 }

@@ -13,7 +13,7 @@ public:
 
     [[nodiscard]] bool HasCollided(const IColliderComponent &other) const override;
 
-    void OnIntersects() override {}
+    void OnIntersects() override;
     const CSceneComposite *GetSceneComposite() const override;
     void OnAttached(CSceneComposite &) override;
     void OnDetached() override;
