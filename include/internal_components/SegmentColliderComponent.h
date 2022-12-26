@@ -22,7 +22,7 @@ private:
     [[nodiscard]] bool HasCollided(const CBoxColliderComponent2D &other) const;
     [[nodiscard]] bool HasCollided(const CSegmentColliderComponent &other) const;
 
-    CSceneComposite *mSceneComposite;
-    const CMeshBuffer *mMeshBuffer;
+    CSceneComposite *mSceneComposite = nullptr;
+    const CMeshBuffer *mMeshBuffer = nullptr;
 };
 }// namespace unboxing_engine

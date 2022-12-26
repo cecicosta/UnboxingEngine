@@ -1,6 +1,6 @@
-prefix=C:/Program Files (x86)/UnboxingEngine
+prefix=C:/Users/Owner/git/UnboxingEngine/out/install/x64-Debug
 exec_prefix=${prefix}
-libdir=C:/Program Files (x86)/UnboxingEngine/lib
+libdir=C:/Users/Owner/git/UnboxingEngine/out/install/x64-Debug/lib
 includedir=${prefix}/include
 
 Name: glew

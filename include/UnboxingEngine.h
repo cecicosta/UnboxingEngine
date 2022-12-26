@@ -46,7 +46,6 @@ class CCore : public IEngine, public CEventDispatcher, public systems::ICollisio
         CSceneComposite *mSceneComposite;
     };
 
-
 public:
     CCore(uint32_t width, uint32_t height, uint32_t bpp);
     ~CCore() override = default;
@@ -63,7 +62,7 @@ public:
     ///
     void RegisterEventListener(UListener<>& listener);
     ///
-    void UnregisterEventListener(UListener<>& listener);
+    void UnregisterEventListener(const UListener<>& listener);
     ///
     void RegisterSceneElement(CSceneComposite & sceneComposite);
     void UnregisterSceneElement(const CSceneComposite &sceneComposite);
@@ -132,21 +131,7 @@ private:
     //SDL input event handling
     SDL_Event event{};
 
-    struct SCursor {
-        //Cursor input attributes
-        int x = 0;
-        int y = 0;
-        int draggingX = 0;
-        int draggingY = 0;
-        float draggingSpeedX = 0;
-        float draggingSpeedY = 0;
-        int buttonPressedX = 0;
-        int buttonPressedY = 0;
-        bool isButtonPressed = false;
-        int scrolling = -1;
-        int cursorState[3]{0, 0, 0};
-    };
-    SCursor mCursor;
+    core_events::SCursor mCursor;
 
     //Handle objects with a ICollisionComponent registered
     systems::CollisionSystem mCollisionSystem;

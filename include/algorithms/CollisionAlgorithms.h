@@ -3,6 +3,7 @@
 #include "BoundingBox.h"
 #include "BoundingBox2D.h"
 #include "UVector.h"
+#include "Matrix.h"
 
 #include <algorithm>
 #include <assert.h>
@@ -153,7 +154,7 @@ Vector<T, dimension> getResultingNormalFromVertices(const std::vector<Vector<T, 
 /// The only case more than one edge is considered to be hit is if the intersection occurs at the point of intersections between the two edges.</returns>
 template<typename T, int dimension>
 SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
-    if (vertices.size() < 2) {
+    if (vertices.size() < 2 || start == end) {
         return {};
     }
 
@@ -168,6 +169,9 @@ SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::ve
     }
 
     for (; v != vertices.end(); v++) {
+        if (*v == previous) {
+            continue;
+        }
         //FIRST PART - Choose a edge potentially crossed by the trajectory
         auto edge = *v - previous;//v2 - v1;
         auto edge_direction = edge.Normalized();
@@ -185,7 +189,7 @@ SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::ve
 
         //SECOND PART - Verify if the trajectory cross the edge at a calculated dt, where dt is calculated as a multiplier factor where the ray defined by the trajectory would cross the line containing the edge
         //Used to calculate if a trajectory cross with a given edge of the box
-        auto extrapolate_trajectory_and_edge_intersection = findIntersectionBetweenLines(edge_origin, edge_direction, end, start - end);
+        auto extrapolate_trajectory_and_edge_intersection = findIntersectionBetweenLines(edge_origin, edge_direction, start, end - start);
 
         //Check if the intersection is within the segment points
         auto intersection_projection_on_to_segment = (extrapolate_trajectory_and_edge_intersection - start).DotProduct(segment_direction);
@@ -197,7 +201,7 @@ SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::ve
         //Check if the intersection is within the segment points
         auto edge_length = edge.Length();
         auto intersection_projection_on_to_edge = (extrapolate_trajectory_and_edge_intersection - edge_origin).DotProduct(edge_direction);
-        if (intersection_projection_on_to_edge < 0 && intersection_projection_on_to_edge > edge_length) {
+        if (intersection_projection_on_to_edge < 0 || intersection_projection_on_to_edge > edge_length) {
             previous = *v;
             continue;
         }
@@ -329,5 +333,29 @@ static bool AssessIntersectionBoxWithRay(const CBoundingBox3D &boundingBox, cons
     upper = Vector3f(upper.x / rayDir.x, upper.y / rayDir.y, upper.z / rayDir.z);
     return upper.x > 0 && upper.y > 0 && upper.z > 0;
 }
+
+static std::vector<Vector3f> ApplyTransformationToVerticesArray(const std::vector<float> vertices, const Matrix4f &transformation) {
+    if (vertices.size() % 3 != 0) {
+        assert(false && "The vertices array is expected to have 3 coordinates for each vertex");
+        return {};
+    }
+
+    std::vector<Vector3f> transformed_vertices;
+    auto v = vertices.begin();
+    while (v != vertices.end()) {
+        float coordinates[3] = {0, 0, 0};
+        for (int i = 0; i < 3; i++) {
+            if (v != vertices.end()) {
+                coordinates[i] = *v;
+                v++;
+            }
+        }
+
+        auto transformed_vertex = transformation * Vector3f{coordinates};
+        transformed_vertices.push_back(transformed_vertex);
+    }
+    return transformed_vertices;
+}
+
 
 }// namespace unboxing_engine::algorithms

@@ -9,20 +9,15 @@
 
 using namespace unboxing_engine;
 
-std::unique_ptr<CSceneComposite> CreateLineObject(CCore& engine, const CMeshBuffer& mesh) {
-    std::unique_ptr<CSceneComposite> line = std::make_unique<CSceneComposite>();
-    std::unique_ptr<IRenderComponent> lineRenderComponent = std::make_unique<CDefaultMeshRenderComponent>(mesh);
-    std::unique_ptr<IColliderComponent> segmentCollider = std::make_unique<CSegmentColliderComponent>();
-    line->AddComponent(std::move(lineRenderComponent));
-    line->AddComponent(std::move(segmentCollider));
-    engine.RegisterSceneElement(*line);
-    return std::move(line);
-}
-
-class CSegment : public CSceneComposite, public unboxing_engine::UListener<systems::IIntersectsEventListener, core_events::IUpdateListener> {
+class CSegment 
+    : public CSceneComposite
+    , public unboxing_engine::UListener<systems::IIntersectsEventListener
+        , core_events::IUpdateListener
+        , core_events::IMouseInputEvent> {
 public:
-    CSegment() {
-        mMesh = primitive_utils::Lines(Vector3f(0.5f, 0, 0), Vector3f(0.4f, 0, 0));
+    CSegment(CCore &engine)
+        : mEngine(engine) {
+        mMesh = primitive_utils::Lines(Vector3f(0.5f, 0, 0), Vector3f(-0.4f, 0, 0));
         AddComponent<IRenderComponent>(std::make_unique<CDefaultMeshRenderComponent>(*mMesh));
         AddComponent<IColliderComponent>(std::make_unique<CSegmentColliderComponent>());
     }
@@ -48,29 +43,70 @@ public:
         render->SetMaterial(material);
     }
 
+    void OnMouseInputtEvent(const core_events::SCursor &cursor) override {
+        mEngine.UnregisterSceneElement(*this);
+        auto point = Vector3f(static_cast<float>(2*cursor.x)/640.0f - 1, -static_cast<float>(2*cursor.y)/480.0f + 1, 0);
+        mMesh->vertices[3] = point.x;
+        mMesh->vertices[4] = point.y;
+        mMesh->vertices[5] = point.z;
+        mMesh->vertices[6] = point.x;
+        mMesh->vertices[7] = point.y;
+        mMesh->vertices[8] = point.z;
+        mEngine.RegisterSceneElement(*this);
+    }
+
+private:
+    std::unique_ptr<CMeshBuffer> mMesh;
+    CCore &mEngine;
+};
+
+
+class CBox : public CSceneComposite
+    , public unboxing_engine::UListener<systems::IIntersectsEventListener, core_events::IUpdateListener> {
+public:
+    CBox() {
+        mMesh = primitive_utils::Quad();
+        AddComponent<IRenderComponent>(std::make_unique<CDefaultMeshRenderComponent>(*mMesh));
+        AddComponent<IColliderComponent>(std::make_unique<CBoxColliderComponent2D>());
+    }
+
+    ~CBox() override = default;
+    void OnIntersects() override {
+        auto render = GetComponent<IRenderComponent>();
+        SMaterial material = render->GetMaterial();
+        material.materialDif[0] = 1;
+        material.materialDif[1] = 0;
+        material.materialDif[2] = 0;
+        material.materialDif[3] = 1;
+        render->SetMaterial(material);
+    }
+
+    void OnUpdate() override {
+        auto render = GetComponent<IRenderComponent>();
+        SMaterial material = render->GetMaterial();
+        material.materialDif[0] = 0;
+        material.materialDif[1] = 0;
+        material.materialDif[2] = 0;
+        material.materialDif[3] = 1;
+        render->SetMaterial(material);
+    }
+
 private:
     std::unique_ptr<CMeshBuffer> mMesh;
 };
 
-std::unique_ptr<CSceneComposite> CreateBoxObject(CCore& engine, const CMeshBuffer& mesh) {
-    std::unique_ptr<CSceneComposite> box = std::make_unique<CSceneComposite>();
-    std::unique_ptr<IRenderComponent> boxRenderComponent = std::make_unique<CDefaultMeshRenderComponent>(mesh);
-    std::unique_ptr<IColliderComponent> boxCollider = std::make_unique<CBoxColliderComponent2D>();
-    box->AddComponent(std::move(boxRenderComponent));
-    box->AddComponent(std::move(boxCollider));
-    engine.RegisterSceneElement(*box);
-    return std::move(box);
-}
 
 int main(int argc, char *argv[]) {
     CCore engine(640, 480, 32);
     engine.Start();
 
-    std::unique_ptr<CSceneComposite> segment = std::make_unique<CSegment>();
+    std::unique_ptr<CSegment> segment = std::make_unique<CSegment>(engine);
     engine.RegisterSceneElement(*segment.get());
+    engine.RegisterEventListener(*segment.get());
 
-    auto box_mesh = primitive_utils::Quad();
-    auto box = CreateBoxObject(engine, *box_mesh);
+    std::unique_ptr<CBox> box = std::make_unique<CBox>();
+    engine.RegisterSceneElement(*box.get());
+    engine.RegisterEventListener(*box.get());
     box->SetScale({0.5f, 0.5f, 0.5f});
 
     engine.Run();

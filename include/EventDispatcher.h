@@ -69,7 +69,7 @@ namespace unboxing_engine {
 
         /// Removes a CListener object from all registered events previously registered according to the types it holds
         /// \param listener CListener object to be unregistered
-        void UnregisterListener(CListener &listener) {
+        void UnregisterListener(const CListener & listener) {
             //Navigate through all types lists the object belongs to
             for (auto &&hash: listener.hash_handles) {
                 if (auto it = m_Listeners.find(hash); it != m_Listeners.end()) {

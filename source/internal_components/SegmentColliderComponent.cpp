@@ -36,29 +36,6 @@ void CSegmentColliderComponent::OnDetached() {
     mSceneComposite = nullptr;
 }
 
-std::vector<Vector3f> ApplyTransformationToVerticesArray(const std::vector<float> vertices, const Matrix4f& transformation) {
-    if (vertices.size() % 3 != 0) {
-        assert(false && "The vertices array is expected to have 3 coordinates for each vertex");
-        return {};
-    }
-
-    std::vector<Vector3f> transformed_vertices;
-    auto v = vertices.begin();
-    while (v != vertices.end()) {
-        float coordinates[3] = {0,0,0};
-        for (int i = 0; i < 3; i++) {
-            if (v != vertices.end()) {
-                coordinates[i] = *v;
-                v++;
-            }
-        }
-
-        auto transformed_vertex = transformation * Vector3f{coordinates};
-        transformed_vertices.push_back(transformed_vertex);
-    }
-    return transformed_vertices;
-}
-
 void CSegmentColliderComponent::OnIntersects() {
 
 }
@@ -71,20 +48,20 @@ bool CSegmentColliderComponent::HasCollided(const CBoxColliderComponent2D &other
     std::vector<Vector3f> other_transformed_vertices;
     if (auto other_composite = other.GetSceneComposite(); 
         auto other_render = other_composite->GetComponent<IRenderComponent>()) {        
-        other_transformed_vertices = ApplyTransformationToVerticesArray(other_render->GetMeshBuffer().vertices, other_composite->GetTransformation());
+        other_transformed_vertices = algorithms::ApplyTransformationToVerticesArray(other_render->GetMeshBuffer().vertices, other_composite->GetTransformation());
         assert(other_transformed_vertices.size() == 4 && "Geometry invalid for CBoxColliderComponent2D");
     } else {
         return false;
     }
     
-    auto this_vertices = ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation()); 
+    auto this_vertices = algorithms::ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation()); 
     auto result = this_vertices.size() >= 2 ? algorithms::checkPolygonIntersectionWithSegment<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true) 
         : unboxing_engine::algorithms::SCollisionResult<float, 3>();
     return result.vertices.size() > 0;
 }
 
 bool CSegmentColliderComponent::HasCollided(const CSegmentColliderComponent &other) const {
-if (!mSceneComposite || !mMeshBuffer) {
+    if (!mSceneComposite || !mMeshBuffer) {
         return false;
     }
 
@@ -92,13 +69,13 @@ if (!mSceneComposite || !mMeshBuffer) {
     if (auto other_composite = other.GetSceneComposite();
         auto other_render = other_composite->GetComponent<IRenderComponent>()) {
         auto other_vertices = other_render->GetMeshBuffer().vertices;
-        other_transformed_vertices = ApplyTransformationToVerticesArray(other_vertices, other_composite->GetTransformation());
+        other_transformed_vertices = algorithms::ApplyTransformationToVerticesArray(other_vertices, other_composite->GetTransformation());
         assert(other_transformed_vertices.size() == 3 && "Geometry invalid for CSegmentColliderComponent");
     } else {
         return false;
     }
 
-    auto this_vertices = ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation());
+    auto this_vertices = algorithms::ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation());
     auto result = this_vertices.size() == 2 ? algorithms::checkPolygonIntersectionWithSegment<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true)
                                             : unboxing_engine::algorithms::SCollisionResult<float, 3>();
     return result.vertices.size() > 0;

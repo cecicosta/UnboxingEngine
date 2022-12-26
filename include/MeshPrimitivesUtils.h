@@ -166,8 +166,8 @@ namespace unboxing_engine::primitive_utils {
     }
 
     //Create a cube mesh
-    [[nodiscard]] CMeshBuffer *Quad() {
-        auto mesh = new CMeshBuffer();
+    [[nodiscard]] std::unique_ptr<CMeshBuffer> Quad() {
+        auto mesh = std::make_unique<CMeshBuffer>();
         auto boundingBox = CBoundingBox2D(Vector2f(-0.5f, -0.5f), Vector2f(0.5f, 0.5f));
         mesh->boundingBox = CBoundingBox3D(Vector3f(-0.5f, -0.5f, 0), Vector3f(0.5f, 0.5f, 0));
         mesh->nvertices = 4;

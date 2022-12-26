@@ -21,16 +21,13 @@ public:
     [[nodiscard]] bool HasCollided(const IColliderComponent &other) const override;
 
     //IComponent
-    const CSceneComposite *GetSceneComposite() const override { return mComposite; }
+    const CSceneComposite *GetSceneComposite() const override { return mSceneComposite; }
     void OnAttached(CSceneComposite& composite) override;
     void OnDetached() override;
 
 private:
-    [[nodiscard]] bool HasCollided(const CBoxColliderComponent2D &other);
-    [[nodiscard]] bool HasCollided(const CMeshBuffer &mesh);
-    [[nodiscard]] bool HasCollided(const Vector2f& p1, const Vector2f p2);
 
-    CBoundingBox3D mBoundingBox;
-    CSceneComposite *mComposite = nullptr;
+    CSceneComposite *mSceneComposite = nullptr;
+    const CMeshBuffer *mMeshBuffer = nullptr;
 };
 }// namespace unboxing_engine

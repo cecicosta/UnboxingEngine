@@ -85,7 +85,7 @@ Vector<T, dimension> getResultingNormalFromVertices(const std::vector<Vector<T, 
 /// The only case more than one edge is considered to be hit is if the intersection occurs at the point of intersections between the two edges.</returns>
 template <typename T, int dimension>
 SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
-    if (vertices.size() < 2) {
+    if (vertices.size() < 2 || start == end) {
         return {};
     }
 
@@ -416,4 +416,10 @@ TEST(CubeRayIntersectionTest, FaceBoxIntersection) {
         }
     }
     ASSERT_TRUE(hasIntersection);
+}
+
+TEST(PolygonIntersection, limite_when_start_approaches_end) {
+}
+
+TEST(PolygonIntersection, limite_when_polygon_edge_and_segment_aproaches_0_degrees_angule) {
 }

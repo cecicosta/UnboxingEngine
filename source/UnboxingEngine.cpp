@@ -63,11 +63,11 @@ void CCore::Run() {
 
         OnInput();
 
-        WritePendingRenderData();
-
         for (auto &&listener: GetListeners<core_events::IUpdateListener>()) {
             listener->OnUpdate();
         }
+
+        WritePendingRenderData();
 
         Render();
     }
@@ -169,7 +169,9 @@ void CCore::OnInput() {
                 }
                 mCursor.x = event.motion.x;
                 mCursor.y = event.motion.y;
-
+                for (auto&& listener : GetListeners<core_events::IMouseInputEvent>()) {
+                    listener->OnMouseInputtEvent(mCursor);
+                }
                 break;
             case SDL_MOUSEBUTTONDOWN:
 
@@ -188,7 +190,9 @@ void CCore::OnInput() {
                 if (CCore::event.type == SDL_MOUSEWHEEL) {
                     mCursor.scrolling = CCore::event.wheel.y;
                 }
-
+                for (auto &&listener: GetListeners<core_events::IMouseInputEvent>()) {
+                    listener->OnMouseInputtEvent(mCursor);
+                }
                 break;
             case SDL_MOUSEBUTTONUP:
                 mCursor.draggingX = 0;
@@ -203,7 +207,9 @@ void CCore::OnInput() {
                 if (CCore::event.button.button == SDL_BUTTON_RIGHT && mCursor.cursorState[R_BUTTON] == 1) {
                     mCursor.cursorState[R_BUTTON] = 0;
                 }
-
+                for (auto &&listener: GetListeners<core_events::IMouseInputEvent>()) {
+                    listener->OnMouseInputtEvent(mCursor);
+                }
                 break;
             case SDL_QUIT:
                 quit = true;
@@ -215,10 +221,6 @@ void CCore::OnInput() {
 
     if (keyState[SDLK_ESCAPE])
         quit = true;
-
-    for (auto &&listener: GetListeners<core_events::IInputListener>()) {
-        listener->OnInput();
-    }
 }
 
 void CCore::UpdateFlyingController() {
@@ -347,7 +349,7 @@ Texture *CCore::LoadTexture(char *filename) {
     //gluBuild2DMipmaps( GL_TEXTURE_2D, 4, w, h, GL_RGBA, GL_UNSIGNED_BYTE, (Uint8 *)raw);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, (Uint8 *) raw);
     glGenerateMipmap(retval);
-    auto *texture = (Texture *) malloc(sizeof(Texture));
+    auto *texture = new Texture();
 
     texture->imageData = (int *) raw;
     texture->bpp = bpp;
@@ -664,12 +666,19 @@ void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
     if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
         mCollisionSystem.RegisterCollider(*collider);
     }
+    if (auto listener = dynamic_cast<UListener<> *>(&sceneComposite)) {
+        RegisterEventListener(*listener);
+    }
     mPendingWriteQueue.emplace_back(SRenderContext(sceneComposite));
 }
 
 void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
     if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
         mCollisionSystem.UnregisterCollider(*collider);
+    }
+
+    if (auto listener = dynamic_cast<const UListener<>*>(&sceneComposite)) {
+        UnregisterEventListener(*listener);
     }
 
     auto findRenderContext = [&sceneComposite](const SRenderContext &context) {
@@ -686,7 +695,7 @@ void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
     }
     {
         auto it = std::find_if(mRenderQueue.begin(), mRenderQueue.end(), findRenderContext);
-        if (it != mPendingWriteQueue.end()) {
+        if (it != mRenderQueue.end()) {
             ReleaseRenderData(*it);
             mRenderQueue.erase(it);
         }
@@ -707,7 +716,7 @@ void CCore::RegisterEventListener(UListener<> &listener) {
     RegisterListener(listener);
 }
 
-void CCore::UnregisterEventListener(UListener<> &listener) {
+void CCore::UnregisterEventListener(const UListener<>& listener) {
     UnregisterListener(listener);
 }
 

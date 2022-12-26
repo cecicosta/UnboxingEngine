@@ -3,6 +3,22 @@
 #include <EventDispatcher.h>
 
 namespace unboxing_engine::core_events {
+
+struct SCursor {
+    //Cursor input attributes
+    int x = 0;
+    int y = 0;
+    int draggingX = 0;
+    int draggingY = 0;
+    float draggingSpeedX = 0;
+    float draggingSpeedY = 0;
+    int buttonPressedX = 0;
+    int buttonPressedY = 0;
+    bool isButtonPressed = false;
+    int scrolling = -1;
+    int cursorState[3]{0, 0, 0};
+};
+
     class IStartListener {
     public:
         virtual ~IStartListener() = default;
@@ -12,11 +28,6 @@ namespace unboxing_engine::core_events {
     public:
         virtual ~IUpdateListener() = default;
         virtual void OnUpdate() = 0;
-    };
-    class IInputListener {
-    public:
-        virtual ~IInputListener() = default;
-        virtual void OnInput() = 0;
     };
     class IPreRenderListener {
     public:
@@ -33,6 +44,15 @@ namespace unboxing_engine::core_events {
         virtual ~IReleaseListener() = default;
         virtual void OnRelease() = 0;
     };
+    class IMouseInputEvent {
+    public:
+        virtual ~IMouseInputEvent() = default;
+        virtual void OnMouseInputtEvent(const SCursor& cursor) = 0;
+    };
+    class IMouseInputEventListener : public UListener<IMouseInputEvent> {
+    public:
+        ~IMouseInputEventListener() override = default;
+    };
 
-    class ICoreEventsListener : public UListener<IStartListener, IUpdateListener, IInputListener, IPreRenderListener, IPostRenderListener, IReleaseListener> {};
+    class ICoreEventsListener : public UListener<IStartListener, IUpdateListener, IPreRenderListener, IPostRenderListener, IReleaseListener> {};
 }// namespace unboxing_engine::core_events
