@@ -12,14 +12,17 @@
 #include "Matrix.h"
 #include "Quaternion.h"
 #include "UVector.h"
+#include "algorithms/CollisionAlgorithms.h"
+
 #include <cmath>
 #include <cstdint>
 #include <memory>
 #include <vector>
 #include <iostream>
 
-#include <EventDispatcher.h>
+#include "EventDispatcher.h"
 #include "systems/CollisionSystem.h"
+
 
 #define L_BUTTON 0
 #define R_BUTTON 1
@@ -33,14 +36,14 @@ namespace unboxing_engine {
 class CMeshBuffer;
 class CSceneComposite;
 
-class CCore : public IEngine, public CEventDispatcher {
+class CCore : public IEngine, public CEventDispatcher, public systems::ICollisionEventLitener {
     ///Rendering opengl buffer handlers
     struct SRenderContext {
-        explicit SRenderContext(const CSceneComposite &sceneComposite);
+        explicit SRenderContext(CSceneComposite & sceneComposite);
         std::uint32_t vao = -1;//Refers to the whole render context, including geometry, shaders and parameters
         std::uint32_t vbo = -1;//Buffer handler for geometry
         std::uint32_t ebo = -1;//Buffer handler for geometry vertex indices
-        const CSceneComposite *mSceneComposite;
+        CSceneComposite *mSceneComposite;
     };
 
 
@@ -62,13 +65,17 @@ public:
     ///
     void UnregisterEventListener(UListener<>& listener);
     ///
-    void RegisterSceneElement(const CSceneComposite& sceneComposite);
+    void RegisterSceneElement(CSceneComposite & sceneComposite);
     void UnregisterSceneElement(const CSceneComposite &sceneComposite);
+    CSceneComposite *GetSceneElement(int id) const;
     ///Register object to interact with the basic engine systems throught its existing components
     void WritePendingRenderData();
 
     ///Destroy opengl context, window and finish SDL subsystems
     void Release();
+
+    void OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) override; 
+
 private:
     ///Rendering routines
     void Render() override;

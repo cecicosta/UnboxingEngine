@@ -7,8 +7,7 @@
 
 namespace unboxing_engine {
 
-unboxing_engine::CSegmentColliderComponent::CSegmentColliderComponent() {
-}
+unboxing_engine::CSegmentColliderComponent::CSegmentColliderComponent() = default;
 CSegmentColliderComponent::~CSegmentColliderComponent() = default;
 
 bool CSegmentColliderComponent::HasCollided(const IColliderComponent &other) const {
@@ -79,13 +78,13 @@ bool CSegmentColliderComponent::HasCollided(const CBoxColliderComponent2D &other
     }
     
     auto this_vertices = ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation()); 
-    auto result = this_vertices.size() >= 2 ? algorithms::findEdgesHitOnTrajectory<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true) 
+    auto result = this_vertices.size() >= 2 ? algorithms::checkPolygonIntersectionWithSegment<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true) 
         : unboxing_engine::algorithms::SCollisionResult<float, 3>();
     return result.vertices.size() > 0;
 }
 
 bool CSegmentColliderComponent::HasCollided(const CSegmentColliderComponent &other) const {
-    if (!mSceneComposite || !mMeshBuffer) {
+if (!mSceneComposite || !mMeshBuffer) {
         return false;
     }
 
@@ -100,7 +99,7 @@ bool CSegmentColliderComponent::HasCollided(const CSegmentColliderComponent &oth
     }
 
     auto this_vertices = ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation());
-    auto result = this_vertices.size() == 2 ? algorithms::findEdgesHitOnTrajectory<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true)
+    auto result = this_vertices.size() == 2 ? algorithms::checkPolygonIntersectionWithSegment<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true)
                                             : unboxing_engine::algorithms::SCollisionResult<float, 3>();
     return result.vertices.size() > 0;
     return false;

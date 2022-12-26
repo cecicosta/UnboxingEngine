@@ -14,8 +14,8 @@
 #include <cstdio>
 #include <iostream>
 
-#include "internal_components/RenderComponent.h"
 #include "internal_components/IColliderComponent.h"
+#include "internal_components/RenderComponent.h"
 
 
 namespace unboxing_engine {
@@ -46,6 +46,7 @@ typedef enum t_attrib_id {
 CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
     : camera(std::make_unique<Camera>(width, height, 70.0f, 1.f, 1.f))
     , BPP(bpp) {
+    mCollisionSystem.RegisterListener(*this);
     RegisterEventListener(mCollisionSystem);
 }
 
@@ -64,10 +65,11 @@ void CCore::Run() {
 
         WritePendingRenderData();
 
-        Render();
         for (auto &&listener: GetListeners<core_events::IUpdateListener>()) {
             listener->OnUpdate();
         }
+
+        Render();
     }
 }
 void CCore::Render() {
@@ -79,10 +81,10 @@ void CCore::Render() {
 
     for (auto &&data: mRenderQueue) {
         if (auto render = data.mSceneComposite->GetComponent<IRenderComponent>()) {
-           
+
             auto meshBuffer = render->GetMeshBuffer();
             glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (camera->mTransformation * data.mSceneComposite->GetTransformation()).ToArray());
-            glUniform4fv(glGetUniformLocation(program, "color"), 1, meshBuffer.material.materialDif);
+            glUniform4fv(glGetUniformLocation(program, "color"), 1, render->GetMaterial().materialDif);
             glBindVertexArray(data.vao);
             glDrawElements(GL_TRIANGLES, meshBuffer.nfaces * 3, GL_UNSIGNED_INT, nullptr);
         }
@@ -534,6 +536,16 @@ void CCore::Release() {
     }
 }
 
+void CCore::OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) {
+    if (auto c1Composite = GetSceneElement(c1.GetSceneComposite()->id); auto listener = dynamic_cast<systems::IIntersectsEventListener *>(c1Composite)) {
+        listener->OnIntersects();
+    }
+   
+    if (auto c2Composite = GetSceneElement(c2.GetSceneComposite()->id); auto listener = dynamic_cast<systems::IIntersectsEventListener *>(c2Composite)) {
+        listener->OnIntersects();
+    }
+}
+
 void CCore::CreateBasicShader() {
     // Create and compile vertex shader
     unsigned int vertexShader;
@@ -603,7 +615,7 @@ void CCore::WritePendingRenderData() {
             continue;
         }
         // For now, render are obligated to have a CMeshBuffer
-        auto meshBuffer = render->GetMeshBuffer();       
+        auto meshBuffer = render->GetMeshBuffer();
 
         glGenVertexArrays(1, &data.vao);
         glGenBuffers(1, &data.vbo);
@@ -629,7 +641,7 @@ void CCore::WritePendingRenderData() {
     mPendingWriteQueue.clear();
 }
 
-void CCore::ReleaseRenderData(SRenderContext& context) {
+void CCore::ReleaseRenderData(SRenderContext &context) {
     glDeleteVertexArrays(1, &context.vao);
     glDeleteBuffers(1, &context.vbo);
     glDeleteBuffers(1, &context.ebo);
@@ -648,11 +660,10 @@ void CCore::RenderCanvas() {
     SDL_Delay(1);
 }
 
-void CCore::RegisterSceneElement(const CSceneComposite &sceneComposite) {
+void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
     if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
         mCollisionSystem.RegisterCollider(*collider);
     }
-
     mPendingWriteQueue.emplace_back(SRenderContext(sceneComposite));
 }
 
@@ -682,6 +693,16 @@ void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
     }
 }
 
+CSceneComposite *CCore::GetSceneElement(int id) const {
+    auto it = std::find_if(mRenderQueue.begin(), mRenderQueue.end(), [id](const SRenderContext &composite) {
+        return composite.mSceneComposite->id == id;
+    });
+    if (it != mRenderQueue.end()) {
+        return it->mSceneComposite;
+    }
+    return nullptr;
+}
+
 void CCore::RegisterEventListener(UListener<> &listener) {
     RegisterListener(listener);
 }
@@ -691,8 +712,6 @@ void CCore::UnregisterEventListener(UListener<> &listener) {
 }
 
 //TODO: Find a better way to store and retrieve the components. The render cannot be retrieved from its common interface with the current method
-CCore::SRenderContext::SRenderContext(const CSceneComposite &sceneComposite)
+CCore::SRenderContext::SRenderContext(CSceneComposite &sceneComposite)
     : mSceneComposite(&sceneComposite) {}
-
-
 }//namespace unboxing_engine

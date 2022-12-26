@@ -2,6 +2,7 @@
 
 #include "EventDispatcher.h"
 #include "CoreEvents.h"
+#include "algorithms/CollisionAlgorithms.h"
 
 namespace unboxing_engine {
 class IColliderComponent;
@@ -14,6 +15,18 @@ public:
     virtual ~IIntersectsEventListener() = default;
     virtual void OnIntersects() = 0;
 };
+
+class ICollisionEvent {
+public:
+    virtual ~ICollisionEvent() = default;
+    virtual void OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) = 0;
+};
+
+class ICollisionEventLitener: public UListener<ICollisionEvent> {
+public:
+    virtual ~ICollisionEventLitener() = default;
+};
+
 
 class CollisionSystem : public UListener <core_events::IPreRenderListener>, public CEventDispatcher {
 public:

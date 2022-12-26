@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BoundingBox.h"
-#include "material.h"
 
 #include <memory>
 
@@ -32,7 +31,6 @@ public:
     uint ntexcoords;
     uint nfaces;
     uint nmaterials;
-    SMaterial material;
     
     [[nodiscard]] std::unique_ptr<float*> &&GetVertexDataArray() const;
 };

@@ -317,7 +317,7 @@ public:
     Vector<T, Columns - 1> operator*(const Vector<T, Columns - 1> &v) const {
         T res[Columns];
         for (int i = 0; i < Columns; ++i) {
-            T soma = this->at(i, Columns);
+            T soma = this->at(i, Columns-1);
             for (int j = 0; j < Columns; ++j) {
                 soma += this->at(i, j) * v.ToArray()[j];
             }

@@ -112,3 +112,16 @@ TEST(MatrixTest, matrix_non_inverseble) {
     auto solution = matrix.Inverse();
     ASSERT_EQ(solution, Matrix3f::INVALID);
 }
+
+TEST(MatrixTest, multiply_by_vector) {
+    Matrix4f transform = Matrix4f::ScaleMatrix(Vector3f(0.5f, 0.5f, 0.5f));
+    EXPECT_EQ(transform, Matrix4f({
+            0.5f, 0, 0, 0, 
+            0, 0.5f, 0, 0, 
+            0, 0, 0.5f, 0, 
+            0, 0, 0, 1}));
+
+   Vector3f point(0.5f, 0.5f, 0.5f);
+   Vector3f scaled_point = transform * point;
+   ASSERT_EQ(scaled_point, Vector3f({0.25, 0.25, 0.25}));
+}

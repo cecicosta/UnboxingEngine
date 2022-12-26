@@ -1,7 +1,7 @@
 #pragma once
 
-#include "internal_components/IRenderComponent.h"
 #include "IComponent.h"
+#include "internal_components/IRenderComponent.h"
 
 namespace unboxing_engine {
 class CMeshBuffer;
@@ -12,6 +12,8 @@ public:
         : mMeshBuffer(meshBuffer) {}
     ~CDefaultMeshRenderComponent() override = default;
 
+    void SetMaterial(const SMaterial &material) { mMaterial = material; }
+    const SMaterial &GetMaterial() const { return mMaterial; }
     const CMeshBuffer &GetMeshBuffer() const override { return mMeshBuffer; }
     void Render() const override;
 
@@ -21,6 +23,7 @@ public:
 
 private:
     const CMeshBuffer &mMeshBuffer;
-    CSceneComposite *mSceneComposite;
+    SMaterial mMaterial;
+    CSceneComposite *mSceneComposite = nullptr;
 };
 }// namespace unboxing_engine

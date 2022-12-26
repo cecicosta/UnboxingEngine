@@ -75,7 +75,7 @@ bool isInsideTriangle(const std::vector<Vector<T, dimension>> &vertices, const V
     auto edge_c = vertices[2] - vertices[1];
     auto edge_c_length = edge_c.Length();
     auto edge_c_normalized = edge_c.Normalized();
-    edge_b = -1*edge_b;
+    edge_b = -1 * edge_b;
     auto projection_b_c = edge_b.DotProduct(edge_c_normalized);
     //If projection of edge b over a, is less than edge a length, splits the triangle on the edge a to vertice 1
     if (projection_b_c > 0 && projection_b_c < edge_c_length) {
@@ -152,7 +152,7 @@ Vector<T, dimension> getResultingNormalFromVertices(const std::vector<Vector<T, 
 /// <returns>Returns a SCollisionResult structure with the information of vertices belonging to the edges hit, resulting normal and point of intersection.
 /// The only case more than one edge is considered to be hit is if the intersection occurs at the point of intersections between the two edges.</returns>
 template<typename T, int dimension>
-SCollisionResult<T, dimension> findEdgesHitOnTrajectory(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
+SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
     if (vertices.size() < 2) {
         return {};
     }
@@ -174,30 +174,41 @@ SCollisionResult<T, dimension> findEdgesHitOnTrajectory(const std::vector<Vector
         auto edge_origin = previous;//v1
         auto normal = edge_direction.Normalized();
         normal = Vector<T, dimension>(edge_direction.y, -edge_direction.x);//Rotate the edge clockwise to obtain the normal
-        auto direction = (end - start).Normalized();
-        //The potentially colliding edge must have a normal with projection to the oposite side of the direction
-        if ((normal).DotProduct(direction) > 0) {
+        auto segment = end - start;
+        auto segment_direction = segment.Normalized();
+        //The potentially colliding edge must have a normal with projection to the oposite side of the direction. And the lines cannot be parallel
+        if ((normal).DotProduct(segment_direction) >= 0) {
             previous = *v;
             continue;
         }
+
 
         //SECOND PART - Verify if the trajectory cross the edge at a calculated dt, where dt is calculated as a multiplier factor where the ray defined by the trajectory would cross the line containing the edge
         //Used to calculate if a trajectory cross with a given edge of the box
         auto extrapolate_trajectory_and_edge_intersection = findIntersectionBetweenLines(edge_origin, edge_direction, end, start - end);
 
-        auto projection_intersection_point_to_edge_length = (extrapolate_trajectory_and_edge_intersection - edge_origin).DotProduct(edge_direction);
-        //The extremes might represent and edge case of collision with corners
-        auto edge_length = edge.Length();
-        if (projection_intersection_point_to_edge_length >= 0 && projection_intersection_point_to_edge_length <= edge_length) {
-            //Collision and intersection with face confirmed. Normal obtained. Consider the need or not of performing the next checking.
-            //Next checking would be necessary in case a collision on 2 adjacent edges happens. Meaning the intersection of the 2 edges were hit.
-            //Such scenario can be found by only checking the if second condition. If the hit is at the edge's length, the next edge was hit as well. No further check is needed.
-            //Interpolate the normal of both edges.
-            if (projection_intersection_point_to_edge_length == edge_length && (v + 1 != vertices.end())) {
-                return {{previous, *v, *(v + 1)}, getResultingNormalFromVertices<T, dimension>({previous, *v, *(v + 1)}), extrapolate_trajectory_and_edge_intersection};
-            }
-            return {{previous, *v}, normal, extrapolate_trajectory_and_edge_intersection};
+        //Check if the intersection is within the segment points
+        auto intersection_projection_on_to_segment = (extrapolate_trajectory_and_edge_intersection - start).DotProduct(segment_direction);
+        if (intersection_projection_on_to_segment < 0 || intersection_projection_on_to_segment > segment.Length()) {
+            previous = *v;
+            continue;
         }
+
+        //Check if the intersection is within the segment points
+        auto edge_length = edge.Length();
+        auto intersection_projection_on_to_edge = (extrapolate_trajectory_and_edge_intersection - edge_origin).DotProduct(edge_direction);
+        if (intersection_projection_on_to_edge < 0 && intersection_projection_on_to_edge > edge_length) {
+            previous = *v;
+            continue;
+        }
+
+        // If the intersection is on edge's length, the next edge was hit as well. No further check is needed.
+        //Interpolate the normal of both edges.
+        if (intersection_projection_on_to_edge == edge_length && (v + 1 != vertices.end())) {
+            return {{previous, *v, *(v + 1)}, getResultingNormalFromVertices<T, dimension>({previous, *v, *(v + 1)}), extrapolate_trajectory_and_edge_intersection};
+        }
+        return {{previous, *v}, normal, extrapolate_trajectory_and_edge_intersection};
+
         previous = *v;
     }
     return {};
@@ -291,7 +302,7 @@ bool CheckBoxToBoxCollision(std::vector<Vector<T, dimension>> box1, std::vector<
         //Since the bounding box is a rectangulum, calculating the projection to one triangle, by symmetry, the other triangle will also contain the projection
         auto escape;
         auto normal;
-        result = findEdgesHitOnTrajectory(box1, c, d);
+        result = checkPolygonIntersectionWithSegment(box1, c, d);
 
         if (result.vertices.size() > 0) {
             return true;
