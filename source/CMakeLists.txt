@@ -19,6 +19,7 @@ set(SOURCES
         SceneComposite.cpp
         BoundingBox.cpp
         BoundingBox2D.cpp
+        algorithms/CollisionAlgorithms.cpp
         #collisionutil.cpp
 )
 set(HEADERS
@@ -47,6 +48,7 @@ set(HEADERS
         ../include/BoundingBox.h
         ../include/material.h
         ../include/BoundingBox2D.h
+        ../include/algorithms/CollisionAlgorithms.h
         #../include/collisionutil.h
         )
 
