@@ -30,7 +30,7 @@ endif ()
 # when building with Visual Studio
 #set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(BUILD_GMOCK "ON")
-set(INSTALL_GTEST "OFF")
+set(INSTALL_GTEST "ON")
 
 include_directories(
         ../include

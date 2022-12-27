@@ -3,7 +3,6 @@ project(UnboxingEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 
-#Set up SDL_image dependency
 add_subdirectory(./third_party/zlib-1.2.12)
 set(ZLIB_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/zlib-1.2.12)
 
@@ -18,7 +17,7 @@ if (WIN32)
     set(BUILD_SHARED_LIBS TRUE)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    configure_file(./third_party/freetype-windows-binaries/release\ dll/win64/freetype.dll ${CMAKE_BINARY_DIR}/Debug COPYONLY)
+    configure_file(third_party/freetype-windows-binaries/release\ dll/win64/freetype.dll ${CMAKE_BINARY_DIR} COPYONLY)
 
 else()
     set(PNG_ARM_NEON off)
@@ -58,6 +57,6 @@ if (WIN32)
     add_custom_command(
             TARGET unboxing_engine
             POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/Debug/glew32d.dll ${CMAKE_BINARY_DIR}/Debug
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
     )
 endif ()

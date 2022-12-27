@@ -15,7 +15,6 @@ public:
 
     MOCK_METHOD(void, OnStart, (), (override));
     MOCK_METHOD(void, OnUpdate, (), (override));
-    MOCK_METHOD(void, OnInput, (), (override));
     MOCK_METHOD(void, OnPreRender, (), (override));
     MOCK_METHOD(void, OnPostRender, (), (override));
     MOCK_METHOD(void, OnRelease, (), (override));
@@ -65,15 +64,11 @@ TEST_F(EventSystemFixture, register_and_recovery_different_type_listeners_for_sa
     eventDispatcher.RegisterListener(eventListenerMock);
     EXPECT_CALL(eventListenerMock, OnStart).Times(1);
     EXPECT_CALL(eventListenerMock, OnUpdate).Times(1);
-    EXPECT_CALL(eventListenerMock, OnInput).Times(1);
     for (auto &&listener: eventDispatcher.GetListeners<core_events::IStartListener>()) {
         listener->OnStart();
     }
     for (auto &&listener: eventDispatcher.GetListeners<core_events::IUpdateListener>()) {
         listener->OnUpdate();
-    }
-    for (auto &&listener: eventDispatcher.GetListeners<core_events::IInputListener>()) {
-        listener->OnInput();
     }
 }
 
@@ -130,14 +125,12 @@ TEST_F(EventSystemFixture, remove_listener_for_only_registered_types_of_specifie
 
     EXPECT_EQ(eventDispatcher.GetListeners<core_events::IStartListener>().size(), 1);
     EXPECT_EQ(eventDispatcher.GetListeners<core_events::IUpdateListener>().size(), 1);
-    EXPECT_EQ(eventDispatcher.GetListeners<core_events::IInputListener>().size(), 1);
     EXPECT_EQ(eventDispatcher.GetListeners<core_events::IPreRenderListener>().size(), 1);
     EXPECT_EQ(eventDispatcher.GetListeners<core_events::IPostRenderListener>().size(), 1);
     EXPECT_EQ(eventDispatcher.GetListeners<core_events::IReleaseListener>().size(), 1);
 
     ASSERT_EQ(eventDispatcher.GetListeners<core_events::IStartListener>()[0], &eventListenerMock);
     ASSERT_EQ(eventDispatcher.GetListeners<core_events::IUpdateListener>()[0], &eventListenerMock);
-    ASSERT_EQ(eventDispatcher.GetListeners<core_events::IInputListener>()[0], &eventListenerMock);
     ASSERT_EQ(eventDispatcher.GetListeners<core_events::IPreRenderListener>()[0], &eventListenerMock);
     ASSERT_EQ(eventDispatcher.GetListeners<core_events::IPostRenderListener>()[0], &eventListenerMock);
     ASSERT_EQ(eventDispatcher.GetListeners<core_events::IReleaseListener>()[0], &eventListenerMock);

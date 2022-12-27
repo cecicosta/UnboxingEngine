@@ -2,6 +2,22 @@
 
 namespace unboxing_engine::algorithms {
 
+
+/// <summary>
+///
+/// </summary>
+/// <param name="start"></param>
+/// <param name="end"></param>
+/// <param name="p1"></param>
+/// <param name="p2"></param>
+/// <param name="projectionLimits"></param>
+/// <returns></returns>
+template<typename T, int dimention>
+bool findProjectedPointsOverSegment(const Vector<T, dimention> &start, const Vector<T, dimention> &end, const std::vector<Vector<T, dimention>> &points, std::vector<T> &projected_points);
+
+template bool findProjectedPointsOverSegment<float, 2>(const Vector<float, 2> &start, const Vector<float, 2> &end, const std::vector<Vector<float, 2>> &points, std::vector<float> &projected_points);
+template bool findProjectedPointsOverSegment<float, 3>(const Vector<float, 3> &start, const Vector<float, 3> &end, const std::vector<Vector<float, 3>> &points, std::vector<float> &projected_points);
+
     
 static bool AssessIntersectionBoxWithRay(const CBoundingBox3D &boundingBox, const Vector3f &raySrc, const Vector3f &rayDir) {
     //Derivative from p >= min, p >= max, p within [min, max], the 2 points defining the box. And p = O + Dx/Dt, from the ray, with p representing any point of intersection
@@ -115,16 +131,6 @@ Vector<T, dimension> getResultingNormalFromVertices(const std::vector<Vector<T, 
     return normal.Normalized();
 }
 
-
-/// <summary>
-///
-/// </summary>
-/// <param name="start"></param>
-/// <param name="end"></param>
-/// <param name="p1"></param>
-/// <param name="p2"></param>
-/// <param name="projectionLimits"></param>
-/// <returns></returns>
 template<typename T, int dimention>
 bool findProjectedPointsOverSegment(const Vector<T, dimention> &start, const Vector<T, dimention> &end, const std::vector<Vector<T, dimention>> &points, std::vector<T> &projected_points) {
     if (points.size() == 0) {
@@ -153,7 +159,7 @@ Vector<T, dimension> findIntersectionBetweenLines(const Vector<T, dimension> &l1
 
 
 template<typename T, int dimension>
-SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
+SCollisionResult<T, dimension> checkPathIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
     if (vertices.size() < 2 || start == end) {
         return {};
     }
@@ -289,7 +295,7 @@ bool CheckBoxToBoxCollision(std::vector<Vector<T, dimension>> box1, std::vector<
         auto d = box2[v];
 
         //Since the bounding box is a rectangulum, calculating the projection to one triangle, by symmetry, the other triangle will also contain the projection
-        result = checkPolygonIntersectionWithSegment(box1, c, d);
+        result = checkPathIntersectionWithSegment(box1, c, d);
 
         if (result.vertices.size() > 0) {
             return true;

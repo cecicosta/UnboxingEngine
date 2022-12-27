@@ -35,7 +35,7 @@ bool CBoxColliderComponent2D::HasCollided(const IColliderComponent& other) const
     auto result = unboxing_engine::algorithms::SCollisionResult<float, 3>();
     auto previous = this_vertices[3];
     for (int i = 0; i < this_vertices.size(); i++) {
-        result = algorithms::checkPolygonIntersectionWithSegment<float, 3>(other_transformed_vertices, previous, this_vertices[i], true);
+        result = algorithms::checkPathIntersectionWithSegment<float, 3>(other_transformed_vertices, previous, this_vertices[i], true);
         if (result.vertices.size() > 0) {
             return true;
         }

@@ -18,20 +18,6 @@ struct SCollisionResult {
     Vector<T, dimension> escape;               //Vector to which direction and lenth the collision can be undone
 };
 
-/// <summary>
-///
-/// </summary>
-/// <param name="start"></param>
-/// <param name="end"></param>
-/// <param name="p1"></param>
-/// <param name="p2"></param>
-/// <param name="projectionLimits"></param>
-/// <returns></returns>
-template<typename T, int dimention>
-bool findProjectedPointsOverSegment(const Vector<T, dimention> &start, const Vector<T, dimention> &end, const std::vector<Vector<T, dimention>> &points, std::vector<T> &projected_points);
-
-template bool findProjectedPointsOverSegment<float, 2>(const Vector<float, 2> &start, const Vector<float, 2> &end, const std::vector<Vector<float, 2>> &points, std::vector<float> &projected_points);
-template bool findProjectedPointsOverSegment<float, 3>(const Vector<float, 3> &start, const Vector<float, 3> &end, const std::vector<Vector<float, 3>> &points, std::vector<float> &projected_points);
 
 /// <summary>
 ///
@@ -57,10 +43,10 @@ template Vector<float, 3> findIntersectionBetweenLines(const Vector<float, 3> &l
 /// <returns>Returns a SCollisionResult structure with the information of vertices belonging to the edges hit, resulting normal and point of intersection.
 /// The only case more than one edge is considered to be hit is if the intersection occurs at the point of intersections between the two edges.</returns>
 template<typename T, int dimension>
-SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex);
+SCollisionResult<T, dimension> checkPathIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex);
 
-template SCollisionResult<float, 2> checkPolygonIntersectionWithSegment<float, 2>(const std::vector<Vector<float, 2>> &vertices, const Vector<float, 2> &start, const Vector<float, 2> &end, bool connectLastVertex);
-template SCollisionResult<float, 3> checkPolygonIntersectionWithSegment<float, 3>(const std::vector<Vector<float, 3>> &vertices, const Vector<float, 3> &start, const Vector<float, 3> &end, bool connectLastVertex);
+template SCollisionResult<float, 2> checkPathIntersectionWithSegment<float, 2>(const std::vector<Vector<float, 2>> &vertices, const Vector<float, 2> &start, const Vector<float, 2> &end, bool connectLastVertex);
+template SCollisionResult<float, 3> checkPathIntersectionWithSegment<float, 3>(const std::vector<Vector<float, 3>> &vertices, const Vector<float, 3> &start, const Vector<float, 3> &end, bool connectLastVertex);
 
 /// <summary>
 ///

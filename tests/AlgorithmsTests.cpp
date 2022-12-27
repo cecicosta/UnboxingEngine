@@ -84,7 +84,7 @@ Vector<T, dimension> getResultingNormalFromVertices(const std::vector<Vector<T, 
 /// <returns>Returns a SCollisionResult structure with the information of vertices belonging to the edges hit, resulting normal and point of intersection.
 /// The only case more than one edge is considered to be hit is if the intersection occurs at the point of intersections between the two edges.</returns>
 template <typename T, int dimension>
-SCollisionResult<T, dimension> checkPolygonIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
+SCollisionResult<T, dimension> findPathIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
     if (vertices.size() < 2 || start == end) {
         return {};
     }
@@ -223,7 +223,7 @@ bool CheckBoxToBoxCollision(std::vector<Vector<T, dimension>> box1, std::vector<
         //Since the bounding box is a rectangulum, calculating the projection to one triangle, by symmetry, the other triangle will also contain the projection
         auto escape;
         auto normal;
-        result = checkPolygonIntersectionWithSegment(box1, c, d);
+        result = findPathIntersectionWithSegment(box1, c, d);
 
         if (result.vertices.size() > 0) {
             return true;
@@ -252,37 +252,6 @@ bool AssessIntersectionBoxWithRay(const CBoundingBox3D &boundingBox, const Vecto
     return upper.x > 0 && upper.y > 0 && upper.z > 0;
 }
 
-TEST(TriangleCollision, IsInsideRightAngleTriangle) {
-    std::vector<Vector2f> triangle{{-23.27499, 11.4315},
-                         {-13.28368, 3.52394},
-                         {-9.6, 8.2}};
-
-    ASSERT_TRUE(unboxing_engine::algorithms::isInsideTriangle(triangle, Vector2f(-11.36868, 7.17424)));
-}
-
-TEST(TriangleCollision, IsOutsideRightAngleTriangle) {
-    std::vector<Vector2f> triangle{{-23.27499, 11.4315},
-                         {-13.28368, 3.52394},
-                         {-9.6, 8.2}};
-
-    ASSERT_FALSE(unboxing_engine::algorithms::isInsideTriangle(triangle, Vector2f(-10.33469, 8.6107)));
-}
-
-TEST(TriangleCollision, IsInsideGenericTriangle) {
-    std::vector<Vector2f> triangle{{13.01983, -5.81032},
-                                   {31.53435, -8.5663},
-                                   {6.30654, 15.81351}};
-
-    ASSERT_TRUE(unboxing_engine::algorithms::isInsideTriangle(triangle, Vector2f(7.8612, 13.62286)));
-}
-
-TEST(TriangleCollision, IsOutsideGenericTriangle) {
-    std::vector<Vector2f> triangle{{13.01983, -5.81032},
-                                   {31.53435, -8.5663},
-                                   {6.30654, 15.81351}};
-
-    ASSERT_FALSE(unboxing_engine::algorithms::isInsideTriangle(triangle, Vector2f(8.92119, -1.99435)));
-}
 
 TEST(GeneralCollisionHelpers, TraceTrajectoryIntoBox_) {
     std::vector<Vector2f> box{
@@ -308,7 +277,7 @@ TEST(GeneralCollisionHelpers, TraceTrajectoryIntoBox_ValidateIntersectionResults
 
     Vector2f start(-11, 6);
     Vector2f end(-6, 8);
-    auto result = MyCollision::checkPolygonIntersectionWithSegment<float, 2>(box, start, end);
+    auto result = MyCollision::findPathIntersectionWithSegment<float, 2>(box, start, end);
     EXPECT_EQ(result.vertices.size(), 2);
     if (result.vertices.size() == 2) {
         ASSERT_EQ(result.vertices[0], box[3]);

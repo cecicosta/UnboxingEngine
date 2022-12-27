@@ -55,7 +55,7 @@ bool CSegmentColliderComponent::HasCollided(const CBoxColliderComponent2D &other
     }
     
     auto this_vertices = algorithms::ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation()); 
-    auto result = this_vertices.size() >= 2 ? algorithms::checkPolygonIntersectionWithSegment<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true) 
+    auto result = this_vertices.size() >= 2 ? algorithms::checkPathIntersectionWithSegment<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true) 
         : unboxing_engine::algorithms::SCollisionResult<float, 3>();
     return result.vertices.size() > 0;
 }
@@ -76,7 +76,7 @@ bool CSegmentColliderComponent::HasCollided(const CSegmentColliderComponent &oth
     }
 
     auto this_vertices = algorithms::ApplyTransformationToVerticesArray(mMeshBuffer->vertices, mSceneComposite->GetTransformation());
-    auto result = this_vertices.size() == 2 ? algorithms::checkPolygonIntersectionWithSegment<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true)
+    auto result = this_vertices.size() == 2 ? algorithms::checkPathIntersectionWithSegment<float, 3>(other_transformed_vertices, this_vertices[0], this_vertices[1], true)
                                             : unboxing_engine::algorithms::SCollisionResult<float, 3>();
     return result.vertices.size() > 0;
     return false;

@@ -1,27 +1,42 @@
+#include "IComponent.h"
 #include "SceneComposite.h"
-#include "internal_components/IComponent.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
+#include <memory>
 #include <string>
 
 ///about 'initialization of test_info_' warning: https://github.com/google/googletest/issues/2442#issuecomment-852972215
+using namespace unboxing_engine;
 
-class MockComponent : public IComponent {
+class MockComponent : public unboxing_engine::IComponent {
 public:
-    explicit MockComponent(uint8_t id) : m_Id(id) {}
+    explicit MockComponent(uint8_t id)
+        : m_Id(id) {}
     ~MockComponent() override = default;
     [[nodiscard]] uint8_t GetId() const { return m_Id; }
+
+    MOCK_METHOD(const CSceneComposite *, GetSceneComposite, (), (const, override));
+    MOCK_METHOD(void, OnAttached, (CSceneComposite &), (override));
+    MOCK_METHOD(void, OnDetached, (), (override));
+
 private:
     uint8_t m_Id = 0;
 };
 
 class MockComponentOther : public IComponent {
 public:
-    explicit MockComponentOther(uint8_t id) : m_Id(id) {}
+    explicit MockComponentOther(uint8_t id)
+        : m_Id(id) {}
     ~MockComponentOther() override = default;
     [[nodiscard]] uint8_t GetId() const { return m_Id; }
     [[nodiscard]] std::string GetIdAsString() const { return std::to_string(m_Id); }
+
+    MOCK_METHOD(const CSceneComposite *, GetSceneComposite, (), (const, override));
+    MOCK_METHOD(void, OnAttached, (CSceneComposite &), (override));
+    MOCK_METHOD(void, OnDetached, (), (override));
+
 private:
     uint8_t m_Id = 0;
 };
@@ -29,13 +44,14 @@ private:
 class ComponentSystemFixture : public testing::Test {
 public:
     ~ComponentSystemFixture() override = default;
+
 protected:
     unboxing_engine::CSceneComposite composite;
 };
 
 TEST_F(ComponentSystemFixture, add_and_recover_component) {
-    MockComponent mockComponent(1);
-    composite.AddComponent(mockComponent);
+    auto mockComponent = std::make_unique<MockComponent>(1);
+    composite.AddComponent<MockComponent>(std::move(mockComponent));
 
     auto component = composite.GetComponent<MockComponent>();
 
@@ -44,11 +60,11 @@ TEST_F(ComponentSystemFixture, add_and_recover_component) {
 }
 
 TEST_F(ComponentSystemFixture, can_hold_and_recover_multiple_objects_of_different_types) {
-    MockComponent mockComponent(1);
-    MockComponentOther mockComponentOther(5);
 
-    composite.AddComponent(mockComponent);
-    composite.AddComponent(mockComponentOther);
+    auto mockComponent = std::make_unique<MockComponent>(1);
+    composite.AddComponent<MockComponent>(std::move(mockComponent));
+    auto mockComponentOther = std::make_unique<MockComponentOther>(5);
+    composite.AddComponent<MockComponentOther>(std::move(mockComponentOther));
 
     auto component = composite.GetComponent<MockComponent>();
     auto componentOther = composite.GetComponent<MockComponentOther>();
@@ -62,13 +78,12 @@ TEST_F(ComponentSystemFixture, can_hold_and_recover_multiple_objects_of_differen
 }
 
 
-
 TEST_F(ComponentSystemFixture, can_remove_component_of_specified_type) {
-    MockComponent mockComponent(1);
-    MockComponentOther mockComponentOther(5);
 
-    composite.AddComponent(mockComponent);
-    composite.AddComponent(mockComponentOther);
+    auto mockComponent = std::make_unique<MockComponent>(1);
+    composite.AddComponent<MockComponent>(std::move(mockComponent));
+    auto mockComponentOther = std::make_unique<MockComponentOther>(5);
+    composite.AddComponent<MockComponentOther>(std::move(mockComponentOther));
 
     //Remove only Component of type MockComponent
     composite.RemoveComponent<MockComponent>();
