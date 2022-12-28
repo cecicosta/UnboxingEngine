@@ -7,7 +7,7 @@
 namespace unboxing_engine {
 
 class IColliderComponent : public IComponent
-    , public UListener<systems::IIntersectsEventListener> {
+    , public UListener<systems::IIntersectsEvent> {
 public:
     ~IColliderComponent() override = default;
 

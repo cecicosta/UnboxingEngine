@@ -1,19 +1,17 @@
 #include "UnboxingEngine.h"
 
+#include "CoreEvents.h"
 #include "MeshPrimitivesUtils.h"
 #include "SceneComposite.h"
-#include "CoreEvents.h"
+#include "internal_components/BoundingBox2DColliderComponent.h"
 #include "internal_components/RenderComponent.h"
 #include "internal_components/SegmentColliderComponent.h"
-#include "internal_components/BoundingBox2DColliderComponent.h"
 
 using namespace unboxing_engine;
 
-class CSegment 
+class CSegment
     : public CSceneComposite
-    , public unboxing_engine::UListener<systems::IIntersectsEventListener
-        , core_events::IUpdateListener
-        , core_events::IMouseInputEvent> {
+    , public unboxing_engine::UListener<systems::IIntersectsEvent, core_events::IUpdateListener, core_events::IMouseInputEvent> {
 public:
     CSegment(CCore &engine)
         : mEngine(engine) {
@@ -45,7 +43,7 @@ public:
 
     void OnMouseInputtEvent(const core_events::SCursor &cursor) override {
         mEngine.UnregisterSceneElement(*this);
-        auto point = Vector3f(static_cast<float>(2*cursor.x)/640.0f - 1, -static_cast<float>(2*cursor.y)/480.0f + 1, 0);
+        auto point = Vector3f(static_cast<float>(2 * cursor.x) / 640.0f - 1, -static_cast<float>(2 * cursor.y) / 480.0f + 1, 0);
         mMesh->vertices[3] = point.x;
         mMesh->vertices[4] = point.y;
         mMesh->vertices[5] = point.z;
@@ -62,7 +60,7 @@ private:
 
 
 class CBox : public CSceneComposite
-    , public unboxing_engine::UListener<systems::IIntersectsEventListener, core_events::IUpdateListener> {
+    , public unboxing_engine::UListener<systems::IIntersectsEvent, core_events::IUpdateListener> {
 public:
     CBox() {
         mMesh = primitive_utils::Quad();

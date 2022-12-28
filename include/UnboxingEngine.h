@@ -12,6 +12,8 @@
 #include "Matrix.h"
 #include "Quaternion.h"
 #include "UVector.h"
+#include "EventDispatcher.h"
+#include "systems/CollisionSystem.h"
 #include "algorithms/CollisionAlgorithms.h"
 
 #include <cmath>
@@ -19,10 +21,6 @@
 #include <memory>
 #include <vector>
 #include <iostream>
-
-#include "EventDispatcher.h"
-#include "systems/CollisionSystem.h"
-
 
 #define L_BUTTON 0
 #define R_BUTTON 1
@@ -36,7 +34,9 @@ namespace unboxing_engine {
 class CMeshBuffer;
 class CSceneComposite;
 
-class CCore : public IEngine, public CEventDispatcher, public systems::ICollisionEventLitener {
+class CCore : public IEngine
+    , public CEventDispatcher
+    , public UListener<systems::ICollisionEvent> {
     ///Rendering opengl buffer handlers
     struct SRenderContext {
         explicit SRenderContext(CSceneComposite & sceneComposite);

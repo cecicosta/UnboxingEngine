@@ -19,40 +19,36 @@ struct SCursor {
     int cursorState[3]{0, 0, 0};
 };
 
-    class IStartListener {
-    public:
-        virtual ~IStartListener() = default;
-        virtual void OnStart() = 0;
-    };
-    class IUpdateListener {
-    public:
-        virtual ~IUpdateListener() = default;
-        virtual void OnUpdate() = 0;
-    };
-    class IPreRenderListener {
-    public:
-        virtual ~IPreRenderListener() = default;
-        virtual void OnPreRender() = 0;
-    };
-    class IPostRenderListener {
-    public:
-        virtual ~IPostRenderListener() = default;
-        virtual void OnPostRender() = 0;
-    };
-    class IReleaseListener {
-    public:
-        virtual ~IReleaseListener() = default;
-        virtual void OnRelease() = 0;
-    };
-    class IMouseInputEvent {
-    public:
-        virtual ~IMouseInputEvent() = default;
-        virtual void OnMouseInputtEvent(const SCursor& cursor) = 0;
-    };
-    class IMouseInputEventListener : public UListener<IMouseInputEvent> {
-    public:
-        ~IMouseInputEventListener() override = default;
-    };
+class IStartListener {
+public:
+    virtual ~IStartListener() = default;
+    virtual void OnStart() = 0;
+};
+class IUpdateListener {
+public:
+    virtual ~IUpdateListener() = default;
+    virtual void OnUpdate() = 0;
+};
+class IPreRenderListener {
+public:
+    virtual ~IPreRenderListener() = default;
+    virtual void OnPreRender() = 0;
+};
+class IPostRenderListener {
+public:
+    virtual ~IPostRenderListener() = default;
+    virtual void OnPostRender() = 0;
+};
+class IReleaseListener {
+public:
+    virtual ~IReleaseListener() = default;
+    virtual void OnRelease() = 0;
+};
+class IMouseInputEvent {
+public:
+    virtual ~IMouseInputEvent() = default;
+    virtual void OnMouseInputtEvent(const SCursor &cursor) = 0;
+};
 
-    class ICoreEventsListener : public UListener<IStartListener, IUpdateListener, IPreRenderListener, IPostRenderListener, IReleaseListener> {};
+class ICoreEventsListener : public UListener<IStartListener, IUpdateListener, IPreRenderListener, IPostRenderListener, IReleaseListener> {};
 }// namespace unboxing_engine::core_events

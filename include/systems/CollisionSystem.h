@@ -10,9 +10,9 @@ class IColliderComponent;
 
 namespace unboxing_engine::systems {
 
-class IIntersectsEventListener {
+class IIntersectsEvent {
 public:
-    virtual ~IIntersectsEventListener() = default;
+    virtual ~IIntersectsEvent() = default;
     virtual void OnIntersects() = 0;
 };
 
@@ -21,12 +21,6 @@ public:
     virtual ~ICollisionEvent() = default;
     virtual void OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) = 0;
 };
-
-class ICollisionEventLitener: public UListener<ICollisionEvent> {
-public:
-    virtual ~ICollisionEventLitener() = default;
-};
-
 
 class CollisionSystem : public UListener <core_events::IPreRenderListener>, public CEventDispatcher {
 public:
