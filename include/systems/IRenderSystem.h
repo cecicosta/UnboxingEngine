@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <memory>
 
+#include "CoreEvents.h"
+
 namespace unboxing_engine {
 class CMeshBuffer;
 class Camera;

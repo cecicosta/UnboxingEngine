@@ -15,12 +15,15 @@ set(INSTALL_GTEST "OFF")
 add_subdirectory(./third_party/googletest)
 add_subdirectory(./tests)
 add_subdirectory(./Examples)
+add_subdirectory(./sdl_gl_render_system_lib)
+
 
 include_directories(
         ./include)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp)
-target_link_libraries(unboxing_engine unboxing_engine_src_lib OpenGL_SDL_RenderSystem)
+target_link_libraries(unboxing_engine unboxing_engine_src_lib sdl_gl_render_system_lib)
 
 target_sources(2d_collision_vectors PUBLIC ./source/systems)
+

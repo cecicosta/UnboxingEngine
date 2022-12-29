@@ -1,3 +1,7 @@
+﻿// sdl_gl_render_system_lib.h : Header file for your target.
+
+#pragma once
+
 #include "systems/IRenderSystem.h"
 
 namespace unboxing_engine::systems {
@@ -5,7 +9,7 @@ namespace unboxing_engine::systems {
 class COpenGLRenderSystem : public IRenderSystem {
 public:
     COpenGLRenderSystem();
-    virtual ~COpenGLRenderSystem();
+    ~COpenGLRenderSystem() override;
 
     [[nodiscard]] bool Initialize(std::uint32_t width, std::uint32_t heigth) override;
     [[nodiscard]] std::unique_ptr<SShaderHandle> CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) override;
@@ -14,7 +18,12 @@ public:
 
     void OnPreRender() override;
     void OnPostRender() override;
-    void Render(const Camera& camera, const SRenderContextHandle &renderContextHandle) override;
+    void Render(const Camera &camera, const SRenderContextHandle &renderContextHandle) override;
+
+private:
+    ///Window and opengl handlers
+    SDL_Window *mWindow = nullptr;
+    SDL_GLContext mGLContext = nullptr;
 };
 
-}// namespace unboxing_engine
+}// namespace unboxing_engine::systems

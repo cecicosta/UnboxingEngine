@@ -2,10 +2,6 @@
 
 #include <unordered_map>
 
-#include "SDL_events.h"
-#include "SDL_timer.h"
-#include "SDL_video.h"
-
 #include "Camera.h"
 #include "IEngine.h"
 #include "texture.h"
@@ -182,10 +178,6 @@ private:
 
     ///Keyboard input attributes
     std::uint8_t const *keyState = nullptr;
-
-    ///Window and opengl handlers
-    SDL_Window *mWindow = nullptr;
-    SDL_GLContext mGLContext = nullptr;
 
     bool quit = false;
 };

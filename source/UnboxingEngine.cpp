@@ -11,7 +11,8 @@
 
 #include "internal_components/IColliderComponent.h"
 #include "internal_components/RenderComponent.h"
-#include "systems/OpenGLRenderSystem.h"
+
+
 
 namespace unboxing_engine {
 
@@ -33,10 +34,6 @@ static const char *fragment_shader_source =
     "void main() {\n"
     "    o_color = v_color;\n"
     "}\n";
-
-typedef enum t_attrib_id {
-    attrib_position
-} t_attrib_id;
 
 CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
     : camera(std::make_unique<Camera>(width, height, 70.0f, 1.f, 1.f))
