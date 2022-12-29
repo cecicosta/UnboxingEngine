@@ -47,6 +47,7 @@ target_link_libraries(2d_collision_vectors unboxing_engine_src_lib SDL2main glew
 #Set up SDL_image dependency
 target_sources(2d_collision_vectors PUBLIC ../third_party/zlib-1.2.12)
 target_sources(2d_collision_vectors PUBLIC ../source)
+target_sources(2d_collision_vectors PUBLIC ../source/systems)
 target_sources(2d_collision_vectors PUBLIC ../third_party/glew-2.1.0/build/cmake)
 target_sources(2d_collision_vectors PUBLIC ../third_party/SDL)
 target_sources(2d_collision_vectors PUBLIC ../third_party/SDL_image)

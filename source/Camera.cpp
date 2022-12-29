@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+namespace unboxing_engine {
 constexpr float pi = 3.1415926f;
 
 static inline void mat4x4_ortho(float *out, float left, float right, float bottom, float top, float znear, float zfar) {
@@ -104,3 +105,5 @@ Camera::Camera(uint32_t width, uint32_t height, float FOV, float zNear, float zF
     , mRight(zNear * tanf(mFieldOfViewX * pi / 360.0f))
     , mLeft(-mRight)
     , mTransformation(Matrix4f::Identity()) {}
+
+}// namespace unboxing_engine
