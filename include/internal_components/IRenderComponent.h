@@ -6,13 +6,19 @@
 namespace unboxing_engine {
 class CMeshBuffer;
 
+namespace systems {
+class IRenderSystem;
+}
+
 class IRenderComponent : public IComponent {
 public:
     virtual ~IRenderComponent() = default;
 
-    virtual void SetMaterial(const SMaterial &material) = 0;
     virtual const SMaterial &GetMaterial() const = 0;
+    virtual void SetMaterial(const SMaterial &material) = 0;
     virtual const CMeshBuffer &GetMeshBuffer() const = 0;
-    virtual void Render() const = 0;
+    virtual void SetMeshBuffer(const CMeshBuffer &meshBuffer) = 0;
+
+    virtual void Render(const systems::IRenderSystem &renderSystem) = 0;
 };
 }// namespace unboxing_engine

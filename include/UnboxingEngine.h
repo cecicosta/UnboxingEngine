@@ -164,8 +164,8 @@ private:
     ///Basic shader handler
     std::unique_ptr<systems::SShaderHandle> program;
     ///
-    std::vector<systems::SRenderContextHandle> mRenderQueue;
-    std::vector<systems::SRenderContextHandle> mPendingWriteQueue;
+    std::unordered_map<int, CSceneComposite *> mRenderQueue;
+    std::vector<CSceneComposite *> mPendingWriteQueue;
 
     //SDL input event handling
     SDL_Event event{};

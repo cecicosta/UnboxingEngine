@@ -12,7 +12,7 @@
 #include "internal_components/IColliderComponent.h"
 #include "internal_components/RenderComponent.h"
 
-
+#include "sdl_gl_render_system_lib.h"
 
 namespace unboxing_engine {
 
@@ -72,10 +72,9 @@ void CCore::Render() {
     }
 
     for (auto &&data: mRenderQueue) {
-        auto sceneComposite = GetSceneElement(data.compositeId);
+        auto sceneComposite = GetSceneElement(data.second->id);
         if (auto render = sceneComposite->GetComponent<IRenderComponent>()) {
-            auto meshBuffer = render->GetMeshBuffer();
-            mRenderSystem->Render(*camera, data);
+            render->Render(*mRenderSystem);
         }
     }
 
@@ -474,23 +473,16 @@ void CCore::OnCollisionEvent(const IColliderComponent &c1, const IColliderCompon
     }
 }
 
-void CCore::CreateBasicShader(const char * vertexhaderSrc, const char * fragmentShaderSrc) {
-}
-
-void unboxing_engine::CCore::WriteGeometryData(systems::SRenderContextHandle &renderContext, unboxing_engine::CMeshBuffer &meshBuffer) {
-    renderContext.renderBufferHandle = mRenderSystem->WriteRenderBufferData(meshBuffer);
-    mRenderQueue.emplace_back(renderContext);
-}
-
 void CCore::WritePendingRenderData() {
     for (auto &&data: mPendingWriteQueue) {
-        auto render = data.mSceneComposite->GetComponent<IRenderComponent>();
+        auto render = data->GetComponent<IRenderComponent>();
         if (!render) {
             continue;
         }
         // For now, render are obligated to have a CMeshBuffer
         auto meshBuffer = render->GetMeshBuffer();
-        WriteGeometryData(data, meshBuffer);
+        renderContext.renderBufferHandle = mRenderSystem->WriteRenderBufferData(meshBuffer);
+        mRenderQueue.emplace_back(renderContext);
     }
     mPendingWriteQueue.clear();
 }

@@ -19,16 +19,5 @@ include_directories(
 add_executable(2d_collision_vectors 2DCollisionVectors.cpp ../source/UnboxingEngine.cpp)
 target_link_libraries(2d_collision_vectors unboxing_engine_src_lib sdl_gl_render_system_lib)
 
-#Set up SDL_image dependency
 target_sources(2d_collision_vectors PUBLIC ../source)
 target_sources(2d_collision_vectors PUBLIC ../tests)
-
-
-if (WIN32)
-    #Copy OpenGL wrapper dll after building
-    add_custom_command(
-            TARGET 2d_collision_vectors
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
-    )
-endif ()
