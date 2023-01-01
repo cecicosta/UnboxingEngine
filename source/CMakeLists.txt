@@ -52,6 +52,7 @@ set(HEADERS
         ../include/algorithms/CollisionAlgorithms.h
         ../include/systems/CollisionSystem.h
         ../include/systems/IRenderSystem.h
+        ../include/systems/IInputSystem.h
         #../include/collisionutil.h
         )
 

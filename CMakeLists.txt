@@ -15,7 +15,7 @@ add_subdirectory(./source)
 
 include_directories(
         ./include
-        ./sdl_gl_render_system_lib
+        ./sdl_gl_render_system
 )
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
@@ -26,4 +26,4 @@ target_sources(unboxing_engine PUBLIC ./source)
 target_sources(unboxing_engine PUBLIC ./tests)
 target_sources(unboxing_engine PUBLIC ./Examples)
 target_sources(unboxing_engine PUBLIC ./third_party/googletest)
-target_sources(unboxing_engine PUBLIC ./sdl_gl_render_system_lib)
+target_sources(unboxing_engine PUBLIC ./sdl_gl_render_system)

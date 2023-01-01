@@ -34,14 +34,6 @@ class CSceneComposite;
 class CCore : public IEngine
     , public CEventDispatcher
     , public UListener<systems::ICollisionEvent> {
-    ///Rendering opengl buffer handlers
-    struct SRenderContext {
-        explicit SRenderContext(CSceneComposite & sceneComposite);
-        std::uint32_t vao = -1;//Refers to the whole render context, including geometry, shaders and parameters
-        std::uint32_t vbo = -1;//Buffer handler for geometry
-        std::uint32_t ebo = -1;//Buffer handler for geometry vertex indices
-        CSceneComposite *mSceneComposite;
-    };
 
 public:
     CCore(uint32_t width, uint32_t height, uint32_t bpp);
@@ -167,19 +159,11 @@ private:
     std::unordered_map<int, CSceneComposite *> mRenderQueue;
     std::vector<CSceneComposite *> mPendingWriteQueue;
 
-    //SDL input event handling
-    SDL_Event event{};
-
-    core_events::SCursor mCursor;
-
     //Handle objects with a ICollisionComponent registered
     systems::CollisionSystem mCollisionSystem;
     std::unique_ptr<systems::IRenderSystem> mRenderSystem;
 
-    ///Keyboard input attributes
-    std::uint8_t const *keyState = nullptr;
-
-    bool quit = false;
+    bool quit;
 };
 
 }

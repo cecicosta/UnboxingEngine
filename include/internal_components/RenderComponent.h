@@ -2,6 +2,7 @@
 
 #include "IComponent.h"
 #include "internal_components/IRenderComponent.h"
+#include "systems/IRenderSystem.h"
 
 namespace unboxing_engine {
 class CMeshBuffer;

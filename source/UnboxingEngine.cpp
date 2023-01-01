@@ -16,24 +16,6 @@
 
 namespace unboxing_engine {
 
-static const char *vertex_shader_source =
-    "#version 150 core\n"
-    "in vec3 i_position;\n"
-    "uniform vec4 color;\n"
-    "out vec4 v_color;\n"
-    "uniform mat4 u_projection_matrix;\n"
-    "void main() {\n"
-    "    v_color = color;\n"
-    "    gl_Position = u_projection_matrix * vec4( i_position.x, i_position.y, i_position.z, 1.0 );\n"
-    "}\n";
-
-static const char *fragment_shader_source =
-    "#version 150\n"
-    "in vec4 v_color;\n"
-    "out vec4 o_color;\n"
-    "void main() {\n"
-    "    o_color = v_color;\n"
-    "}\n";
 
 CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
     : camera(std::make_unique<Camera>(width, height, 70.0f, 1.f, 1.f))
@@ -83,97 +65,10 @@ void CCore::Render() {
     }
 }
 
-void CCore::OnInput() {
-    keyState = SDL_GetKeyboardState(nullptr);
-
-    mCursor.scrolling = 0;
-    while (SDL_PollEvent(&event)) {
-        switch (event.type) {
-            case SDL_MOUSEMOTION:
-                if (mCursor.cursorState[L_BUTTON] == 1) {
-                    mCursor.draggingX = event.motion.x - mCursor.buttonPressedX;
-                    mCursor.draggingY = event.motion.y - mCursor.buttonPressedY;
-                }
-                mCursor.x = event.motion.x;
-                mCursor.y = event.motion.y;
-                for (auto&& listener : GetListeners<core_events::IMouseInputEvent>()) {
-                    listener->OnMouseInputtEvent(mCursor);
-                }
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-
-                if (CCore::event.button.button == SDL_BUTTON_LEFT && !mCursor.isButtonPressed) {
-                    mCursor.cursorState[L_BUTTON] = 1;
-                    mCursor.buttonPressedX = event.motion.x;
-                    mCursor.buttonPressedY = event.motion.y;
-                }
-                if (CCore::event.button.button == SDL_BUTTON_RIGHT && !mCursor.isButtonPressed) {
-                    mCursor.cursorState[R_BUTTON] = 1;
-                    mCursor.buttonPressedX = event.motion.x;
-                    mCursor.buttonPressedY = event.motion.y;
-                }
-                mCursor.isButtonPressed = true;
-
-                if (CCore::event.type == SDL_MOUSEWHEEL) {
-                    mCursor.scrolling = CCore::event.wheel.y;
-                }
-                for (auto &&listener: GetListeners<core_events::IMouseInputEvent>()) {
-                    listener->OnMouseInputtEvent(mCursor);
-                }
-                break;
-            case SDL_MOUSEBUTTONUP:
-                mCursor.draggingX = 0;
-                mCursor.draggingY = 0;
-                mCursor.draggingSpeedX = 0;
-                mCursor.draggingSpeedY = 0;
-                mCursor.isButtonPressed = false;
-
-                if (CCore::event.button.button == SDL_BUTTON_LEFT && mCursor.cursorState[L_BUTTON] == 1) {
-                    mCursor.cursorState[L_BUTTON] = 0;
-                }
-                if (CCore::event.button.button == SDL_BUTTON_RIGHT && mCursor.cursorState[R_BUTTON] == 1) {
-                    mCursor.cursorState[R_BUTTON] = 0;
-                }
-                for (auto &&listener: GetListeners<core_events::IMouseInputEvent>()) {
-                    listener->OnMouseInputtEvent(mCursor);
-                }
-                break;
-            case SDL_QUIT:
-                quit = true;
-        }
-    }
-
-    mCursor.draggingSpeedX = static_cast<float>(mCursor.draggingX) * 180.f / 400.f;
-    mCursor.draggingSpeedY = static_cast<float>(mCursor.draggingY) * 180.f / 300.f;
-
-    if (keyState[SDLK_ESCAPE])
-        quit = true;
-}
-
 void CCore::UpdateFlyingController() {
     Vector3f velocity;
     Vector3f rotation;
-    if (keyState) {
-        if (keyState[SDLK_RIGHT]) {
-            velocity.x = -1;
-        }
-        if (keyState[SDLK_LEFT]) {
-            velocity.x = 1;
-        }
-        if (keyState[SDLK_UP]) {
-            velocity.y = -1;
-        }
-        if (keyState[SDLK_DOWN]) {
-            velocity.y = 1;
-        }
-        if (keyState[SDLK_o]) {
-            velocity.z = 1;
-        }
-        if (keyState[SDLK_i]) {
-            velocity.z = -1;
-        }
-    }
-
+    
     rotation.x = mCursor.draggingX * 180 / 400 - mCursor.draggingSpeedX;
     rotation.y = mCursor.draggingY * 180 / 300 - mCursor.draggingSpeedY;
 

@@ -19,6 +19,20 @@ struct SCursor {
     int cursorState[3]{0, 0, 0};
 };
 
+struct SKeyboard {
+    enum EKey { NONE,
+                KEY_A,
+                KEY_S,
+                KEY_D,
+                KEY_W,
+                KEY_ESC,
+                KEY_LEFT,
+                KEY_RIGHT,
+                KEY_UP,
+                KEY_DOWN };
+    EKey key;
+};
+
 class IStartListener {
 public:
     virtual ~IStartListener() = default;

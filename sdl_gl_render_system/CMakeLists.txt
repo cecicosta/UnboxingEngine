@@ -1,7 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.21)
 project(sdl_gl_render_system)
 
-
 set(CMAKE_CXX_STANDARD 17)
 
 set(ZLIB_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../third_party/zlib-1.2.12)
@@ -33,7 +32,7 @@ include_directories(
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
-add_library(sdl_gl_render_system_lib STATIC "sdl_gl_render_system_lib.cpp" "sdl_gl_render_system_lib.h")
+add_library(sdl_gl_render_system_lib STATIC "sdl_gl_render_system_lib.cpp" "sdl_gl_render_system_lib.h" "sdl_input_system_lib.h" "sdl_input_system_lib.cpp")
 target_link_libraries(sdl_gl_render_system_lib PUBLIC SDL2main glew SDL2 SDL2_image SDL2_ttf unboxing_engine_src_lib)
 
 #Set up SDL_image dependency

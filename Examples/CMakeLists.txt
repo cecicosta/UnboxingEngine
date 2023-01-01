@@ -13,7 +13,7 @@ set(INSTALL_GTEST "ON")
 
 include_directories(
         ../include
-        ../sdl_gl_render_system_lib
+        ../sdl_gl_render_system
 )
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 add_executable(2d_collision_vectors 2DCollisionVectors.cpp ../source/UnboxingEngine.cpp)
@@ -21,3 +21,4 @@ target_link_libraries(2d_collision_vectors unboxing_engine_src_lib sdl_gl_render
 
 target_sources(2d_collision_vectors PUBLIC ../source)
 target_sources(2d_collision_vectors PUBLIC ../tests)
+target_sources(2d_collision_vectors PUBLIC ../sdl_gl_render_system)
