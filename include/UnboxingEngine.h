@@ -2,10 +2,6 @@
 
 #include <unordered_map>
 
-#include "SDL_events.h"
-#include "SDL_timer.h"
-#include "SDL_video.h"
-
 #include "Camera.h"
 #include "IEngine.h"
 #include "texture.h"
@@ -14,12 +10,13 @@
 #include "UVector.h"
 #include "EventDispatcher.h"
 #include "systems/CollisionSystem.h"
-#include "algorithms/CollisionAlgorithms.h"
+#include "systems/IRenderSystem.h"
 
 #include <cmath>
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <optional>
 #include <iostream>
 
 #define L_BUTTON 0
@@ -37,45 +34,73 @@ class CSceneComposite;
 class CCore : public IEngine
     , public CEventDispatcher
     , public UListener<systems::ICollisionEvent> {
-    ///Rendering opengl buffer handlers
-    struct SRenderContext {
-        explicit SRenderContext(CSceneComposite & sceneComposite);
-        std::uint32_t vao = -1;//Refers to the whole render context, including geometry, shaders and parameters
-        std::uint32_t vbo = -1;//Buffer handler for geometry
-        std::uint32_t ebo = -1;//Buffer handler for geometry vertex indices
-        CSceneComposite *mSceneComposite;
-    };
 
 public:
     CCore(uint32_t width, uint32_t height, uint32_t bpp);
     ~CCore() override = default;
-    std::unique_ptr<Camera> camera;
 
+    /// <summary>
     ///Create new window and setup view
+    /// </summary>
     void CreateWindow();
 
+    /// <summary>
     ///Initialize engine subsystems
+    /// </summary>
     void Start() override;
-    ///Run loop
+
+    /// <summary>
+    /// 
+    /// </summary>
     void Run() override;
 
-    ///
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="listener"></param>
     void RegisterEventListener(UListener<>& listener);
-    ///
-    void UnregisterEventListener(const UListener<>& listener);
-    ///
-    void RegisterSceneElement(CSceneComposite & sceneComposite);
-    void UnregisterSceneElement(const CSceneComposite &sceneComposite);
-    CSceneComposite *GetSceneElement(int id) const;
-    ///Register object to interact with the basic engine systems throught its existing components
-    void WritePendingRenderData();
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="listener"></param>
+    void UnregisterEventListener(const UListener<>& listener);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sceneComposite"></param>
+    void RegisterSceneElement(CSceneComposite & sceneComposite);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sceneComposite"></param>
+    void UnregisterSceneElement(const CSceneComposite &sceneComposite);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    CSceneComposite *GetSceneElement(int id) const;
+
+    /// <summary>
     ///Destroy opengl context, window and finish SDL subsystems
+    /// </summary>
     void Release();
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="c1"></param>
+    /// <param name="c2"></param>
+    /// <param name="result"></param>
     void OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) override; 
-
 private:
+    void WriteGeometryData(systems::SRenderContextHandle &renderContext, unboxing_engine::CMeshBuffer &meshBuffer);
+    ///Register object to interact with the basic engine systems throught its existing components
+    void WritePendingRenderData();
     ///Rendering routines
     void Render() override;
     ///Start rendering
@@ -84,7 +109,7 @@ private:
     void OnInput() override;
 
     void CreateView() const;
-    void CreateBasicShader();
+    void CreateBasicShader(const char* vertexShaderSrc, const char* fragmentShaderSrc);
     
     ///Load texture into the engine resources manager
     Texture *LoadTexture(char *filename);
@@ -113,8 +138,11 @@ private:
     ///The control keys used are wasd for movement and mouse for direction.
     void UpdateFlyingController();
 
-    ///
-    void ReleaseRenderData(SRenderContext &context);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="context"></param>
+    void ReleaseRenderData(systems::SRenderContextHandle &context);
 
     ///Retrieve and log opengl errors
     static void GetError() ;
@@ -122,29 +150,20 @@ private:
     ///Captures the window y button click
     [[nodiscard]] bool HasQuit() const { return quit; }
 
+    std::unique_ptr<Camera> camera;
+    std::uint32_t BPP = 32;
+
     ///Basic shader handler
-    std::uint32_t program = -1;
+    std::unique_ptr<systems::SShaderHandle> program;
     ///
-    std::vector<SRenderContext> mRenderQueue;
-    std::vector<SRenderContext> mPendingWriteQueue;
-
-    //SDL input event handling
-    SDL_Event event{};
-
-    core_events::SCursor mCursor;
+    std::unordered_map<int, CSceneComposite *> mRenderQueue;
+    std::vector<CSceneComposite *> mPendingWriteQueue;
 
     //Handle objects with a ICollisionComponent registered
     systems::CollisionSystem mCollisionSystem;
+    std::unique_ptr<systems::IRenderSystem> mRenderSystem;
 
-    ///Keyboard input attributes
-    std::uint8_t const *keyState = nullptr;
-
-    ///Window and opengl handlers
-    SDL_Window *mWindow = nullptr;
-    SDL_GLContext mGLContext = nullptr;
-
-    bool quit = false;
-    std::uint32_t BPP = 32;
+    bool quit;
 };
 
 }

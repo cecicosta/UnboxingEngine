@@ -4,6 +4,7 @@
 #include "Quaternion.h"
 
 #include <cstdint>
+namespace unboxing_engine {
 
 class Camera {
 public:
@@ -13,7 +14,7 @@ public:
     [[nodiscard]] Vector3f ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const;
     void SetCamera(const Vector3f &pos, float ang, const Vector3f &axi, const Vector3f &point);
     ///Move the camera
-    void FPSCamera(const Vector3f & movement, const Vector3f & rotation);
+    void FPSCamera(const Vector3f &movement, const Vector3f &rotation);
 
     //Opengl camera attributes
     Quaternion mRotation = Quaternion(0, Vector3f(1, 0, 0));
@@ -43,3 +44,4 @@ public:
     ///Furthest coordinate to the left of the mWindow
     float mLeft;
 };
+}// namespace unboaxing_engine

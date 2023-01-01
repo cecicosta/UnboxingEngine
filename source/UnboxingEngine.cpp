@@ -5,11 +5,6 @@
 #include <CoreEvents.h>
 #include <MeshBuffer.h>
 
-#include <GL/glew.h>
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
-
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
@@ -17,50 +12,31 @@
 #include "internal_components/IColliderComponent.h"
 #include "internal_components/RenderComponent.h"
 
+#include "sdl_gl_render_system_lib.h"
 
 namespace unboxing_engine {
 
-static const char *vertex_shader_source =
-    "#version 150 core\n"
-    "in vec3 i_position;\n"
-    "uniform vec4 color;\n"
-    "out vec4 v_color;\n"
-    "uniform mat4 u_projection_matrix;\n"
-    "void main() {\n"
-    "    v_color = color;\n"
-    "    gl_Position = u_projection_matrix * vec4( i_position.x, i_position.y, i_position.z, 1.0 );\n"
-    "}\n";
-
-static const char *fragment_shader_source =
-    "#version 150\n"
-    "in vec4 v_color;\n"
-    "out vec4 o_color;\n"
-    "void main() {\n"
-    "    o_color = v_color;\n"
-    "}\n";
-
-typedef enum t_attrib_id {
-    attrib_position
-} t_attrib_id;
 
 CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
     : camera(std::make_unique<Camera>(width, height, 70.0f, 1.f, 1.f))
-    , BPP(bpp) {
+    , BPP(bpp) 
+    , mRenderSystem(std::make_unique<systems::COpenGLRenderSystem>()) {
     mCollisionSystem.RegisterListener(*this);
     RegisterEventListener(mCollisionSystem);
+    RegisterEventListener(*mRenderSystem);
 }
 
 void CCore::Start() {
-    CreateWindow();
+    if (!mRenderSystem->Initialize(camera->mWidth, camera->mHeight)) {
+
+    }
+    program = mRenderSystem->CompileShader(vertex_shader_source, fragment_shader_source);
     for (auto l: GetListeners<core_events::IStartListener>()) {
         l->OnStart();
     }
 }
 void CCore::Run() {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     while (!HasQuit()) {
-        glClear(GL_COLOR_BUFFER_BIT);
-
         OnInput();
 
         for (auto &&listener: GetListeners<core_events::IUpdateListener>()) {
@@ -73,180 +49,26 @@ void CCore::Run() {
     }
 }
 void CCore::Render() {
-    glUseProgram(program);
-
     for (auto &&listener: GetListeners<core_events::IPreRenderListener>()) {
         listener->OnPreRender();
     }
 
     for (auto &&data: mRenderQueue) {
-        if (auto render = data.mSceneComposite->GetComponent<IRenderComponent>()) {
-
-            auto meshBuffer = render->GetMeshBuffer();
-            glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (camera->mTransformation * data.mSceneComposite->GetTransformation()).ToArray());
-            glUniform4fv(glGetUniformLocation(program, "color"), 1, render->GetMaterial().materialDif);
-            glBindVertexArray(data.vao);
-            glDrawElements(GL_TRIANGLES, meshBuffer.nfaces * 3, GL_UNSIGNED_INT, nullptr);
+        auto sceneComposite = GetSceneElement(data.second->id);
+        if (auto render = sceneComposite->GetComponent<IRenderComponent>()) {
+            render->Render(*mRenderSystem);
         }
     }
-    RenderCanvas();
 
     for (auto &&listener: GetListeners<core_events::IPostRenderListener>()) {
         listener->OnPostRender();
     }
 }
 
-void CCore::CreateWindow() {
-    //Initialize SDL subsystems
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-        std::cout << "Video initialization failed: " << SDL_GetError() << std::endl;
-        return;
-    }
-
-    //Initialize SDL_ttf
-    TTF_Init();
-
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-
-    //Creates the window
-    mWindow = SDL_CreateWindow("My Game Window",
-                               SDL_WINDOWPOS_CENTERED,
-                               SDL_WINDOWPOS_CENTERED,
-                               static_cast<GLint>(camera->mWidth),
-                               static_cast<GLint>(camera->mHeight),
-                               SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-
-    // Create an OpenGL context associated with the window
-    mGLContext = SDL_GL_CreateContext(mWindow);
-
-    //TODO: Verify if by creating a new window, a new context needs to be
-    // created and glew needs to be initialize for that context
-    auto init_res = glewInit();
-    if (init_res != GLEW_OK) {
-        std::cout << glewGetErrorString(glewInit()) << std::endl;
-    }
-
-    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
-
-    CreateView();
-
-    CreateBasicShader();
-}
-
-void CCore::CreateView() const {
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);// Clear The Background Color Out Blue
-                                         //    glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
-                                         //    glEnable(GL_BLEND);
-                                         //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending
-    //glEnable(GL_CULL_FACE);
-
-    //    glEnable(GL_DEPTH_TEST);// Enables Depth Testing
-    //    glDepthFunc(GL_LEQUAL); // Type Of Depth Testing
-
-    glViewport(0, 0, static_cast<GLint>(camera->mWidth), static_cast<GLint>(camera->mHeight));
-}
-
-void CCore::OnInput() {
-    keyState = SDL_GetKeyboardState(nullptr);
-
-    mCursor.scrolling = 0;
-    while (SDL_PollEvent(&event)) {
-        switch (event.type) {
-            case SDL_MOUSEMOTION:
-                if (mCursor.cursorState[L_BUTTON] == 1) {
-                    mCursor.draggingX = event.motion.x - mCursor.buttonPressedX;
-                    mCursor.draggingY = event.motion.y - mCursor.buttonPressedY;
-                }
-                mCursor.x = event.motion.x;
-                mCursor.y = event.motion.y;
-                for (auto&& listener : GetListeners<core_events::IMouseInputEvent>()) {
-                    listener->OnMouseInputtEvent(mCursor);
-                }
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-
-                if (CCore::event.button.button == SDL_BUTTON_LEFT && !mCursor.isButtonPressed) {
-                    mCursor.cursorState[L_BUTTON] = 1;
-                    mCursor.buttonPressedX = event.motion.x;
-                    mCursor.buttonPressedY = event.motion.y;
-                }
-                if (CCore::event.button.button == SDL_BUTTON_RIGHT && !mCursor.isButtonPressed) {
-                    mCursor.cursorState[R_BUTTON] = 1;
-                    mCursor.buttonPressedX = event.motion.x;
-                    mCursor.buttonPressedY = event.motion.y;
-                }
-                mCursor.isButtonPressed = true;
-
-                if (CCore::event.type == SDL_MOUSEWHEEL) {
-                    mCursor.scrolling = CCore::event.wheel.y;
-                }
-                for (auto &&listener: GetListeners<core_events::IMouseInputEvent>()) {
-                    listener->OnMouseInputtEvent(mCursor);
-                }
-                break;
-            case SDL_MOUSEBUTTONUP:
-                mCursor.draggingX = 0;
-                mCursor.draggingY = 0;
-                mCursor.draggingSpeedX = 0;
-                mCursor.draggingSpeedY = 0;
-                mCursor.isButtonPressed = false;
-
-                if (CCore::event.button.button == SDL_BUTTON_LEFT && mCursor.cursorState[L_BUTTON] == 1) {
-                    mCursor.cursorState[L_BUTTON] = 0;
-                }
-                if (CCore::event.button.button == SDL_BUTTON_RIGHT && mCursor.cursorState[R_BUTTON] == 1) {
-                    mCursor.cursorState[R_BUTTON] = 0;
-                }
-                for (auto &&listener: GetListeners<core_events::IMouseInputEvent>()) {
-                    listener->OnMouseInputtEvent(mCursor);
-                }
-                break;
-            case SDL_QUIT:
-                quit = true;
-        }
-    }
-
-    mCursor.draggingSpeedX = static_cast<float>(mCursor.draggingX) * 180.f / 400.f;
-    mCursor.draggingSpeedY = static_cast<float>(mCursor.draggingY) * 180.f / 300.f;
-
-    if (keyState[SDLK_ESCAPE])
-        quit = true;
-}
-
 void CCore::UpdateFlyingController() {
     Vector3f velocity;
     Vector3f rotation;
-    if (keyState) {
-        if (keyState[SDLK_RIGHT]) {
-            velocity.x = -1;
-        }
-        if (keyState[SDLK_LEFT]) {
-            velocity.x = 1;
-        }
-        if (keyState[SDLK_UP]) {
-            velocity.y = -1;
-        }
-        if (keyState[SDLK_DOWN]) {
-            velocity.y = 1;
-        }
-        if (keyState[SDLK_o]) {
-            velocity.z = 1;
-        }
-        if (keyState[SDLK_i]) {
-            velocity.z = -1;
-        }
-    }
-
+    
     rotation.x = mCursor.draggingX * 180 / 400 - mCursor.draggingSpeedX;
     rotation.y = mCursor.draggingY * 180 / 300 - mCursor.draggingSpeedY;
 
@@ -530,9 +352,7 @@ SDL_Rect *CCore::CreateSurfaceClips(int linhas, int colunas, int width, int heig
 }
 
 void CCore::Release() {
-    SDL_GL_DeleteContext(mGLContext);
-    SDL_DestroyWindow(mWindow);
-    SDL_Quit();
+    mRenderSystem.reset();
     for (auto &&listener: GetListeners<core_events::IReleaseListener>()) {
         listener->OnRelease();
     }
@@ -548,118 +368,22 @@ void CCore::OnCollisionEvent(const IColliderComponent &c1, const IColliderCompon
     }
 }
 
-void CCore::CreateBasicShader() {
-    // Create and compile vertex shader
-    unsigned int vertexShader;
-    {
-        vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        int length = static_cast<int>(strlen(vertex_shader_source));
-        glShaderSource(vertexShader, 1, &vertex_shader_source, &length);
-        glCompileShader(vertexShader);
-
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-            std::cout << "Vertex shader compilation failed: \n"
-                      << infoLog << std::endl;
-        }
-    }
-
-    // Create and compile fragment shader
-    unsigned int fragmentShader;
-    {
-        fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        int length = static_cast<int>(strlen(vertex_shader_source));
-        glShaderSource(fragmentShader, 1, &fragment_shader_source, &length);
-        glCompileShader(fragmentShader);
-
-        int success;
-        char infoLog[512];
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-            std::cout << "Fragment shader compilation failed:\n"
-                      << infoLog << std::endl;
-        }
-    }
-
-    // Create program and link shaders
-    program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-
-    glBindAttribLocation(program, attrib_position, "i_position");
-
-    glLinkProgram(program);
-
-    {
-        int success;
-        char infoLog[512];
-        glGetProgramiv(program, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(program, 512, nullptr, infoLog);
-            std::cout << "Compiling shader program failed: \n"
-                      << infoLog << std::endl;
-        }
-    }
-
-    glUseProgram(program);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-}
-
 void CCore::WritePendingRenderData() {
     for (auto &&data: mPendingWriteQueue) {
-        auto render = data.mSceneComposite->GetComponent<IRenderComponent>();
+        auto render = data->GetComponent<IRenderComponent>();
         if (!render) {
             continue;
         }
         // For now, render are obligated to have a CMeshBuffer
         auto meshBuffer = render->GetMeshBuffer();
-
-        glGenVertexArrays(1, &data.vao);
-        glGenBuffers(1, &data.vbo);
-        glGenBuffers(1, &data.ebo);
-
-        glBindVertexArray(data.vao);
-
-        glBindBuffer(GL_ARRAY_BUFFER, data.vbo);
-        glBufferData(GL_ARRAY_BUFFER, 3 * meshBuffer.nvertices * sizeof(float), meshBuffer.vertices.data(), GL_DYNAMIC_DRAW);
-
-        glEnableVertexAttribArray(attrib_position);
-        glVertexAttribPointer(attrib_position, 3, GL_FLOAT, GL_FALSE, 0, (void *) (0));
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * meshBuffer.nfaces * sizeof(unsigned int), meshBuffer.triangles.data(), GL_DYNAMIC_DRAW);
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        mRenderQueue.emplace_back(data);
+        renderContext.renderBufferHandle = mRenderSystem->WriteRenderBufferData(meshBuffer);
+        mRenderQueue.emplace_back(renderContext);
     }
-
     mPendingWriteQueue.clear();
 }
 
-void CCore::ReleaseRenderData(SRenderContext &context) {
-    glDeleteVertexArrays(1, &context.vao);
-    glDeleteBuffers(1, &context.vbo);
-    glDeleteBuffers(1, &context.ebo);
-}
-
-void CCore::GetError() {
-    static int error_count = 0;
-    auto gl_error = glGetError();
-    std::cout << "Get error count: " << error_count++ << std::endl;
-    if (gl_error != 0) {
-        std::cout << "Code: " << gl_error << std::endl;
-    }
-}
-void CCore::RenderCanvas() {
-    SDL_GL_SwapWindow(mWindow);
-    SDL_Delay(1);
+void CCore::ReleaseRenderData(systems::SRenderContextHandle &context) {
+    mRenderSystem->EraseRenderBufferData(*context.renderBufferHandle);
 }
 
 void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {

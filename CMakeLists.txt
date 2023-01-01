@@ -3,32 +3,6 @@ project(UnboxingEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_subdirectory(./third_party/zlib-1.2.12)
-set(ZLIB_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/zlib-1.2.12)
-
-if (WIN32)
-    set(ZLIB_LIBRARY ${PROJECT_SOURCE_DIR}/third_party/zlib-1.2.12/cmake-build-debug/libzlibstatic.a)
-
-    #Set up SDL_ttf dependency
-    set(FREETYPE_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/third_party/freetype-windows-binaries/include)
-    set(FREETYPE_LIBRARY ${PROJECT_SOURCE_DIR}/third_party/freetype-windows-binaries/release\ dll/win64/freetype.lib)
-
-    #Enable building dlls
-    set(BUILD_SHARED_LIBS TRUE)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    configure_file(third_party/freetype-windows-binaries/release\ dll/win64/freetype.dll ${CMAKE_BINARY_DIR} COPYONLY)
-
-else()
-    set(PNG_ARM_NEON off)
-endif ()
-
-add_subdirectory(./source)
-add_subdirectory(./third_party/glew-2.1.0/build/cmake)
-add_subdirectory(./third_party/SDL)
-add_subdirectory(./third_party/SDL_image)
-add_subdirectory(./third_party/SDL_ttf)
-
 #Disable building dlls
 #set(BUILD_SHARED_LIBS FALSE)
 # Prevent GoogleTest from overriding our compiler/linker options
@@ -36,27 +10,20 @@ add_subdirectory(./third_party/SDL_ttf)
 #set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(BUILD_GMOCK "ON")
 set(INSTALL_GTEST "OFF")
-add_subdirectory(./third_party/googletest)
-add_subdirectory(./tests)
-add_subdirectory(./Examples)
+
+add_subdirectory(./source)
 
 include_directories(
         ./include
-        ./third_party/SDL/include
-        ./third_party/zlib-1.2.12
-        ./third_party/SDL_image
-        ./third_party/SDL_ttf
-        ./third_party/glew-2.1.0/include)
+        ./sdl_gl_render_system
+)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp)
-target_link_libraries(unboxing_engine unboxing_engine_src_lib SDL2main glew SDL2 SDL2_image SDL2_ttf)
+target_link_libraries(unboxing_engine unboxing_engine_src_lib sdl_gl_render_system_lib)
 
-if (WIN32)
-    #Copy OpenGL wrapper dll after building
-    add_custom_command(
-            TARGET unboxing_engine
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
-    )
-endif ()
+target_sources(unboxing_engine PUBLIC ./source)
+target_sources(unboxing_engine PUBLIC ./tests)
+target_sources(unboxing_engine PUBLIC ./Examples)
+target_sources(unboxing_engine PUBLIC ./third_party/googletest)
+target_sources(unboxing_engine PUBLIC ./sdl_gl_render_system)
