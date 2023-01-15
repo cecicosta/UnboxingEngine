@@ -12,6 +12,10 @@ set(BUILD_GMOCK "ON")
 set(INSTALL_GTEST "OFF")
 
 add_subdirectory(./source)
+add_subdirectory(./sdl_gl_render_system)
+add_subdirectory(./tests)
+add_subdirectory(./Examples)
+
 
 include_directories(
         ./include
@@ -23,7 +27,5 @@ add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp)
 target_link_libraries(unboxing_engine unboxing_engine_src_lib sdl_gl_render_system_lib)
 
 target_sources(unboxing_engine PUBLIC ./source)
-target_sources(unboxing_engine PUBLIC ./tests)
-target_sources(unboxing_engine PUBLIC ./Examples)
 target_sources(unboxing_engine PUBLIC ./third_party/googletest)
 target_sources(unboxing_engine PUBLIC ./sdl_gl_render_system)

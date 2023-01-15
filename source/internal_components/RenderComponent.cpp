@@ -1,20 +1,31 @@
 #include "internal_components/RenderComponent.h"
 
-#include "systems/IRenderSystem.h"
-
-
 unboxing_engine::CDefaultMeshRenderComponent::CDefaultMeshRenderComponent(const CMeshBuffer &meshBuffer)
     : CRenderComponentBase(meshBuffer) {
 }
+unboxing_engine::CDefaultMeshRenderComponent::~CDefaultMeshRenderComponent() {
+    ReleaseRenderContext();
+}
 
-void unboxing_engine::CDefaultMeshRenderComponent::Render(const systems::IRenderSystem &renderSystem) {
+
+void unboxing_engine::CDefaultMeshRenderComponent::ReleaseRenderContext() {
+    if(mRenderSystem) {
+        mRenderSystem->EraseRenderBufferData(*mRenderContextHandle->renderBufferHandle);
+    }
+    mRenderContextHandle.reset();
+}
+void unboxing_engine::CDefaultMeshRenderComponent::Render(systems::IRenderSystem &renderSystem) {
     if (mIsDirty) {
-        renderSystem.EraseRenderBufferData(*mRenderContextHandle.renderBufferHandle);
+        mRenderSystem = &renderSystem;
+        if(mRenderContextHandle) {
+            renderSystem.EraseRenderBufferData(*mRenderContextHandle->renderBufferHandle);
+        }
+
         const CMeshBuffer &meshBuffer = GetMeshBuffer();
-        mRenderContextHandle.renderBufferHandle = renderSystem.WriteRenderBufferData(meshBuffer);
-        mRenderContextHandle.shaderHandle = &renderSystem.GetShader(0);
+        mRenderContextHandle->renderBufferHandle = renderSystem.WriteRenderBufferData(meshBuffer);
+        mRenderContextHandle->shaderHandle = renderSystem.GetDefaultShader();
         mIsDirty = false;
     }
 
-    renderSystem.Render(mRenderContextHandle);
+    renderSystem.Render(*mRenderContextHandle);
 }

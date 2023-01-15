@@ -2,6 +2,8 @@
 
 #include "Camera.h"
 #include "MeshBuffer.h"
+#include "SceneComposite.h"
+#include "internal_components/IRenderComponent.h"
 
 #include <GL/glew.h>
 #include <SDL.h>
@@ -71,6 +73,7 @@ struct SRenderBufferHandle {
     std::uint32_t ntriangles;//Number of triangles the geometry has
 };
 
+
 class COpenGLRenderSystem::Impl {
 public:
     Impl(const Camera& camera) : mCamera(camera) {}
@@ -118,17 +121,18 @@ public:
         auto init_res = glewInit();
         if (init_res != GLEW_OK) {
             std::cout << glewGetErrorString(glewInit()) << std::endl;
+            return false;
         }
 
         std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
-        mShaders.try_emplace(0, CompileShader(vertex_shader_source, fragment_shader_source));
+        mShaders.emplace_back(CompileShader(vertex_shader_source, fragment_shader_source));
         CreateView(mCamera.mWidth, mCamera.mHeight);
 
-        return false;
+        return true;
     }
 
-    [[nodiscard]] std::unique_ptr<SShaderHandle> CompileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc) const {
+    [[nodiscard]] SShaderHandle* CompileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc) {
         unsigned int vertexShader;
         {
             vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -143,6 +147,7 @@ public:
                 glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
                 std::cout << "Vertex shader compilation failed: \n"
                           << infoLog << std::endl;
+                return nullptr;
             }
         }
 
@@ -161,6 +166,7 @@ public:
                 glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
                 std::cout << "Fragment shader compilation failed:\n"
                           << infoLog << std::endl;
+                return nullptr;
             }
         }
 
@@ -181,6 +187,7 @@ public:
                 glGetProgramInfoLog(program, 512, nullptr, infoLog);
                 std::cout << "Compiling shader program failed: \n"
                           << infoLog << std::endl;
+                return nullptr;
             }
         }
 
@@ -190,9 +197,10 @@ public:
 
         auto handle = std::make_unique<SShaderHandle>();
         handle->program = program;
-        return handle;
+        mShaders.emplace_back(std::move(handle));
+        return mShaders[mShaders.size() - 1].get();
     }
-    [[nodiscard]] std::unique_ptr<SRenderBufferHandle> WriteRenderBufferData(const unboxing_engine::CMeshBuffer& meshBuffer) const {
+    [[nodiscard]] SRenderBufferHandle* WriteRenderBufferData(const unboxing_engine::CMeshBuffer& meshBuffer) {
         auto handle = std::make_unique<SRenderBufferHandle>();
         glGenVertexArrays(1, &handle->vao);
         glGenBuffers(1, &handle->vbo);
@@ -212,9 +220,10 @@ public:
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        return handle;
+        mRenderBuffers.emplace_back(std::move(handle));
+        return mRenderBuffers[mRenderBuffers.size() - 1].get();
     }
+
     void EraseRenderBufferData(const SRenderBufferHandle& renderBufferHandle) {
         glDeleteVertexArrays(1, &renderBufferHandle.vao);
         glDeleteBuffers(1, &renderBufferHandle.vbo);
@@ -224,9 +233,8 @@ public:
     [[nodiscard]] const Camera& GetCamera() const {
         return mCamera;
     }
-    [[nodiscard]] const SShaderHandle& GetShader(std::uint32_t id) const {
-        return mShaders.find(id) != mShaders.end() ? *mShaders.at(id) :
-        *mShaders.at(id);
+    [[nodiscard]] const SShaderHandle* GetDefaultShader() const {
+        return mShaders.begin() != mShaders.end() ? mShaders.begin()->get() : nullptr;
     }
     void SetCamera(const Camera& camera) {
         mCamera = camera;
@@ -235,9 +243,14 @@ public:
         auto program = renderContextHandle.shaderHandle->program;
         glUseProgram(program);
 
+        const SMaterial *material;
+        if(auto renderComponent = renderContextHandle.sceneComposite.GetComponent<IRenderComponent>()) {
+            material = &renderComponent->GetMaterial();
+        }
+
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (mCamera.mTransformation * *renderContextHandle.transformation).ToArray());
-        glUniform4fv(glGetUniformLocation(program, "color"), 1, renderContextHandle.material->materialDif);
+        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (mCamera.mTransformation * renderContextHandle.sceneComposite.GetTransformation()).ToArray());
+        glUniform4fv(glGetUniformLocation(program, "color"), 1, material->materialDif);
         glBindVertexArray(renderContextHandle.renderBufferHandle->vao);
         glDrawElements(GL_TRIANGLES, renderContextHandle.renderBufferHandle->ntriangles * 3, GL_UNSIGNED_INT, nullptr);
 
@@ -256,7 +269,8 @@ private:
     SDL_Window *mWindow = nullptr;
     SDL_GLContext mGLContext;
     Camera mCamera;
-    std::unordered_map<int, std::unique_ptr<SShaderHandle>> mShaders;
+    std::vector<std::unique_ptr<SShaderHandle>> mShaders;
+    std::vector<std::unique_ptr<SRenderBufferHandle>> mRenderBuffers;
 };
 
 COpenGLRenderSystem::COpenGLRenderSystem(const Camera& camera)
@@ -268,11 +282,11 @@ bool COpenGLRenderSystem::Initialize() {
     return mImpl->Initialize(); 
 }
 
-std::unique_ptr<SShaderHandle> COpenGLRenderSystem::CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) const {
+SShaderHandle* COpenGLRenderSystem::CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) const {
     return mImpl->CompileShader(vertexShaderSrc, fragmentShaderSrc);
 }
 
-std::unique_ptr<SRenderBufferHandle> COpenGLRenderSystem::WriteRenderBufferData(const unboxing_engine::CMeshBuffer &meshBuffer) {
+SRenderBufferHandle* COpenGLRenderSystem::WriteRenderBufferData(const unboxing_engine::CMeshBuffer &meshBuffer) {
     return mImpl->WriteRenderBufferData(meshBuffer);
 }
 
@@ -296,8 +310,8 @@ void COpenGLRenderSystem::SetCamera(const Camera &camera) {
     mImpl->SetCamera(camera);
 }
 
-const SShaderHandle &COpenGLRenderSystem::GetShader(std::uint32_t id) const {
-    return mImpl->GetShader(id);
+const SShaderHandle *COpenGLRenderSystem::GetDefaultShader() const {
+    return mImpl->GetDefaultShader();
 }
 
 void COpenGLRenderSystem::Render(const SRenderContextHandle &renderContextHandle) {

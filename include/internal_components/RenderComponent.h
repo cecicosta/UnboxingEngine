@@ -4,6 +4,8 @@
 #include "internal_components/IRenderComponent.h"
 #include "systems/IRenderSystem.h"
 
+#include <memory>
+
 namespace unboxing_engine {
 class CMeshBuffer;
 
@@ -30,15 +32,18 @@ protected:
     const CMeshBuffer *mMeshBuffer;
     SMaterial mMaterial;
     CSceneComposite *mSceneComposite = nullptr;
-    systems::SRenderContextHandle mRenderContextHandle;
+    std::unique_ptr<systems::SRenderContextHandle> mRenderContextHandle;
 };
 
 
 class CDefaultMeshRenderComponent : public CRenderComponentBase {
 public:
     CDefaultMeshRenderComponent(const CMeshBuffer &meshBuffer);
-    ~CDefaultMeshRenderComponent() override = default;
+    ~CDefaultMeshRenderComponent() override;
 
-    void Render(const systems::IRenderSystem &renderSystem) override;
+    void ReleaseRenderContext() override;
+    void Render(systems::IRenderSystem &renderSystem) override;
+private:
+    systems::IRenderSystem *mRenderSystem;
 };
 }// namespace unboxing_engine

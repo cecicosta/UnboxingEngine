@@ -11,6 +11,7 @@
 #include "EventDispatcher.h"
 #include "systems/CollisionSystem.h"
 #include "systems/IRenderSystem.h"
+#include "systems/IInputSystem.h"
 
 #include <cmath>
 #include <cstdint>
@@ -33,7 +34,7 @@ class CSceneComposite;
 
 class CCore : public IEngine
     , public CEventDispatcher
-    , public UListener<systems::ICollisionEvent> {
+    , public UListener<systems::ICollisionEvent, core_events::IMouseInputEvent> {
 
 public:
     CCore(uint32_t width, uint32_t height, uint32_t bpp);
@@ -97,8 +98,10 @@ public:
     /// <param name="c2"></param>
     /// <param name="result"></param>
     void OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) override; 
+
+    /// From IMouseImputEvent 
+    void OnMouseInputtEvent(const core_events::SCursor &cursor) override;
 private:
-    void WriteGeometryData(systems::SRenderContextHandle &renderContext, unboxing_engine::CMeshBuffer &meshBuffer);
     ///Register object to interact with the basic engine systems throught its existing components
     void WritePendingRenderData();
     ///Rendering routines
@@ -108,44 +111,9 @@ private:
     ///Capture and process user inputs
     void OnInput() override;
 
-    void CreateView() const;
-    void CreateBasicShader(const char* vertexShaderSrc, const char* fragmentShaderSrc);
-    
-    ///Load texture into the engine resources manager
-    Texture *LoadTexture(char *filename);
-    ///Convert um SDL_surface to opengl texture
-    Texture *CreateTextureFromSurface(SDL_Surface *sdlSurface);
-
-    ///Make a surface composition
-    ///@param x horizontal left-to-right coordinate on @origin surface where @destine will be applied.
-    ///@param y vertical top-to-bottom coordinate on @origin surface where @destine will be applied.
-    ///@param origin existing surface to where @destine will be applied at the coordinates specified by @x and @y.
-    ///@param destine existing surface to be applied at the specified coordinates into @origin.
-    void ApplySurface(int x, int y, SDL_Surface *origin, SDL_Surface *destine, SDL_Rect *clip);
-    ///Loads an image without alpha channel
-    SDL_Surface *LoadSurface(char *nome);
-    ///Loads an image with alpha channel
-    SDL_Surface *LoadSurfaceAlpha(char *nome);
-
-    ///Create an array of rect clips for splitting a surface into equally spaced sprites
-    ///@param rows number or rows in which the sprite sheet is divided
-    ///@param rows number or columns in which the sprite sheet is divided
-    ///@param width of each the sprite. Applied to all sprites clips
-    ///@param height of each sprite. Applied to all sprites clips
-    SDL_Rect *CreateSurfaceClips(int rows, int cols, int width, int height);
-
     ///Method used for debug purposes. Allows to control the camera and fly around the 3D space.
     ///The control keys used are wasd for movement and mouse for direction.
-    void UpdateFlyingController();
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="context"></param>
-    void ReleaseRenderData(systems::SRenderContextHandle &context);
-
-    ///Retrieve and log opengl errors
-    static void GetError() ;
+    void UpdateFlyingController(const core_events::SCursor& cursor);
 
     ///Captures the window y button click
     [[nodiscard]] bool HasQuit() const { return quit; }
@@ -153,15 +121,14 @@ private:
     std::unique_ptr<Camera> camera;
     std::uint32_t BPP = 32;
 
-    ///Basic shader handler
-    std::unique_ptr<systems::SShaderHandle> program;
     ///
-    std::unordered_map<int, CSceneComposite *> mRenderQueue;
-    std::vector<CSceneComposite *> mPendingWriteQueue;
+    std::unordered_map<int, CSceneComposite*> mRenderQueue;
+    std::vector<CSceneComposite*> mPendingWriteQueue;
 
     //Handle objects with a ICollisionComponent registered
     systems::CollisionSystem mCollisionSystem;
     std::unique_ptr<systems::IRenderSystem> mRenderSystem;
+    std::unique_ptr<systems::IInputSystem> mInputSystem;
 
     bool quit;
 };

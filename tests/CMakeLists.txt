@@ -1,10 +1,6 @@
 #Google tests
 enable_testing()
 
-target_sources(gtest PUBLIC
-    ${CMAKE_SOURCE_DIR}/third_party/googletest
-)
-
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
@@ -19,6 +15,8 @@ add_executable(
         main.cpp
         ComponentSystemTests.cpp
         EventSystemTests.cpp)
+
+target_sources(unboxing_engine_tests PUBLIC ${CMAKE_SOURCE_DIR}/third_party/googletest)
 
 target_link_libraries(
         unboxing_engine_tests
@@ -38,11 +36,16 @@ add_executable(unboxing_engine_minimal_unit_tests
         ../include/MathUtils.h
         ../include/BoundingBox.h
         ../source/BoundingBox.cpp
-        ../include/internal_components/TransformComponent.h AlgorithmsTests.cpp BoundingBoxTest.cpp)
+        ../include/internal_components/TransformComponent.h 
+        AlgorithmsTests.cpp 
+        BoundingBoxTest.cpp)
+
 target_link_libraries(unboxing_engine_minimal_unit_tests
         gtest
         gmock
 )
+
+target_sources(unboxing_engine_minimal_unit_tests PUBLIC ${CMAKE_SOURCE_DIR}/third_party/googletest)
 
 add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests --exe unboxing_engine_tests.exe)
 #gtest_discover_tests(TARGET unboxing_engine_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )

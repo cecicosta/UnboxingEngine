@@ -3,7 +3,7 @@
 #include "EventDispatcher.h"
 #include "CoreEvents.h"
 
-namespace unboxing_engine {
+namespace unboxing_engine::systems {
 
 class IInputSystem : public CEventDispatcher {
 public:

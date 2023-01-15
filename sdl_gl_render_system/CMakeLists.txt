@@ -33,7 +33,7 @@ include_directories(
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 add_library(sdl_gl_render_system_lib STATIC "sdl_gl_render_system_lib.cpp" "sdl_gl_render_system_lib.h" "sdl_input_system_lib.h" "sdl_input_system_lib.cpp")
-target_link_libraries(sdl_gl_render_system_lib PUBLIC SDL2main glew SDL2 SDL2_image SDL2_ttf unboxing_engine_src_lib)
+target_link_libraries(sdl_gl_render_system_lib PUBLIC SDL2main glew_s SDL2 SDL2_image SDL2_ttf unboxing_engine_src_lib)
 
 #Set up SDL_image dependency
 target_sources(sdl_gl_render_system_lib PUBLIC ../source)
@@ -46,9 +46,9 @@ target_sources(sdl_gl_render_system_lib PUBLIC ../third_party/SDL_ttf)
 
 if (WIN32)
     #Copy OpenGL wrapper dll after building
-    add_custom_command(
-            TARGET sdl_gl_render_system_lib
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
-    )
+    #add_custom_command(
+    #        TARGET sdl_gl_render_system_lib
+    #        POST_BUILD
+    #        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
+    #)
 endif ()
