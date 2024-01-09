@@ -10,13 +10,13 @@ include_directories(
         ../third_party/googletest/googletest/include
         ../third_party/googletest/googlemock/include)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/googletest  ${CMAKE_CURRENT_BINARY_DIR}/libs)
+
 add_executable(
         unboxing_engine_tests
         main.cpp
         ComponentSystemTests.cpp
         EventSystemTests.cpp)
-
-target_sources(unboxing_engine_tests PUBLIC ${CMAKE_SOURCE_DIR}/third_party/googletest)
 
 target_link_libraries(
         unboxing_engine_tests
@@ -45,19 +45,21 @@ target_link_libraries(unboxing_engine_minimal_unit_tests
         gmock
 )
 
-target_sources(unboxing_engine_minimal_unit_tests PUBLIC ${CMAKE_SOURCE_DIR}/third_party/googletest)
-
 add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests --exe unboxing_engine_tests.exe)
 #gtest_discover_tests(TARGET unboxing_engine_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
 
 if (WIN32)
     #Copy dll after building
-    add_custom_command(
-            TARGET unboxing_engine_tests
-            PRE_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/Debug/gtest.dll ${CMAKE_BINARY_DIR}/Debug
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/Debug/gmock.dll ${CMAKE_BINARY_DIR}/Debug
-    )
+    #add_custom_command(
+    #        TARGET unboxing_engine_tests
+    #        PRE_BUILD
+    #        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/Debug/gtest.dll ${CMAKE_BINARY_DIR}/Debug
+    #        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/Debug/gmock.dll ${CMAKE_BINARY_DIR}/Debug
+    #)
+    #target_compile_definitions( unboxing_engine_tests PRIVATE -DGTEST_LINKED_AS_SHARED_LIBRARY )
+    #target_compile_definitions( unboxing_engine_minimal_unit_tests PRIVATE -DGTEST_LINKED_AS_SHARED_LIBRARY )
+
+    
 endif ()
 
-target_compile_definitions( unboxing_engine_tests PRIVATE -DGTEST_LINKED_AS_SHARED_LIBRARY )
+
