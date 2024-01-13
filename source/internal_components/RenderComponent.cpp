@@ -19,13 +19,14 @@ void unboxing_engine::CDefaultMeshRenderComponent::Render(systems::IRenderSystem
         mRenderSystem = &renderSystem;
         if(mRenderContextHandle) {
             renderSystem.EraseRenderBufferData(*mRenderContextHandle->renderBufferHandle);
+            const CMeshBuffer &meshBuffer = GetMeshBuffer();
+            mRenderContextHandle->renderBufferHandle = renderSystem.WriteRenderBufferData(meshBuffer);
+            mRenderContextHandle->shaderHandle = renderSystem.GetDefaultShader();
         }
-
-        const CMeshBuffer &meshBuffer = GetMeshBuffer();
-        mRenderContextHandle->renderBufferHandle = renderSystem.WriteRenderBufferData(meshBuffer);
-        mRenderContextHandle->shaderHandle = renderSystem.GetDefaultShader();
         mIsDirty = false;
     }
 
-    renderSystem.Render(*mRenderContextHandle);
+    if(mRenderContextHandle) {
+        renderSystem.Render(*mRenderContextHandle);
+    }
 }

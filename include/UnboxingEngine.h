@@ -103,7 +103,7 @@ public:
     void OnMouseInputtEvent(const core_events::SCursor &cursor) override;
 private:
     ///Register object to interact with the basic engine systems throught its existing components
-    void WritePendingRenderData();
+    //void WritePendingRenderData();
     ///Rendering routines
     void Render() override;
     ///Start rendering
@@ -130,7 +130,7 @@ private:
     std::unique_ptr<systems::IRenderSystem> mRenderSystem;
     std::unique_ptr<systems::IInputSystem> mInputSystem;
 
-    bool quit;
+    bool quit = false;
 };
 
 }

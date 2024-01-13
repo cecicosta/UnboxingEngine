@@ -12,8 +12,14 @@
 #include "internal_components/IColliderComponent.h"
 #include "internal_components/RenderComponent.h"
 
+#if !BUILD_WITH_EXTERNAL_LIBS
 #include "sdl_gl_render_system_lib.h"
 #include "sdl_input_system_lib.h"
+#else 
+#include "dummie_libs/sdl_gl_render_system_lib.h"
+#include "dummie_libs/sdl_input_system_lib.h"
+#endif
+
 
 namespace unboxing_engine {
 
@@ -30,7 +36,9 @@ CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
 
 void CCore::Start() {
     if (!mRenderSystem->Initialize()) {
-
+        std::cout << "Render system failed to initialize.\n" << std::endl;    
+        quit = true;
+        return;
     }
     for (auto l: GetListeners<core_events::IStartListener>()) {
         l->OnStart();
@@ -38,13 +46,13 @@ void CCore::Start() {
 }
 void CCore::Run() {
     while (!HasQuit()) {
-        OnInput();
+        //OnInput();
 
         for (auto &&listener: GetListeners<core_events::IUpdateListener>()) {
             listener->OnUpdate();
         }
 
-        WritePendingRenderData();
+        //WritePendingRenderData();
 
         Render();
     }
