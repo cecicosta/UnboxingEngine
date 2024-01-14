@@ -32,6 +32,8 @@ CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
     mCollisionSystem.RegisterListener(*this);
     RegisterEventListener(mCollisionSystem);
     RegisterEventListener(*mRenderSystem);
+
+    mInputSystem->RegisterListener(dynamic_cast<UListener<core_events::IKeyboardInputEvent>&>(*this));
 }
 
 void CCore::Start() {
@@ -46,7 +48,7 @@ void CCore::Start() {
 }
 void CCore::Run() {
     while (!HasQuit()) {
-        //OnInput();
+        OnInput();
 
         for (auto &&listener: GetListeners<core_events::IUpdateListener>()) {
             listener->OnUpdate();
@@ -110,6 +112,12 @@ void CCore::OnMouseInputtEvent(const core_events::SCursor &cursor) {
     UpdateFlyingController(cursor);
 }
 
+void unboxing_engine::CCore::OnKeyboardInputtEvent(const core_events::SKeyboard &keyboardState) {
+    if(keyboardState.key == core_events::SKeyboard::EKey::KEY_ESC) {
+        quit = true;
+    }
+}
+
 void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
     if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
         mCollisionSystem.RegisterCollider(*collider);
@@ -119,6 +127,9 @@ void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
     }
 
     if(auto inputListener = dynamic_cast<UListener<core_events::IMouseInputEvent>*>(&sceneComposite)) {
+        mInputSystem->RegisterListener(*inputListener);
+    }
+    if(auto inputListener = dynamic_cast<UListener<core_events::IKeyboardInputEvent>*>(&sceneComposite)) {
         mInputSystem->RegisterListener(*inputListener);
     }
 
@@ -139,6 +150,13 @@ void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
             renderComponent->ReleaseRenderContext();
         }
         mRenderQueue.erase(it);
+    }
+    
+    if(auto inputListener = dynamic_cast<const UListener<core_events::IMouseInputEvent>*>(&sceneComposite)) {
+        mInputSystem->UnregisterListener(*inputListener);
+    }
+    if(auto inputListener = dynamic_cast<const UListener<core_events::IKeyboardInputEvent>*>(&sceneComposite)) {
+        mInputSystem->UnregisterListener(*inputListener);
     }
 }
 

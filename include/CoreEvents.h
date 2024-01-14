@@ -63,6 +63,11 @@ public:
     virtual ~IMouseInputEvent() = default;
     virtual void OnMouseInputtEvent(const SCursor &cursor) = 0;
 };
+class IKeyboardInputEvent {
+public:
+    virtual ~IKeyboardInputEvent() = default;
+    virtual void OnKeyboardInputtEvent(const SKeyboard &keyboardState) = 0;
+};
 
 class ICoreEventsListener : public UListener<IStartListener, IUpdateListener, IPreRenderListener, IPostRenderListener, IReleaseListener> {};
 }// namespace unboxing_engine::core_events

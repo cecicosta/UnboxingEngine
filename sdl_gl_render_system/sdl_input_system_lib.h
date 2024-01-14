@@ -11,9 +11,6 @@ public:
     void OnInput() override;
 
 private:
-    bool OnMouseInput();
-    bool OnKeyboardInput();
-
     core_events::SCursor mCursor;
     core_events::SKeyboard mKeyboard;
 

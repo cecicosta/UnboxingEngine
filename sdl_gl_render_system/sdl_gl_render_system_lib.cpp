@@ -78,6 +78,9 @@ class COpenGLRenderSystem::Impl {
 public:
     Impl(const Camera& camera) : mCamera(camera) {}
     ~Impl() {
+        mRenderBuffers.clear();
+        mShaders.clear();
+       
         SDL_GL_DeleteContext(mGLContext);
         SDL_DestroyWindow(mWindow);
         SDL_Quit();
