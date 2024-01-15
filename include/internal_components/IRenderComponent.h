@@ -14,12 +14,13 @@ class IRenderComponent : public IComponent {
 public:
     virtual ~IRenderComponent() = default;
 
+    virtual void OnInitialize(systems::IRenderSystem &renderSystem) = 0; 
     virtual const SMaterial &GetMaterial() const = 0;
     virtual void SetMaterial(const SMaterial &material) = 0;
     virtual const CMeshBuffer &GetMeshBuffer() const = 0;
     virtual void SetMeshBuffer(const CMeshBuffer &meshBuffer) = 0;
     virtual void ReleaseRenderContext() = 0;
 
-    virtual void Render(systems::IRenderSystem &renderSystem) = 0;
+    virtual void OnRender() = 0;
 };
 }// namespace unboxing_engine

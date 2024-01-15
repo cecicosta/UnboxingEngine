@@ -41,9 +41,11 @@ public:
     CDefaultMeshRenderComponent(const CMeshBuffer &meshBuffer);
     ~CDefaultMeshRenderComponent() override;
 
+    void OnInitialize(systems::IRenderSystem &renderSystem) override;
     void ReleaseRenderContext() override;
-    void Render(systems::IRenderSystem &renderSystem) override;
+    void OnRender() override;
 private:
+    void UpdateRenderContext();
     systems::IRenderSystem *mRenderSystem;
 };
 }// namespace unboxing_engine

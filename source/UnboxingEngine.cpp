@@ -67,7 +67,7 @@ void CCore::Render() {
     for (auto &&data: mRenderQueue) {
         auto sceneComposite = GetSceneElement(data.second->id);
         if (auto render = sceneComposite->GetComponent<IRenderComponent>()) {
-            render->Render(*mRenderSystem);
+            render->OnRender();
         }
     }
 
@@ -124,6 +124,10 @@ void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
     }
     if (auto listener = dynamic_cast<UListener<>*>(&sceneComposite)) {
         RegisterEventListener(*listener);
+    }
+
+    if (auto render = sceneComposite.GetComponent<IRenderComponent>()) {
+        render->OnInitialize(*mRenderSystem);
     }
 
     if(auto inputListener = dynamic_cast<UListener<core_events::IMouseInputEvent>*>(&sceneComposite)) {

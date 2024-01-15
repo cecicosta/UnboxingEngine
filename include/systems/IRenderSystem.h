@@ -18,6 +18,10 @@ namespace unboxing_engine::systems {
 struct SShaderHandle;
 struct SRenderBufferHandle;
 struct SRenderContextHandle {
+    SRenderContextHandle(const SRenderBufferHandle* _renderBufferHandle, const SShaderHandle* _shaderHandle, const CSceneComposite& _sceneComposite)
+    : renderBufferHandle(_renderBufferHandle)
+    , shaderHandle(_shaderHandle)
+    , sceneComposite(_sceneComposite) {}
     const SRenderBufferHandle *renderBufferHandle;
     const SShaderHandle *shaderHandle;
     const CSceneComposite &sceneComposite;
