@@ -3,6 +3,13 @@ project(sdl_gl_render_system)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(SDL_HAPTIC OFF)
+set(SDL_JOYSTICK OFF)
+set(SDL_HIDAPI OFF)
+set(SDL_XINPUT OFF)
+set(SDL_SENSOR OFF)
+set(SDL_DYNAPI OFF)
+
 set(ZLIB_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../third_party/zlib-1.2.12)
 
 if (WIN32)
@@ -29,26 +36,31 @@ include_directories(
         ../third_party/SDL_image
         ../third_party/SDL_ttf
         ../third_party/glew-2.1.0/include)
+#Set up dependency
+#include(../source/CMakeLists.txt)
+#include(../third_party/zlib-1.2.12/CMakeLists.txt)
+#include(../third_party/glew-2.1.0/build/cmake/CMakeLists.txt)
+#include(../third_party/SDL/CMakeLists.txt)
+#include(../third_party/SDL_image/CMakeLists.txt)
+#include(../third_party/SDL_ttf/CMakeLists.txt)
+
+add_subdirectory("../third_party/zlib-1.2.12/" "../third_party/zlib-1.2.12")
+add_subdirectory("../third_party/glew-2.1.0/build/cmake/" "../third_party/glew-2.1.0/build/cmake")
+add_subdirectory("../third_party/SDL/" "../third_party/SDL")
+add_subdirectory("../third_party/SDL_image/" "../third_party/SDL_image")
+add_subdirectory("../third_party/SDL_ttf/" "../third_party/SDL_ttf")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 add_library(sdl_gl_render_system_lib STATIC "sdl_gl_render_system_lib.cpp" "sdl_gl_render_system_lib.h" "sdl_input_system_lib.h" "sdl_input_system_lib.cpp")
-target_link_libraries(sdl_gl_render_system_lib PUBLIC SDL2main glew_s SDL2 SDL2_image SDL2_ttf unboxing_engine_src_lib)
-
-#Set up SDL_image dependency
-target_sources(sdl_gl_render_system_lib PUBLIC ../source)
-target_sources(sdl_gl_render_system_lib PUBLIC ../third_party/zlib-1.2.12)
-target_sources(sdl_gl_render_system_lib PUBLIC ../third_party/glew-2.1.0/build/cmake)
-target_sources(sdl_gl_render_system_lib PUBLIC ../third_party/SDL)
-target_sources(sdl_gl_render_system_lib PUBLIC ../third_party/SDL_image)
-target_sources(sdl_gl_render_system_lib PUBLIC ../third_party/SDL_ttf)
+target_link_libraries(sdl_gl_render_system_lib PUBLIC zlib SDL2 SDL2Main SDL2_image glew_s unboxing_engine_src_lib)
 
 
 if (WIN32)
-    #Copy OpenGL wrapper dll after building
+    # Copy OpenGL wrapper dll after building
     #add_custom_command(
-    #        TARGET sdl_gl_render_system_lib
-    #        POST_BUILD
-    #        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
+     #       TARGET sdl_gl_render_system_lib
+     #       POST_BUILD
+     #       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/bin/glew32d.dll ${CMAKE_BINARY_DIR}
     #)
 endif ()

@@ -11,11 +11,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(BUILD_GMOCK "ON")
 set(INSTALL_GTEST "OFF")
 
-add_subdirectory(./source)
+
 add_subdirectory(./sdl_gl_render_system)
+add_subdirectory(./source)
 add_subdirectory(./tests)
 add_subdirectory(./Examples)
-
+add_subdirectory(./third_party/googletest)
 
 include_directories(
         ./include
@@ -23,9 +24,5 @@ include_directories(
 )
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-add_executable(unboxing_engine main.cpp source/UnboxingEngine.cpp)
-target_link_libraries(unboxing_engine unboxing_engine_src_lib sdl_gl_render_system_lib)
-
-target_sources(unboxing_engine PUBLIC ./source)
-target_sources(unboxing_engine PUBLIC ./third_party/googletest)
-target_sources(unboxing_engine PUBLIC ./sdl_gl_render_system)
+add_library(unboxing_engine source/UnboxingEngine.cpp)
+target_link_libraries(unboxing_engine PUBLIC unboxing_engine_src_lib INTERFACE sdl_gl_render_system_lib)
