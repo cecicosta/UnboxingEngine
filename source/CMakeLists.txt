@@ -58,4 +58,3 @@ set(HEADERS
 
 message("Source files: ${SOURCES}")
 add_library(${BINARY_FILENAME}_lib STATIC ${HEADERS} ${SOURCES})
-target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})

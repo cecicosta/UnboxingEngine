@@ -6,7 +6,7 @@
 #include "internal_components/BoundingBox2DColliderComponent.h"
 #include "internal_components/RenderComponent.h"
 #include "internal_components/SegmentColliderComponent.h"
-
+#include "sdl_gl_render_system_lib.h"
 using namespace unboxing_engine;
 
 class CSegment
@@ -25,7 +25,7 @@ public:
         auto render = GetComponent<IRenderComponent>();
         SMaterial material = render->GetMaterial();
         material.materialDif[0] = 1;
-        material.materialDif[1] = 0;
+        material.materialDif[1] = 1;
         material.materialDif[2] = 0;
         material.materialDif[3] = 1;
         render->SetMaterial(material);
@@ -42,15 +42,22 @@ public:
     }
 
     void OnMouseInputtEvent(const core_events::SCursor &cursor) override {
-        mEngine.UnregisterSceneElement(*this);
-        auto point = Vector3f(static_cast<float>(2 * cursor.x) / 640.0f - 1, -static_cast<float>(2 * cursor.y) / 480.0f + 1, 0);
-        mMesh->vertices[3] = point.x;
-        mMesh->vertices[4] = point.y;
-        mMesh->vertices[5] = point.z;
-        mMesh->vertices[6] = point.x;
-        mMesh->vertices[7] = point.y;
-        mMesh->vertices[8] = point.z;
-        mEngine.RegisterSceneElement(*this);
+        if (cursor.isButtonPressed) {
+            std::cout << "Mouse button pressed :" << cursor.buttonPressedX << ", "
+                      << cursor.buttonPressedY << std::endl; 
+            //mEngine.UnregisterSceneElement(*this);
+            auto point = Vector3f(static_cast<float>(2 * cursor.x) / 640.0f - 1, -static_cast<float>(2 * cursor.y) / 480.0f + 1, 0);
+            mMesh->vertices[3] = point.x;
+            mMesh->vertices[4] = point.y;
+            mMesh->vertices[5] = point.z;
+            mMesh->vertices[6] = point.x;
+            mMesh->vertices[7] = point.y;
+            mMesh->vertices[8] = point.z;
+            //mEngine.RegisterSceneElement(*this);
+            if (auto renderComponent = this->GetComponent<IRenderComponent>()) {
+                renderComponent->SetMeshBuffer(*mMesh.get());
+            }
+        }
     }
 
 private:
@@ -93,8 +100,9 @@ private:
     std::unique_ptr<CMeshBuffer> mMesh;
 };
 
-
+#include <iostream>
 int main(int argc, char *argv[]) {
+
     CCore engine(640, 480, 32);
     engine.Start();
 
@@ -108,6 +116,6 @@ int main(int argc, char *argv[]) {
     box->SetScale({0.5f, 0.5f, 0.5f});
 
     engine.Run();
-    engine.Release();
+    engine.Release(); 
     return 0;
 }

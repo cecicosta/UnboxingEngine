@@ -22,13 +22,13 @@ static const char *vertex_shader_source =
     "    gl_Position = u_projection_matrix * vec4( i_position.x, i_position.y, i_position.z, 1.0 );\n"
     "}\n";
 
-static const char *fragment_shader_source =
-    "#version 150\n"
-    "in vec4 v_color;\n"
-    "out vec4 o_color;\n"
-    "void main() {\n"
-    "    o_color = v_color;\n"
-    "}\n";
+static const char *fragment_shader_source = R"(
+    #version 330 core
+    out vec4 FragColor;
+    void main() {
+        FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red
+    }
+)";
 
 namespace {
 void GetError() {
@@ -45,15 +45,23 @@ typedef enum t_attrib_id {
 } t_attrib_id;
 
 
-void CreateView(std::uint32_t width, std::uint32_t heigth) {
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);// Clear The Background Color Out Blue
-                                         //    glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
-                                         //    glEnable(GL_BLEND);
-                                         //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending
-    //glEnable(GL_CULL_FACE);
+float vertices[] = {
+-0.5f, -0.5f, 0.0f,
+0.5f, -0.5f, 0.0f,
+0.0f, 0.5f, 0.0f};
 
-    //    glEnable(GL_DEPTH_TEST);// Enables Depth Testing
-    //    glDepthFunc(GL_LEQUAL); // Type Of Depth Testing
+GLuint VBO;
+GLuint VAO;
+
+void CreateView(std::uint32_t width, std::uint32_t heigth) {
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Clear The Background Color Out Blue
+    glClearDepth(1.0); // Enables Clearing Of The Depth Buffer
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Enable Alpha Blending
+    
+    //glEnable(GL_CULL_FACE);
+    // glEnable(GL_DEPTH_TEST);// Enables Depth Testing
+    // glDepthFunc(GL_LEQUAL); // Type Of Depth Testing
 
     glViewport(0, 0, static_cast<GLint>(width), static_cast<GLint>(heigth));
 }
@@ -76,7 +84,8 @@ struct SRenderBufferHandle {
 
 class COpenGLRenderSystem::Impl {
 public:
-    Impl(const Camera& camera) : mCamera(camera) {}
+    Impl(const Camera &camera)
+        : mCamera(camera) {}
     ~Impl() {
         SDL_GL_DeleteContext(mGLContext);
         SDL_DestroyWindow(mWindow);
@@ -85,7 +94,7 @@ public:
 
     [[nodiscard]] bool Initialize() {
         //Initialize SDL subsystems
-        if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             std::cout << "Video initialization failed: " << SDL_GetError() << std::endl;
             return false;
         }
@@ -105,13 +114,15 @@ public:
         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 
+        glewInit();
+
         //Creates the window
         mWindow = SDL_CreateWindow("My Game Window",
                                    SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED,
                                    static_cast<GLint>(mCamera.mWidth),
                                    static_cast<GLint>(mCamera.mHeight),
-                                   SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+                                   SDL_WINDOW_OPENGL);
 
         // Create an OpenGL context associated with the window
         mGLContext = SDL_GL_CreateContext(mWindow);
@@ -128,11 +139,10 @@ public:
 
         mShaders.emplace_back(CompileShader(vertex_shader_source, fragment_shader_source));
         CreateView(mCamera.mWidth, mCamera.mHeight);
-
         return true;
     }
 
-    [[nodiscard]] SShaderHandle* CompileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc) {
+    [[nodiscard]] SShaderHandle *CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) {
         unsigned int vertexShader;
         {
             vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -200,7 +210,9 @@ public:
         mShaders.emplace_back(std::move(handle));
         return mShaders[mShaders.size() - 1].get();
     }
-    [[nodiscard]] SRenderBufferHandle* WriteRenderBufferData(const unboxing_engine::CMeshBuffer& meshBuffer) {
+
+
+    [[nodiscard]] SRenderBufferHandle *WriteRenderBufferData(const unboxing_engine::CMeshBuffer &meshBuffer) {
         auto handle = std::make_unique<SRenderBufferHandle>();
         glGenVertexArrays(1, &handle->vao);
         glGenBuffers(1, &handle->vbo);
@@ -216,6 +228,7 @@ public:
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle->ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * meshBuffer.nfaces * sizeof(unsigned int), meshBuffer.triangles.data(), GL_DYNAMIC_DRAW);
+        handle->ntriangles = meshBuffer.nfaces;
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -224,37 +237,41 @@ public:
         return mRenderBuffers[mRenderBuffers.size() - 1].get();
     }
 
-    void EraseRenderBufferData(const SRenderBufferHandle& renderBufferHandle) {
+    void EraseRenderBufferData(const SRenderBufferHandle &renderBufferHandle) {
         glDeleteVertexArrays(1, &renderBufferHandle.vao);
         glDeleteBuffers(1, &renderBufferHandle.vbo);
         glDeleteBuffers(1, &renderBufferHandle.ebo);
-
     }
-    [[nodiscard]] const Camera& GetCamera() const {
+
+    [[nodiscard]] const Camera &GetCamera() const {
         return mCamera;
     }
-    [[nodiscard]] const SShaderHandle* GetDefaultShader() const {
+
+    [[nodiscard]] const SShaderHandle *GetDefaultShader() const {
         return mShaders.begin() != mShaders.end() ? mShaders.begin()->get() : nullptr;
     }
-    void SetCamera(const Camera& camera) {
+
+    void SetCamera(const Camera &camera) {
         mCamera = camera;
     }
-    void Render(const SRenderContextHandle& renderContextHandle) const {
+
+    void Render(const SRenderContextHandle &renderContextHandle) const {
         auto program = renderContextHandle.shaderHandle->program;
         glUseProgram(program);
 
-        const SMaterial *material;
-        if(auto renderComponent = renderContextHandle.sceneComposite.GetComponent<IRenderComponent>()) {
-            material = &renderComponent->GetMaterial();
-        }
-
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (mCamera.mTransformation * renderContextHandle.sceneComposite.GetTransformation()).ToArray());
-        glUniform4fv(glGetUniformLocation(program, "color"), 1, material->materialDif);
+        
+        if (auto* renderComponent = renderContextHandle.sceneComposite.GetComponent<IRenderComponent>()) {
+            glUniform4fv(glGetUniformLocation(program, "color"), 1, renderComponent->GetMaterial().materialDif);
+        }
+
         glBindVertexArray(renderContextHandle.renderBufferHandle->vao);
         glDrawElements(GL_TRIANGLES, renderContextHandle.renderBufferHandle->ntriangles * 3, GL_UNSIGNED_INT, nullptr);
-
     }
+
+    bool running = true;
+    SDL_Event event;
 
     void OnPreRender() {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -273,20 +290,30 @@ private:
     std::vector<std::unique_ptr<SRenderBufferHandle>> mRenderBuffers;
 };
 
-COpenGLRenderSystem::COpenGLRenderSystem(const Camera& camera)
+COpenGLRenderSystem::COpenGLRenderSystem(const Camera &camera)
     : mImpl(std::make_unique<Impl>(camera)) {}
 
 COpenGLRenderSystem::~COpenGLRenderSystem() = default;
 
 bool COpenGLRenderSystem::Initialize() {
-    return mImpl->Initialize(); 
+    return mImpl->Initialize();
 }
 
-SShaderHandle* COpenGLRenderSystem::CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) const {
+SShaderHandle *COpenGLRenderSystem::CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) const {
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(0);
+
     return mImpl->CompileShader(vertexShaderSrc, fragmentShaderSrc);
 }
 
-SRenderBufferHandle* COpenGLRenderSystem::WriteRenderBufferData(const unboxing_engine::CMeshBuffer &meshBuffer) {
+SRenderBufferHandle *COpenGLRenderSystem::WriteRenderBufferData(const unboxing_engine::CMeshBuffer &meshBuffer) {
     return mImpl->WriteRenderBufferData(meshBuffer);
 }
 

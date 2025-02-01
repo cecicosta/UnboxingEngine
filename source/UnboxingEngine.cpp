@@ -19,7 +19,7 @@ namespace unboxing_engine {
 
 
 CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
-    : camera(std::make_unique<Camera>(width, height, 70.0f, 1.f, 1.f))
+    : camera(std::make_unique<Camera>(width, height, 70.0f, 1.f, -1.f))
     , BPP(bpp) 
     , mRenderSystem(std::make_unique<systems::COpenGLRenderSystem>(*camera))
     , mInputSystem(std::make_unique<systems::CSDLInputSystem>()) {
@@ -30,7 +30,7 @@ CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
 
 void CCore::Start() {
     if (!mRenderSystem->Initialize()) {
-
+        std::cout << "Error during RenderSystem initialization." << std::endl;
     }
     for (auto l: GetListeners<core_events::IStartListener>()) {
         l->OnStart();
@@ -44,8 +44,6 @@ void CCore::Run() {
             listener->OnUpdate();
         }
 
-        WritePendingRenderData();
-
         Render();
     }
 }
@@ -55,8 +53,7 @@ void CCore::Render() {
     }
 
     for (auto &&data: mRenderQueue) {
-        auto sceneComposite = GetSceneElement(data.second->id);
-        if (auto render = sceneComposite->GetComponent<IRenderComponent>()) {
+        if (auto render = data.second->GetComponent<IRenderComponent>()) {
             render->Render(*mRenderSystem);
         }
     }
@@ -106,6 +103,8 @@ void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
     if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
         mCollisionSystem.RegisterCollider(*collider);
     }
+    
+    // What does it mean?
     if (auto listener = dynamic_cast<UListener<>*>(&sceneComposite)) {
         RegisterEventListener(*listener);
     }
@@ -124,6 +123,10 @@ void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
 
     if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
         mCollisionSystem.UnregisterCollider(*collider);
+    }
+
+    if (auto inputListener = dynamic_cast<const UListener<core_events::IMouseInputEvent> *>(&sceneComposite)) {
+        mInputSystem->UnregisterListener(*inputListener);
     }
 
     if (auto it = mRenderQueue.find(sceneComposite.id); it != mRenderQueue.end()) {

@@ -169,7 +169,7 @@ public:
 
     /// Get a read only array reference containing the matrix elements.
     /// \return The Matrix as an read only array.
-    T const *ToArray() {
+    T const *ToArray() const {
         return A;
     }
 

@@ -21,6 +21,11 @@ struct SRenderContextHandle {
     const SRenderBufferHandle *renderBufferHandle;
     const SShaderHandle *shaderHandle;
     const CSceneComposite &sceneComposite;
+
+    SRenderContextHandle(const SRenderBufferHandle *buffer, const SShaderHandle *shader, const CSceneComposite& object)
+        : renderBufferHandle(buffer)
+        , shaderHandle(shader)
+        , sceneComposite(object) {}
 };
 
 class IRenderSystem: public UListener<core_events::IPreRenderListener, core_events::IPostRenderListener> {

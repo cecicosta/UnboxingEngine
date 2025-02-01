@@ -9,15 +9,14 @@ constexpr static float s_PI = 3.14159265359;
 Quaternion::Quaternion() = default;
 
 Quaternion::Quaternion(const Vector3f &v)
-    : Vector3f(v)
-    , w(0) {}
+    : Quaternion(0, Vector3f(0,0,0)) {}
 
 Quaternion::Quaternion(const Vector2f &v)
     : Vector3f(v.x, v.y, 0)
     , w(0) {}
 
-Quaternion::Quaternion(float angle, Vector3f axi) {
-    float angle_rad = s_PI * angle / 180.0f;
+Quaternion::Quaternion(float degreeAngle, Vector3f axi) {
+    float angle_rad = s_PI * degreeAngle / 180.0f;
 
     axi = axi.Normalized();
     axi = axi * sinf(angle_rad / 2.f);
