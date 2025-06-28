@@ -9,6 +9,8 @@ set(INSTALL_GTEST "OFF")
 
 add_subdirectory(./sdl_gl_render_system)
 add_subdirectory(./Examples)
+add_subdirectory(./Simulation)
+add_subdirectory(./tests)
 
 include_directories(
         ./include

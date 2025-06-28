@@ -23,6 +23,7 @@ CCore::CCore(uint32_t width, uint32_t height, uint32_t bpp)
     , BPP(bpp) 
     , mRenderSystem(std::make_unique<systems::COpenGLRenderSystem>(*camera))
     , mInputSystem(std::make_unique<systems::CSDLInputSystem>()) {
+    mInputSystem->RegisterListener(*this);
     mCollisionSystem.RegisterListener(*this);
     RegisterEventListener(mCollisionSystem);
     RegisterEventListener(*mRenderSystem);
@@ -77,9 +78,7 @@ void CCore::UpdateFlyingController(const core_events::SCursor& cursor) {
     camera->FPSCamera(velocity, rotation);
 }
 
-void CCore::Release() {
-    mRenderSystem.reset();
-    
+void CCore::Release() {    
     for (auto &&listener: GetListeners<core_events::IReleaseListener>()) {
         listener->OnRelease();
     }
@@ -97,6 +96,10 @@ void CCore::OnCollisionEvent(const IColliderComponent &c1, const IColliderCompon
 
 void CCore::OnMouseInputtEvent(const core_events::SCursor &cursor) {
     UpdateFlyingController(cursor);
+}
+
+void CCore::OnRelease() {
+    quit = true;
 }
 
 void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {

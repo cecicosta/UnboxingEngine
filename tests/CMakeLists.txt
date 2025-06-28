@@ -1,4 +1,6 @@
-#Google tests
+cmake_minimum_required(VERSION 3.21)
+project(unboxing_engine_tests)
+
 enable_testing()
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
@@ -6,9 +8,7 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
 include_directories(
         ./tests
-        ../include
-        ../third_party/googletest/googletest/include
-        ../third_party/googletest/googlemock/include)
+        ../include)
 
 add_executable(
         unboxing_engine_tests
@@ -16,7 +16,7 @@ add_executable(
         ComponentSystemTests.cpp
         EventSystemTests.cpp)
 
-target_sources(unboxing_engine_tests PUBLIC ${CMAKE_SOURCE_DIR}/third_party/googletest)
+add_subdirectory("../third_party/googletest/" "../third_party/googletest/")
 
 target_link_libraries(
         unboxing_engine_tests

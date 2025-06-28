@@ -3,6 +3,8 @@
 #include <systems/IInputSystem.h>
 #include <CoreEvents.h> 
 
+union SDL_Event;
+
 namespace unboxing_engine::systems {
 class CSDLInputSystem : public IInputSystem {
 public:
@@ -11,7 +13,7 @@ public:
     void OnInput() override;
 
 private:
-    bool OnMouseInput();
+    bool OnMouseInput(const SDL_Event& event);
     bool OnKeyboardInput();
 
     core_events::SCursor mCursor;

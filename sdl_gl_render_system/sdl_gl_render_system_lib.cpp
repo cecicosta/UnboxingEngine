@@ -22,13 +22,14 @@ static const char *vertex_shader_source =
     "    gl_Position = u_projection_matrix * vec4( i_position.x, i_position.y, i_position.z, 1.0 );\n"
     "}\n";
 
-static const char *fragment_shader_source = R"(
-    #version 330 core
-    out vec4 FragColor;
-    void main() {
-        FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red
-    }
-)";
+static const char *fragment_shader_source =
+    "#version 150\n"
+    "in vec4 v_color;\n"
+    "out vec4 o_color;\n"
+    "void main() {\n"
+    "    o_color = v_color;\n"
+    "}\n";
+
 
 namespace {
 void GetError() {

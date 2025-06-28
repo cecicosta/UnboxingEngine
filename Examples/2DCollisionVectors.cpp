@@ -25,7 +25,7 @@ public:
         auto render = GetComponent<IRenderComponent>();
         SMaterial material = render->GetMaterial();
         material.materialDif[0] = 1;
-        material.materialDif[1] = 1;
+        material.materialDif[1] = 0;
         material.materialDif[2] = 0;
         material.materialDif[3] = 1;
         render->SetMaterial(material);
@@ -43,9 +43,6 @@ public:
 
     void OnMouseInputtEvent(const core_events::SCursor &cursor) override {
         if (cursor.isButtonPressed) {
-            std::cout << "Mouse button pressed :" << cursor.buttonPressedX << ", "
-                      << cursor.buttonPressedY << std::endl; 
-            //mEngine.UnregisterSceneElement(*this);
             auto point = Vector3f(static_cast<float>(2 * cursor.x) / 640.0f - 1, -static_cast<float>(2 * cursor.y) / 480.0f + 1, 0);
             mMesh->vertices[3] = point.x;
             mMesh->vertices[4] = point.y;
@@ -53,7 +50,7 @@ public:
             mMesh->vertices[6] = point.x;
             mMesh->vertices[7] = point.y;
             mMesh->vertices[8] = point.z;
-            //mEngine.RegisterSceneElement(*this);
+
             if (auto renderComponent = this->GetComponent<IRenderComponent>()) {
                 renderComponent->SetMeshBuffer(*mMesh.get());
             }

@@ -34,7 +34,7 @@ class CSceneComposite;
 
 class CCore : public IEngine
     , public CEventDispatcher
-    , public UListener<systems::ICollisionEvent, core_events::IMouseInputEvent> {
+    , public UListener<systems::ICollisionEvent, core_events::IMouseInputEvent, core_events::IReleaseListener> {
 
 public:
     CCore(uint32_t width, uint32_t height, uint32_t bpp);
@@ -99,8 +99,12 @@ public:
     /// <param name="result"></param>
     void OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) override; 
 
-    /// From IMouseImputEvent 
+    /// From IMouseInputEvent 
     void OnMouseInputtEvent(const core_events::SCursor &cursor) override;
+
+    /// From IReleaseInputEvent
+    void OnRelease();
+    
 private:
     ///Rendering routines
     void Render() override;
