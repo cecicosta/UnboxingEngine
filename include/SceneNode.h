@@ -19,10 +19,12 @@ public:
     [[nodiscard]] Vector3f GetScale() const;
     [[nodiscard]] Quaternion GetRotation() const;
     [[nodiscard]] Matrix4f GetTransformation() const;
+    [[nodiscard]] Matrix4f GetWorldTransformation() const;
 
     void SetParent(CSceneNode* parent);
 
     CSceneNode* GetParent();
+    const CSceneNode* GetParent() const;
     std::vector<CSceneNode*> GetChildren();
 
 protected:

@@ -10,6 +10,11 @@ namespace systems {
 class IRenderSystem;
 }
 
+enum class EPolygonMode {
+    Line,
+    Fill
+};
+
 class IRenderComponent : public IComponent {
 public:
     virtual ~IRenderComponent() = default;
@@ -17,6 +22,8 @@ public:
     virtual void OnInitialize(systems::IRenderSystem &renderSystem) = 0; 
     virtual const SMaterial &GetMaterial() const = 0;
     virtual void SetMaterial(const SMaterial &material) = 0;
+    virtual EPolygonMode GetPolygonMode() const = 0;
+    virtual void SetPolygonMode(EPolygonMode polygonMode) = 0;
     virtual const CMeshBuffer &GetMeshBuffer() const = 0;
     virtual void SetMeshBuffer(const CMeshBuffer &meshBuffer) = 0;
     virtual void ReleaseRenderContext() = 0;

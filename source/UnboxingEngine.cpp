@@ -12,7 +12,7 @@
 #include "internal_components/IColliderComponent.h"
 #include "internal_components/RenderComponent.h"
 
-#if !BUILD_WITH_EXTERNAL_LIBS
+#if BUILD_WITH_EXTERNAL_LIBS
 #include "sdl_gl_render_system_lib.h"
 #include "sdl_input_system_lib.h"
 #else 
@@ -96,6 +96,17 @@ void CCore::Release() {
     for (auto &&listener: GetListeners<core_events::IReleaseListener>()) {
         listener->OnRelease();
     }
+}
+
+void CCore::SetCamera(const Camera &newCamera) {
+    *camera = newCamera;
+    if (mRenderSystem) {
+        mRenderSystem->SetCamera(*camera);
+    }
+}
+
+const Camera &CCore::GetCamera() const {
+    return *camera;
 }
 
 void CCore::OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) {

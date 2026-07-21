@@ -13,6 +13,7 @@ public:
     void CastRayFromScreen(int scr_x, int scr_y, Vector3f &point, Vector3f &dir) const;
     [[nodiscard]] Vector3f ScreenCoordinateToWorld(int scr_x, int scr_y, float zFar) const;
     void SetCamera(const Vector3f &pos, float ang, const Vector3f &axi, const Vector3f &point);
+    void SetOrthographicIsometric(float viewWidth, float viewHeight, float depthRange, const Vector3f &focus, float yawDegrees, float pitchDegrees);
     ///Move the camera
     void FPSCamera(const Vector3f &movement, const Vector3f &rotation);
 

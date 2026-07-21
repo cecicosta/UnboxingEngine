@@ -34,7 +34,7 @@ public:
     [[nodiscard]] virtual bool Initialize() = 0;
     [[nodiscard]] virtual SShaderHandle* CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) const = 0;
     [[nodiscard]] virtual SRenderBufferHandle* WriteRenderBufferData(const CMeshBuffer &meshBuffer) = 0;
-    [[nodiscard]] virtual void EraseRenderBufferData(const SRenderBufferHandle &renderBufferHandle) = 0;
+    virtual void EraseRenderBufferData(const SRenderBufferHandle &renderBufferHandle) = 0;
     [[nodiscard]] virtual const Camera &GetCamera() const = 0;
     [[nodiscard]] virtual const SShaderHandle *GetDefaultShader() const = 0;
     virtual void SetCamera(const Camera& camera) = 0;

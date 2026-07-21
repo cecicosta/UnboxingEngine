@@ -46,14 +46,14 @@ typedef enum t_attrib_id {
 
 
 void CreateView(std::uint32_t width, std::uint32_t heigth) {
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);// Clear The Background Color Out Blue
-                                         //    glClearDepth(1.0);                   // Enables Clearing Of The Depth Buffer
+    glClearColor(0.02f, 0.025f, 0.035f, 1.0f);
+    glClearDepth(1.0f);
                                          //    glEnable(GL_BLEND);
                                          //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);// Enable Alpha Blending
     //glEnable(GL_CULL_FACE);
 
-    //    glEnable(GL_DEPTH_TEST);// Enables Depth Testing
-    //    glDepthFunc(GL_LEQUAL); // Type Of Depth Testing
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 
     glViewport(0, 0, static_cast<GLint>(width), static_cast<GLint>(heigth));
 }
@@ -129,7 +129,7 @@ public:
 
         std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
-        mShaders.emplace_back(CompileShader(vertex_shader_source, fragment_shader_source));
+        (void) CompileShader(vertex_shader_source, fragment_shader_source);
         CreateView(mCamera.mWidth, mCamera.mHeight);
 
         return true;
@@ -219,6 +219,7 @@ public:
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle->ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * meshBuffer.nfaces * sizeof(unsigned int), meshBuffer.triangles.data(), GL_DYNAMIC_DRAW);
+        handle->ntriangles = meshBuffer.nfaces;
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -246,13 +247,19 @@ public:
         auto program = renderContextHandle.shaderHandle->program;
         glUseProgram(program);
 
-        const SMaterial *material;
+        const SMaterial *material = nullptr;
+        EPolygonMode polygonMode = EPolygonMode::Line;
         if(auto renderComponent = renderContextHandle.sceneComposite.GetComponent<IRenderComponent>()) {
             material = &renderComponent->GetMaterial();
+            polygonMode = renderComponent->GetPolygonMode();
         }
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_FALSE, (mCamera.mTransformation * renderContextHandle.sceneComposite.GetTransformation()).ToArray());
+        if (!material) {
+            return;
+        }
+
+        glPolygonMode(GL_FRONT_AND_BACK, polygonMode == EPolygonMode::Fill ? GL_FILL : GL_LINE);
+        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_TRUE, (mCamera.mTransformation * renderContextHandle.sceneComposite.GetWorldTransformation()).ToArray());
         glUniform4fv(glGetUniformLocation(program, "color"), 1, material->materialDif);
         glBindVertexArray(renderContextHandle.renderBufferHandle->vao);
         glDrawElements(GL_TRIANGLES, renderContextHandle.renderBufferHandle->ntriangles * 3, GL_UNSIGNED_INT, nullptr);
@@ -260,7 +267,7 @@ public:
     }
 
     void OnPreRender() {
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     void OnPostRender() {
         SDL_GL_SwapWindow(mWindow);

@@ -64,6 +64,43 @@ void Camera::SetCamera(const Vector3f &pos, float ang, const Vector3f &axi, cons
     mTransformation = mWorldToCamTransformation.Inverse();
 }
 
+void Camera::SetOrthographicIsometric(float viewWidth, float viewHeight, float depthRange, const Vector3f &focus, float yawDegrees, float pitchDegrees) {
+    const float safeViewWidth = viewWidth == 0.0f ? 1.0f : viewWidth;
+    const float safeViewHeight = viewHeight == 0.0f ? 1.0f : viewHeight;
+    const float safeDepthRange = depthRange == 0.0f ? 1.0f : depthRange;
+    const float yaw = yawDegrees * pi / 180.0f;
+    const float pitch = pitchDegrees * pi / 180.0f;
+
+    const float cosYaw = cosf(yaw);
+    const float sinYaw = sinf(yaw);
+    const float cosPitch = cosf(pitch);
+    const float sinPitch = sinf(pitch);
+
+    mTransformation = Matrix4f::Identity();
+    mTransformation.at(0, 0) = cosYaw * 2.0f / safeViewWidth;
+    mTransformation.at(0, 1) = -sinYaw * 2.0f / safeViewWidth;
+    mTransformation.at(0, 2) = 0.0f;
+    mTransformation.at(0, 3) = -(mTransformation.at(0, 0) * focus.x + mTransformation.at(0, 1) * focus.y + mTransformation.at(0, 2) * focus.z);
+
+    mTransformation.at(1, 0) = sinPitch * sinYaw * 2.0f / safeViewHeight;
+    mTransformation.at(1, 1) = sinPitch * cosYaw * 2.0f / safeViewHeight;
+    mTransformation.at(1, 2) = cosPitch * 2.0f / safeViewHeight;
+    mTransformation.at(1, 3) = -(mTransformation.at(1, 0) * focus.x + mTransformation.at(1, 1) * focus.y + mTransformation.at(1, 2) * focus.z);
+
+    mTransformation.at(2, 0) = cosPitch * sinYaw * 2.0f / safeDepthRange;
+    mTransformation.at(2, 1) = cosPitch * cosYaw * 2.0f / safeDepthRange;
+    mTransformation.at(2, 2) = -sinPitch * 2.0f / safeDepthRange;
+    mTransformation.at(2, 3) = -(mTransformation.at(2, 0) * focus.x + mTransformation.at(2, 1) * focus.y + mTransformation.at(2, 2) * focus.z);
+
+    mTransformation.at(3, 0) = 0.0f;
+    mTransformation.at(3, 1) = 0.0f;
+    mTransformation.at(3, 2) = 0.0f;
+    mTransformation.at(3, 3) = 1.0f;
+
+    mWorldToCamTransformation = mTransformation;
+    mPosition = focus;
+}
+
 void Camera::FPSCamera(const Vector3f &movement, const Vector3f &rotation) {
     const float x = movement.x;
     const float y = movement.y;

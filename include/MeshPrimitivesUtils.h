@@ -4,6 +4,8 @@
 #include "BoundingBox2D.h"
 #include "UVector.h"
 
+#include <cmath>
+
 namespace unboxing_engine::primitive_utils {
 
     template<typename  T1, typename  T2>
@@ -198,6 +200,61 @@ namespace unboxing_engine::primitive_utils {
         // Top Left Of The Texture and Quad
         InsertCoordinates(&mesh->texcoords[textureOffset], textureOffset, 0, 1);
 
+        return mesh;
+    }
+
+    [[nodiscard]] inline std::unique_ptr<CMeshBuffer> Torus(float majorRadius = 2.4f, float minorRadius = 0.75f, unsigned int majorSegments = 48, unsigned int minorSegments = 16) {
+        constexpr float pi = 3.14159265358979323846f;
+        majorSegments = majorSegments < 3 ? 3 : majorSegments;
+        minorSegments = minorSegments < 3 ? 3 : minorSegments;
+
+        auto mesh = std::make_unique<CMeshBuffer>();
+        mesh->nvertices = majorSegments * minorSegments;
+        mesh->nfaces = majorSegments * minorSegments * 2;
+        mesh->nnormals = 0;
+        mesh->ntexcoords = 0;
+        mesh->nmaterials = 0;
+        mesh->vertices.reserve(mesh->nvertices * 3);
+        mesh->triangles.reserve(mesh->nfaces * 3);
+        mesh->faces.resize(mesh->nfaces);
+
+        for (unsigned int i = 0; i < majorSegments; ++i) {
+            float majorAngle = 2.0f * pi * static_cast<float>(i) / static_cast<float>(majorSegments);
+            float majorCos = cosf(majorAngle);
+            float majorSin = sinf(majorAngle);
+
+            for (unsigned int j = 0; j < minorSegments; ++j) {
+                float minorAngle = 2.0f * pi * static_cast<float>(j) / static_cast<float>(minorSegments);
+                float minorCos = cosf(minorAngle);
+                float minorSin = sinf(minorAngle);
+                float ringRadius = majorRadius + minorRadius * minorCos;
+
+                mesh->vertices.push_back(ringRadius * majorCos);
+                mesh->vertices.push_back(ringRadius * majorSin);
+                mesh->vertices.push_back(minorRadius * minorSin);
+            }
+        }
+
+        for (unsigned int i = 0; i < majorSegments; ++i) {
+            unsigned int nextI = (i + 1) % majorSegments;
+            for (unsigned int j = 0; j < minorSegments; ++j) {
+                unsigned int nextJ = (j + 1) % minorSegments;
+                unsigned int current = i * minorSegments + j;
+                unsigned int nextMajor = nextI * minorSegments + j;
+                unsigned int nextMinor = i * minorSegments + nextJ;
+                unsigned int nextBoth = nextI * minorSegments + nextJ;
+
+                mesh->triangles.push_back(current);
+                mesh->triangles.push_back(nextMajor);
+                mesh->triangles.push_back(nextBoth);
+                mesh->triangles.push_back(nextBoth);
+                mesh->triangles.push_back(nextMinor);
+                mesh->triangles.push_back(current);
+            }
+        }
+
+        float boundsXY = majorRadius + minorRadius;
+        mesh->boundingBox = CBoundingBox3D(Vector3f(-boundsXY, -boundsXY, -minorRadius), Vector3f(boundsXY, boundsXY, minorRadius));
         return mesh;
     }
 

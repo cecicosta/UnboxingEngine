@@ -159,13 +159,13 @@ Vector<T, dimension> findIntersectionBetweenLines(const Vector<T, dimension> &l1
 
 
 template<typename T, int dimension>
-SCollisionResult<T, dimension> checkPathIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex = true) {
+SCollisionResult<T, dimension> checkPathIntersectionWithSegment(const std::vector<Vector<T, dimension>> &vertices, const Vector<T, dimension> &start, const Vector<T, dimension> &end, bool connectLastVertex) {
     if (vertices.size() < 2 || start == end) {
         return {};
     }
 
     Vector<T, dimension> previous;
-    std::vector<Vector<T, dimension>>::const_iterator v;
+    typename std::vector<Vector<T, dimension>>::const_iterator v;
     if (connectLastVertex) {
         previous = *(vertices.end() - 1);
         v = vertices.begin();
@@ -304,5 +304,16 @@ bool CheckBoxToBoxCollision(std::vector<Vector<T, dimension>> box1, std::vector<
     return false;
 }
 
+template Vector<float, 2> findIntersectionBetweenLines(const Vector<float, 2> &l1_point, const Vector<float, 2> &l1_dir, const Vector<float, 2> &l2_point, const Vector<float, 2> &l2_dir);
+template Vector<float, 3> findIntersectionBetweenLines(const Vector<float, 3> &l1_point, const Vector<float, 3> &l1_dir, const Vector<float, 3> &l2_point, const Vector<float, 3> &l2_dir);
+
+template SCollisionResult<float, 2> checkPathIntersectionWithSegment<float, 2>(const std::vector<Vector<float, 2>> &vertices, const Vector<float, 2> &start, const Vector<float, 2> &end, bool connectLastVertex);
+template SCollisionResult<float, 3> checkPathIntersectionWithSegment<float, 3>(const std::vector<Vector<float, 3>> &vertices, const Vector<float, 3> &start, const Vector<float, 3> &end, bool connectLastVertex);
+
+template SCollisionResult<float, 2> checkSegmentCollisionAgainstRect(const std::vector<Vector<float, 2>> &box, const Vector<float, 2> &c, const Vector<float, 2> &d, const Vector<float, 2> &direction);
+template SCollisionResult<float, 3> checkSegmentCollisionAgainstRect(const std::vector<Vector<float, 3>> &box, const Vector<float, 3> &c, const Vector<float, 3> &d, const Vector<float, 3> &direction);
+
+template bool CheckBoxToBoxCollision(std::vector<Vector<float, 2>> box1, std::vector<Vector<float, 2>> box2, const Vector<float, 2> &direction, SCollisionResult<float, 2> &result);
+template bool CheckBoxToBoxCollision(std::vector<Vector<float, 3>> box1, std::vector<Vector<float, 3>> box2, const Vector<float, 3> &direction, SCollisionResult<float, 3> &result);
 
 }// namespace unboxing_engine::algorithms

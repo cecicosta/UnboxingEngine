@@ -15,8 +15,10 @@ public:
         : mMeshBuffer(&meshBuffer) {}
     ~CRenderComponentBase() override = default;
 
-    void SetMaterial(const SMaterial &material) { mMaterial = material; }
-    const SMaterial &GetMaterial() const { return mMaterial; }
+    void SetMaterial(const SMaterial &material) override { mMaterial = material; }
+    const SMaterial &GetMaterial() const override { return mMaterial; }
+    EPolygonMode GetPolygonMode() const override { return mPolygonMode; }
+    void SetPolygonMode(EPolygonMode polygonMode) override { mPolygonMode = polygonMode; }
     const CMeshBuffer &GetMeshBuffer() const override { return *mMeshBuffer; }
     void SetMeshBuffer(const CMeshBuffer &meshBuffer) override {
         mMeshBuffer = &meshBuffer;
@@ -31,6 +33,7 @@ protected:
     bool mIsDirty = true;
     const CMeshBuffer *mMeshBuffer;
     SMaterial mMaterial;
+    EPolygonMode mPolygonMode = EPolygonMode::Line;
     CSceneComposite *mSceneComposite = nullptr;
     std::unique_ptr<systems::SRenderContextHandle> mRenderContextHandle;
 };

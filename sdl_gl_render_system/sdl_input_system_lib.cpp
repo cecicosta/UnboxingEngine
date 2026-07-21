@@ -66,6 +66,11 @@ inline static bool OnMouseInput(const SDL_Event& event, core_events::SCursor& cu
 }
 
 inline static bool OnKeyboardInput(const SDL_Event& event, core_events::SKeyboard& keyboard) {
+    if (event.type == SDL_QUIT) {
+        keyboard.key = core_events::SKeyboard::EKey::KEY_ESC;
+        return true;
+    }
+
     if(event.type == SDL_KEYDOWN) {
         auto keyState = SDL_GetKeyboardState(nullptr);
         keyboard.key = core_events::SKeyboard::EKey::NONE;

@@ -11,4 +11,5 @@ include_directories(
 add_executable(2d_collision_vectors 2DCollisionVectors.cpp)
 target_link_libraries(2d_collision_vectors unboxing_engine)
 
-
+add_executable(bresenham_voxelization_port BresenhamVoxelizationPort.cpp)
+target_link_libraries(bresenham_voxelization_port unboxing_engine)

@@ -91,6 +91,9 @@ public:
     /// </summary>
     void Release();
 
+    void SetCamera(const Camera &camera);
+    [[nodiscard]] const Camera &GetCamera() const;
+
     /// <summary>
     /// 
     /// </summary>
