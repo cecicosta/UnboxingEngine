@@ -20,6 +20,8 @@ set(SOURCES
         BoundingBox.cpp
         BoundingBox2D.cpp
         algorithms/CollisionAlgorithms.cpp
+        algorithms/LegacyCollisionAlgorithms.cpp
+        algorithms/LegacyOctreeAlgorithms.cpp
         systems/CollisionSystem.cpp
         #collisionutil.cpp
 )
@@ -50,6 +52,8 @@ set(HEADERS
         ../include/material.h
         ../include/BoundingBox2D.h
         ../include/algorithms/CollisionAlgorithms.h
+        ../include/algorithms/LegacyCollisionAlgorithms.h
+        ../include/algorithms/LegacyOctreeAlgorithms.h
         ../include/systems/CollisionSystem.h
         ../include/systems/IRenderSystem.h
         ../include/systems/IInputSystem.h
@@ -58,4 +62,4 @@ set(HEADERS
 
 message("Source files: ${SOURCES}")
 add_library(${BINARY_FILENAME}_lib STATIC ${HEADERS} ${SOURCES})
-target_sources(${BINARY_FILENAME}_lib PUBLIC ${HEADERS} ${SOURCES})
+target_sources(${BINARY_FILENAME}_lib PRIVATE ${HEADERS} ${SOURCES})

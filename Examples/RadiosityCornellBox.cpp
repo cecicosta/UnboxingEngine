@@ -1,5 +1,6 @@
 #include "RadiosityCornellBox.h"
 
+#include "MeshPrimitivesUtils.h"
 #include "UVector.h"
 
 #include <algorithm>
@@ -112,30 +113,50 @@ std::unique_ptr<CMeshBuffer> makeSubdividedQuadMesh(
     return mesh;
 }
 
+std::unique_ptr<CMeshBuffer> makeTranslatedTorusMesh(const SCornellTorusConfig &torus) {
+    std::unique_ptr<CMeshBuffer> mesh = primitive_utils::Torus(torus.majorRadius, torus.minorRadius, torus.majorSegments, torus.minorSegments);
+    for (std::size_t i = 0; i + 2 < mesh->vertices.size(); i += 3) {
+        mesh->vertices[i] += torus.center.x;
+        mesh->vertices[i + 1] += torus.center.y;
+        mesh->vertices[i + 2] += torus.center.z;
+    }
+
+    finalizeMeshBounds(*mesh);
+    return mesh;
+}
+
 SCornellMeshElement makeCornellMeshElement(std::string name, std::unique_ptr<CMeshBuffer> mesh, const SRgb &reflectance, const SRgb &emissivity = {}) {
     return {std::move(name), std::move(mesh), reflectance, emissivity};
 }
 
 }  // namespace
 
-std::vector<SCornellMeshElement> makeCornellBoxMeshElements() {
+std::vector<SCornellMeshElement> makeCornellBoxMeshElements(const SCornellBoxConfig &config) {
     std::vector<SCornellMeshElement> elements;
-    elements.reserve(6);
+    elements.reserve(config.torus.enabled ? 7 : 6);
 
     const SRgb grey = rgb(0.68f, 0.68f, 0.66f);
     const SRgb red = rgb(0.78f, 0.16f, 0.12f);
     const SRgb green = rgb(0.15f, 0.68f, 0.20f);
     const SRgb lightReflectance = rgb(0.05f, 0.05f, 0.05f);
-    const SRgb lightEmission = rgb(4.8f, 4.3f, 3.4f) * 2.0f;
+    const SRgb lightEmission = rgb(4.8f, 4.3f, 3.4f) * config.lightEmissionScale;
 
-    elements.push_back(makeCornellMeshElement("floor", makeSubdividedQuadMesh(Vector3f(-2.0f, -2.0f, 0.0f), Vector3f(2.0f, -2.0f, 0.0f), Vector3f(2.0f, 2.0f, 0.0f), Vector3f(-2.0f, 2.0f, 0.0f), 8, 8), grey));
-    elements.push_back(makeCornellMeshElement("back wall", makeSubdividedQuadMesh(Vector3f(-2.0f, 2.0f, 0.0f), Vector3f(2.0f, 2.0f, 0.0f), Vector3f(2.0f, 2.0f, 3.0f), Vector3f(-2.0f, 2.0f, 3.0f), 8, 6), grey));
-    elements.push_back(makeCornellMeshElement("left wall", makeSubdividedQuadMesh(Vector3f(-2.0f, -2.0f, 0.0f), Vector3f(-2.0f, 2.0f, 0.0f), Vector3f(-2.0f, 2.0f, 3.0f), Vector3f(-2.0f, -2.0f, 3.0f), 8, 6), red));
-    elements.push_back(makeCornellMeshElement("right wall", makeSubdividedQuadMesh(Vector3f(2.0f, 2.0f, 0.0f), Vector3f(2.0f, -2.0f, 0.0f), Vector3f(2.0f, -2.0f, 3.0f), Vector3f(2.0f, 2.0f, 3.0f), 8, 6), green));
-    elements.push_back(makeCornellMeshElement("ceiling", makeSubdividedQuadMesh(Vector3f(-2.0f, 2.0f, 3.0f), Vector3f(2.0f, 2.0f, 3.0f), Vector3f(2.0f, -2.0f, 3.0f), Vector3f(-2.0f, -2.0f, 3.0f), 8, 8), grey * 0.85f));
-    elements.push_back(makeCornellMeshElement("emissive ceiling patch", makeSubdividedQuadMesh(Vector3f(-0.55f, 0.55f, 2.92f), Vector3f(0.55f, 0.55f, 2.92f), Vector3f(0.55f, -0.55f, 2.92f), Vector3f(-0.55f, -0.55f, 2.92f), 3, 3), lightReflectance, lightEmission));
+    const SCornellBoxSubdivision &subdivision = config.subdivision;
+    elements.push_back(makeCornellMeshElement("floor", makeSubdividedQuadMesh(Vector3f(-2.0f, -2.0f, 0.0f), Vector3f(2.0f, -2.0f, 0.0f), Vector3f(2.0f, 2.0f, 0.0f), Vector3f(-2.0f, 2.0f, 0.0f), subdivision.floorColumns, subdivision.floorRows), grey));
+    elements.push_back(makeCornellMeshElement("back wall", makeSubdividedQuadMesh(Vector3f(-2.0f, 2.0f, 0.0f), Vector3f(2.0f, 2.0f, 0.0f), Vector3f(2.0f, 2.0f, 3.0f), Vector3f(-2.0f, 2.0f, 3.0f), subdivision.wallColumns, subdivision.wallRows), grey));
+    elements.push_back(makeCornellMeshElement("left wall", makeSubdividedQuadMesh(Vector3f(-2.0f, -2.0f, 0.0f), Vector3f(-2.0f, 2.0f, 0.0f), Vector3f(-2.0f, 2.0f, 3.0f), Vector3f(-2.0f, -2.0f, 3.0f), subdivision.wallColumns, subdivision.wallRows), red));
+    elements.push_back(makeCornellMeshElement("right wall", makeSubdividedQuadMesh(Vector3f(2.0f, 2.0f, 0.0f), Vector3f(2.0f, -2.0f, 0.0f), Vector3f(2.0f, -2.0f, 3.0f), Vector3f(2.0f, 2.0f, 3.0f), subdivision.wallColumns, subdivision.wallRows), green));
+    elements.push_back(makeCornellMeshElement("ceiling", makeSubdividedQuadMesh(Vector3f(-2.0f, 2.0f, 3.0f), Vector3f(2.0f, 2.0f, 3.0f), Vector3f(2.0f, -2.0f, 3.0f), Vector3f(-2.0f, -2.0f, 3.0f), subdivision.ceilingColumns, subdivision.ceilingRows), grey * 0.85f));
+    elements.push_back(makeCornellMeshElement("emissive ceiling patch", makeSubdividedQuadMesh(Vector3f(-0.55f, 0.55f, 2.92f), Vector3f(0.55f, 0.55f, 2.92f), Vector3f(0.55f, -0.55f, 2.92f), Vector3f(-0.55f, -0.55f, 2.92f), subdivision.lightColumns, subdivision.lightRows), lightReflectance, lightEmission));
+    if (config.torus.enabled) {
+        elements.push_back(makeCornellMeshElement("center torus occluder", makeTranslatedTorusMesh(config.torus), config.torus.reflectance, config.torus.emissivity));
+    }
 
     return elements;
+}
+
+std::vector<SCornellMeshElement> makeCornellBoxMeshElements() {
+    return makeCornellBoxMeshElements(SCornellBoxConfig{});
 }
 
 }  // namespace radiosity_demo

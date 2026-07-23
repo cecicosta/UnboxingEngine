@@ -49,6 +49,7 @@ public:
     ///Initialize engine subsystems
     /// </summary>
     void Start() override;
+    [[nodiscard]] bool IsRunning() const { return !quit; }
 
     /// <summary>
     /// 

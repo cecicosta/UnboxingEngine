@@ -53,8 +53,31 @@ target_link_libraries(unboxing_engine_minimal_unit_tests
         gmock
 )
 
+add_executable(unboxing_engine_collision_algorithm_tests
+        main.cpp
+        PathIntersectionAlgorithmsTests.cpp)
+
+target_link_libraries(unboxing_engine_collision_algorithm_tests
+        unboxing_engine_src_lib
+        gtest
+        gmock
+)
+
 add_test(NAME unboxing_engine_tests COMMAND unboxing_engine_tests --exe unboxing_engine_tests.exe)
 #gtest_discover_tests(TARGET unboxing_engine_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
+
+add_executable(unboxing_engine_legacy_collision_algorithm_tests
+        main.cpp
+        LegacyCollisionAlgorithmsTests.cpp)
+
+target_link_libraries(unboxing_engine_legacy_collision_algorithm_tests
+        unboxing_engine_src_lib
+        gtest
+        gmock
+)
+
+add_test(NAME unboxing_engine_legacy_collision_algorithm_tests COMMAND unboxing_engine_legacy_collision_algorithm_tests)
+add_test(NAME unboxing_engine_collision_algorithm_tests COMMAND unboxing_engine_collision_algorithm_tests)
 
 if (WIN32)
     #Copy dll after building
@@ -69,5 +92,3 @@ if (WIN32)
 
     
 endif ()
-
-
