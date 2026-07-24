@@ -1,1 +1,276 @@
-asdadasdasdasd
+# UnboxingEngine Examples
+
+This directory contains the maintained executable examples used to exercise engine features and preserve older academic algorithms as working ports.
+
+The default example build keeps three active targets:
+
+| Target | Main source | Purpose |
+| --- | --- | --- |
+| `2d_collision_vectors` | `2DCollisionVectors.cpp` | Interactive 2D segment and box collision visualization. |
+| `bresenham_voxelization_port` | `BresenhamVoxelizationPort.cpp` | Port of the legacy ray sweep and voxel fill algorithm. |
+| `radiosity_port` | `RadiosityPort.cpp` | Port of the legacy radiosity patch pipeline with rasterized hemisphere form factors. |
+
+Experimental or superseded examples live in `drafts/` and are not built by default.
+
+## 2D Collision Vectors
+
+Target: `2d_collision_vectors`
+
+Source file:
+
+- `2DCollisionVectors.cpp`
+
+This example is a compact interactive scene for the engine's 2D collision components. It creates a movable segment and a box collider. The segment follows mouse input, and both objects change render color when the collision system reports an intersection.
+
+### What The Example Shows
+
+- Registering scene elements with render and collider components.
+- Using `CSegmentColliderComponent` and `CBoxColliderComponent2D`.
+- Listening for `systems::IIntersectsEvent` to reflect collision state in the visual output.
+- Updating a mesh from mouse input and re-registering the scene element so collision state follows the edited segment.
+
+### Running
+
+Build:
+
+```bash
+cmake --build build --target 2d_collision_vectors
+```
+
+Run:
+
+```bash
+./build/Examples/2d_collision_vectors
+```
+
+This example is visual and interactive. It currently has no `--self-test` mode.
+
+## Bresenham Voxelization Port
+
+Target: `bresenham_voxelization_port`
+
+Source file:
+
+- `BresenhamVoxelizationPort.cpp`
+
+This example ports the old Editor voxelization flow into a standalone UnboxingEngine demo. It casts a regular grid of rays through a mesh, pairs entry and exit intersections, and fills voxel cells between those intersections.
+
+### What The Example Shows
+
+- `rayCollisionsWithMeshBufferPorted(...)` intersects sweep rays with mesh triangles.
+- `drawLine3DPorted(...)` preserves the legacy dominant-axis grid walk.
+- `drawVoxelsPorted(...)` fills voxel coordinates between paired intersections.
+- `createVoxelizedScenePorted(...)` runs the full ray sweep over a mesh.
+- The visual mode shows the source torus beside the generated voxel set.
+
+### Running
+
+Build:
+
+```bash
+cmake --build build --target bresenham_voxelization_port
+```
+
+Run the visual demo:
+
+```bash
+./build/Examples/bresenham_voxelization_port
+```
+
+Run the self-test:
+
+```bash
+./build/Examples/bresenham_voxelization_port --self-test
+```
+
+Run one render pass without entering the main loop:
+
+```bash
+./build/Examples/bresenham_voxelization_port --render-smoke-test
+```
+
+### Self-Test Coverage
+
+`--self-test` validates:
+
+- dominant-axis grid traversal
+- unique mesh ray intersections against a cube
+- default sweep ray count and intersection count
+- filled voxel count for the default cube
+- expected inside and outside voxel membership
+
+## Radiosity Port
+
+Target: `radiosity_port`
+
+Source files:
+
+- `RadiosityPort.cpp`
+- `RadiosityCornellBox.cpp`
+- `RadiosityCornellBox.h`
+
+This example ports the radiosity work from the old Editor project into a self-contained UnboxingEngine demo. The goal is not to create a production renderer or a physically exact radiosity implementation. The goal is to keep the old algorithmic lineage visible while making the code runnable, testable, and inspectable inside the current engine infrastructure.
+
+### What The Example Shows
+
+The example builds a Cornell-box-like scene, converts its mesh triangles into radiosity patches, estimates form factors with a receiver-local rasterized hemisphere projection, solves patch radiosity with Gauss-Seidel iteration, and renders the resulting patch colors in a centered rotating scene.
+
+### Current Pipeline
+
+1. `RadiosityCornellBox.cpp` creates demo mesh elements.
+
+   Each `SCornellMeshElement` owns a `CMeshBuffer` plus material-like radiosity data:
+
+   - `reflectance`
+   - `emissivity`
+   - descriptive `name`
+
+   The Cornell box surfaces are subdivided into many quads, and each quad is triangulated. This is necessary because radiosity gradients only become visible when large surfaces are represented by multiple patches.
+
+2. `makePatchesFromMeshPorted(...)` converts mesh triangles into radiosity patches.
+
+   This mirrors the old `patch::patchListFromObjectList(...)` flow from the Editor project:
+
+   - iterate scene mesh elements
+   - read triangle vertex indices
+   - fetch triangle vertex positions
+   - create one radiosity patch per triangle
+   - copy reflectance and emissivity from the mesh element
+
+3. `makePatchPorted(...)` creates the patch data.
+
+   This is adapted from `patch::patch`. It stores:
+
+   - three triangle vertices
+   - centroid
+   - normal
+   - area
+   - emissivity
+   - reflectance
+   - accumulated radiosity
+   - visible patch/form-factor links
+
+4. `CHemiEsferaPorted` estimates visibility and form factors.
+
+   This is adapted from the old `hemiEsfera` logic. For each receiver patch, it keeps a fixed `100 x 100` grid. Candidate source patches are projected from the receiver centroid onto a unit hemisphere, then into the receiver plane, then rasterized into that grid.
+
+   Each grid cell stores the closest patch id seen at that projected location. This gives a simple receiver-local visibility approximation and allows nearer projected geometry to replace farther projected geometry.
+
+5. `calculateFormFactorScenePorted(...)` builds the patch visibility graph.
+
+   This is adapted from `formFactorScene::formFactorScene`. It creates one receiver-local hemisphere grid per patch, paints every visible source patch into it, and stores directed form-factor links in `SRadiosityPatch::patches`.
+
+6. `gaussSeidelRadiosityPorted(...)` solves the radiosity recurrence.
+
+   This is adapted from `GaussSeidel::resolver`, with a fixed iteration wrapper and convergence tolerance:
+
+   ```text
+   B_i = E_i + rho_i * sum(F_ij * B_j)
+   ```
+
+   Where:
+
+   - `B_i` is patch radiosity
+   - `E_i` is emissivity
+   - `rho_i` is reflectance
+   - `F_ij` is the form factor from patch `i` to visible patch `j`
+
+7. The visual mode renders one mesh per solved patch.
+
+   The patch radiosity is tone-mapped into a diffuse material color and rendered with solid polygon fill. A rotating parent scene node gives a stable view of the solved Cornell box without requiring manual camera controls.
+
+### Ported Function Map
+
+The code keeps port-style names and comments so the historical source remains traceable:
+
+| Current function/class | Original source role |
+| --- | --- |
+| `makePatchPorted(...)` | `patch::patch` |
+| `makePatchesFromMeshPorted(...)` | `patch::patchListFromObjectList(...)` |
+| `isVisiblePorted(...)` | `hemiEsfera::isVisible` |
+| `intersectHemisphereRayPorted(...)` | `hemiEsfera::intersectionWithRay` |
+| `CHemiEsferaPorted::paintGrid(...)` | `hemiEsfera` grid projection and paint path |
+| `CHemiEsferaPorted::calculateFormFactor(...)` | `hemiEsfera::calculateFormFactor` |
+| `calculateFormFactorScenePorted(...)` | `formFactorScene::formFactorScene` |
+| `gaussSeidelRadiosityPorted(...)` | `GaussSeidel::resolver` |
+
+### Deliberate Adaptations
+
+The port keeps the original algorithmic shape, but it avoids directly compiling the old Qt/OpenGL/OBJ-dependent code. The main adaptations are:
+
+- Uses `Vector3f`, `CMeshBuffer`, `CSceneComposite`, and `CDefaultMeshRenderComponent`.
+- Uses STL containers and value-owned structs instead of old custom lists and scene-object ownership.
+- Builds a small Cornell-box mesh in code instead of loading old OBJ resources.
+- Converts mesh triangles to patches before solving, preserving the original mesh-to-patch workflow.
+- Clamps raster grid bounds before indexing fixed arrays.
+- Uses a receiver-normal tangent basis where the old code referenced a fragile `vertex[3]` path on a three-vertex patch.
+- Adds iteration limits and convergence tolerance around the Gauss-Seidel update.
+- Keeps all radiosity implementation details local to the example instead of promoting them to engine APIs.
+
+### Known Limitations
+
+This is still a demonstrator, not a general radiosity system.
+
+- Form factors are approximated with a fixed receiver-local raster grid.
+- The result is qualitative and intentionally tuned for visibility.
+- The mesh is synthetic Cornell-box geometry, not a restored Editor scene loader.
+- The renderer has no dedicated radiosity shader; patch colors are baked into material diffuse colors.
+- The example is useful evidence of the old radiosity work, but it should not be presented as a modern global illumination implementation.
+
+### Running
+
+Configure and build:
+
+```bash
+cmake -S . -B build -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake --build build --target radiosity_port
+```
+
+Run the visual demo:
+
+```bash
+./build/Examples/radiosity_port
+```
+
+Run the self-test:
+
+```bash
+./build/Examples/radiosity_port --self-test
+```
+
+Run one render pass without entering the main loop:
+
+```bash
+./build/Examples/radiosity_port --render-smoke-test
+```
+
+The normal visual run prints a compact summary:
+
+```text
+Patches: <count>
+Visible form factors: <count>
+Max form factor: <value>
+Max row coverage: <value>
+Gauss-Seidel iterations: <count>
+Final max delta: <value>
+```
+
+### Self-Test Coverage
+
+`--self-test` validates the core behavior without requiring visual inspection:
+
+- patch area, centroid, and normal construction
+- visible and back-facing patch rejection
+- positive rasterized form factor for a facing source patch
+- zero form factor for a back-facing source patch
+- grid depth replacement where a nearer projected patch hides a farther projected patch
+- Cornell-box form-factor generation
+- Gauss-Seidel propagation from emissive patches to non-emissive patches
+
+## Drafts
+
+`drafts/` contains example sources that are useful to keep for comparison or future work but are not part of the maintained default example build:
+
+- `drafts/BresenhamVoxelizationOctreePort.cpp`
+- `drafts/PathIntersectionTriangleExample.cpp`
+- `drafts/RadiosityOctreePort.cpp`

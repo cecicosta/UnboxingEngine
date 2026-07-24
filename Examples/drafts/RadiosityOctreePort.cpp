@@ -63,6 +63,8 @@ struct SRadiositySummary {
     int iterations = 0;
     int normalVisiblePairs = 0;
     int directOccludedPairs = 0;
+    std::size_t formFactorSkippedPairs = 0;
+    std::size_t occlusionPairsTested = 0;
     float maxFormFactor = 0.0f;
     float maxRowSum = 0.0f;
     float maxDelta = 0.0f;
@@ -400,6 +402,104 @@ SVisibilityCollisionScene makeVisibilityCollisionScenePorted(
     return scene;
 }
 
+struct SOctreeNodeRayEntry {
+    const SMeshOctreeNode *node = nullptr;
+    float entryDistance = 0.0f;
+};
+
+bool nodeIntersectsOcclusionSegment(
+    const SMeshOctreeNode &node,
+    const SRay3D &ray,
+    float maxOcclusionDistance,
+    float &entryDistance) {
+
+    const auto entry = rayWithBoundingBoxPorted(node.box, ray);
+    if (!entry || *entry > maxOcclusionDistance) {
+        return false;
+    }
+
+    entryDistance = *entry;
+    return true;
+}
+
+bool triangleBlocksPatchSegment(
+    const SRadiosityPatch &receiver,
+    const SRadiosityPatch &source,
+    const SVisibilityCollisionScene &collisionScene,
+    const SRay3D &ray,
+    float pathLength,
+    unsigned int triangleIndex,
+    SRadiositySummary &summary) {
+
+    ++summary.octreeCandidateTriangleTests;
+
+    const std::size_t triangleOffset = static_cast<std::size_t>(triangleIndex) * 3;
+    if (triangleOffset + 2 >= collisionScene.mesh.triangles.size()) {
+        return false;
+    }
+
+    const auto v1 = meshVertexPorted(collisionScene.mesh, collisionScene.mesh.triangles[triangleOffset]);
+    const auto v2 = meshVertexPorted(collisionScene.mesh, collisionScene.mesh.triangles[triangleOffset + 1]);
+    const auto v3 = meshVertexPorted(collisionScene.mesh, collisionScene.mesh.triangles[triangleOffset + 2]);
+    if (!v1 || !v2 || !v3) {
+        return false;
+    }
+
+    auto hit = rayWithTrianglePorted(ray, *v1, *v2, *v3, triangleIndex);
+    if (!hit || hit->distance <= kOcclusionEpsilon || hit->distance >= pathLength - kOcclusionEpsilon) {
+        return false;
+    }
+
+    if (hit->triangleIndex >= collisionScene.patchIdByTriangleIndex.size()) {
+        return false;
+    }
+
+    const int hitPatchId = collisionScene.patchIdByTriangleIndex[hit->triangleIndex];
+    return hitPatchId != receiver.id && hitPatchId != source.id;
+}
+
+bool findOccluderInSegmentNode(
+    const SRadiosityPatch &receiver,
+    const SRadiosityPatch &source,
+    const SVisibilityCollisionScene &collisionScene,
+    const SMeshOctreeNode &node,
+    const SRay3D &ray,
+    float pathLength,
+    float maxOcclusionDistance,
+    SRadiositySummary &summary) {
+
+    for (unsigned int triangleIndex : node.triangleIndices) {
+        if (triangleBlocksPatchSegment(receiver, source, collisionScene, ray, pathLength, triangleIndex, summary)) {
+            return true;
+        }
+    }
+
+    std::array<SOctreeNodeRayEntry, 8> childEntries;
+    std::size_t childCount = 0;
+    for (const auto &child : node.children) {
+        if (!child) {
+            continue;
+        }
+
+        float entryDistance = 0.0f;
+        if (nodeIntersectsOcclusionSegment(*child, ray, maxOcclusionDistance, entryDistance)) {
+            childEntries[childCount++] = {child.get(), entryDistance};
+        }
+    }
+
+    std::sort(childEntries.begin(), childEntries.begin() + static_cast<std::ptrdiff_t>(childCount), [](const SOctreeNodeRayEntry &a, const SOctreeNodeRayEntry &b) {
+        return a.entryDistance < b.entryDistance;
+    });
+
+    for (std::size_t i = 0; i < childCount; ++i) {
+        if (findOccluderInSegmentNode(receiver, source, collisionScene, *childEntries[i].node, ray, pathLength, maxOcclusionDistance, summary)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool hasOccluderBetweenPatchesPorted(
     const SRadiosityPatch &receiver,
     const SRadiosityPatch &source,
@@ -412,34 +512,26 @@ bool hasOccluderBetweenPatchesPorted(
         return false;
     }
 
-    std::size_t candidateCount = 0;
-    std::vector<STriangleHit3D> hits = rayWithMeshOctreePorted(
-        collisionScene.mesh,
-        collisionScene.octree,
-        {receiver.centroid, path.Normalized()},
-        false,
-        &candidateCount);
-
+    ++summary.occlusionPairsTested;
     summary.bruteForceOcclusionTriangleTests += collisionScene.patchIdByTriangleIndex.size();
-    summary.octreeCandidateTriangleTests += candidateCount;
 
-    for (const STriangleHit3D &hit : hits) {
-        if (hit.triangleIndex >= collisionScene.patchIdByTriangleIndex.size()) {
-            continue;
-        }
-
-        const int hitPatchId = collisionScene.patchIdByTriangleIndex[hit.triangleIndex];
-        if (hitPatchId == receiver.id || hitPatchId == source.id) {
-            continue;
-        }
-
-        if (hit.distance > kOcclusionEpsilon && hit.distance < pathLength - kOcclusionEpsilon) {
-            ++summary.directOccludedPairs;
-            return true;
-        }
+    const float maxOcclusionDistance = pathLength - kOcclusionEpsilon;
+    if (maxOcclusionDistance <= kOcclusionEpsilon || !collisionScene.octree.root) {
+        return false;
     }
 
-    return false;
+    const SRay3D ray{receiver.centroid, path.Normalized()};
+    float rootEntryDistance = 0.0f;
+    if (!nodeIntersectsOcclusionSegment(*collisionScene.octree.root, ray, maxOcclusionDistance, rootEntryDistance)) {
+        return false;
+    }
+
+    if (!findOccluderInSegmentNode(receiver, source, collisionScene, *collisionScene.octree.root, ray, pathLength, maxOcclusionDistance, summary)) {
+        return false;
+    }
+
+    ++summary.directOccludedPairs;
+    return true;
 }
 
 // Adapted from Editor/radiosity/original/formfactorscene.cpp:formFactorScene::formFactorScene.
@@ -464,25 +556,32 @@ SRadiositySummary calculateFormFactorSceneOctreePorted(
                 continue;
             }
 
+            const float receiverFormFactor = calculateProjectedFormFactorPorted(receiver, source);
+            const float sourceFormFactor = calculateProjectedFormFactorPorted(source, receiver);
+            const bool receiverContributes = receiverFormFactor > kFormFactorContributionThreshold;
+            const bool sourceContributes = sourceFormFactor > kFormFactorContributionThreshold;
+            if (!receiverContributes && !sourceContributes) {
+                ++summary.formFactorSkippedPairs;
+                continue;
+            }
+
             if (hasOccluderBetweenPatchesPorted(receiver, source, collisionScene, summary)) {
                 continue;
             }
 
-            const float receiverFormFactor = calculateProjectedFormFactorPorted(receiver, source);
-            if (receiverFormFactor <= kFormFactorContributionThreshold) {
-                continue;
-            }
             ++summary.normalVisiblePairs;
 
-            receiver.patches.push_back(SViewedPatch{source.id, receiverFormFactor});
-            receiver.coverage += receiverFormFactor;
-
-            const float sourceFormFactor = calculateProjectedFormFactorPorted(receiver, source);
-            if (sourceFormFactor <= kFormFactorContributionThreshold) {
-                continue;
+            if (receiverContributes) {
+                receiver.patches.push_back(SViewedPatch{source.id, receiverFormFactor});
+                receiver.coverage += receiverFormFactor;
+                summary.maxFormFactor = std::max(summary.maxFormFactor, receiverFormFactor);
             }
-            source.patches.push_back(SViewedPatch{receiver.id, sourceFormFactor});
-            source.coverage += sourceFormFactor;
+
+            if (sourceContributes) {
+                source.patches.push_back(SViewedPatch{receiver.id, sourceFormFactor});
+                source.coverage += sourceFormFactor;
+                summary.maxFormFactor = std::max(summary.maxFormFactor, sourceFormFactor);
+            }
         }
 
 
@@ -635,7 +734,7 @@ bool runSelfTest() {
     ok = expect(outsideHemisphereFormFactor == 0.0f, "source outside the receiver hemisphere should produce a zero form factor") && ok;
 
     std::vector<SRadiosityPatch> scene = makeCornellBoxScenePorted(makeSelfTestCornellConfig());
-    SVisibilityCollisionScene collisionScene = makeVisibilityCollisionScenePorted(scene, 10, 6);
+    SVisibilityCollisionScene collisionScene = makeVisibilityCollisionScenePorted(scene, 10, 8);
     SRadiositySummary summary = calculateFormFactorSceneOctreePorted(scene, collisionScene);
     gaussSeidelRadiosityPorted(scene, summary);
 
@@ -658,6 +757,8 @@ void printSummary(const SRadiositySummary &summary) {
 
     std::cout << "Patches: " << summary.patchCount << "\n";
     std::cout << "Normal-facing patch pairs: " << summary.normalVisiblePairs << "\n";
+    std::cout << "Form-factor culled patch pairs before occlusion: " << summary.formFactorSkippedPairs << "\n";
+    std::cout << "Patch pairs reaching occlusion: " << summary.occlusionPairsTested << "\n";
     std::cout << "Direct-light occluded patch pairs: " << summary.directOccludedPairs << "\n";
     std::cout << "Visible form factors: " << summary.nonZeroFormFactors << "\n";
     std::cout << "Max form factor: " << summary.maxFormFactor << "\n";

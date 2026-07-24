@@ -9,6 +9,8 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <limits>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -209,6 +211,155 @@ void makeTangentBasis(const Vector3f &normal, Vector3f &axisX, Vector3f &axisY) 
     axisY = normal.CrossProduct(axisX).Normalized();
 }
 
+struct SHemispherePixel {
+    int patch_id = -1;
+    float patch_z = std::numeric_limits<float>::max();
+};
+
+// Adapted from Editor/radiosity/original/hemiesfera.cpp:hemiEsfera.
+//
+// Original role:
+// - Keep a receiver-owned 100x100 hemisphere grid.
+// - Paint projected source patches into the grid.
+// - Convert visible pixel ownership into form factors.
+class CHemiEsferaPorted {
+public:
+    static constexpr int gridSize = 100;
+    static constexpr float radius = 1.0f;
+
+    explicit CHemiEsferaPorted(const SRadiosityPatch &myPatch)
+        : my(&myPatch)
+        , position(myPatch.centroid) {
+        for (SHemispherePixel &pixel : grid) {
+            pixel.patch_id = -1;
+            pixel.patch_z = std::numeric_limits<float>::max();
+        }
+    }
+
+    bool isVisible(const SRadiosityPatch &other) const {
+        return isVisiblePorted(*my, other);
+    }
+
+    void paintGrid(const SRadiosityPatch &other) {
+        if (my->id == other.id || my->area <= kEpsilon || other.area <= kEpsilon || !isVisible(other)) {
+            return;
+        }
+
+        std::array<Vector3f, 3> projected{};
+        for (std::size_t index = 0; index < other.vertex.size(); ++index) {
+            if (!intersectHemisphereRayPorted(position, radius, position, other.vertex[index], projected[index])) {
+                return;
+            }
+
+            if ((projected[index] - position).DotProduct(my->normal) <= kEpsilon) {
+                return;
+            }
+        }
+
+        std::array<Vector3f, 3> projectedOnPlane{};
+        for (std::size_t index = 0; index < projected.size(); ++index) {
+            Vector3f dist = projected[index] - my->vertex[0];
+            Vector3f proj = my->normal * dist.DotProduct(my->normal);
+            Vector3f distproj = projected[index] - (proj + my->vertex[0]);
+            projectedOnPlane[index] = my->vertex[0] + distproj;
+        }
+
+        Vector3f x;
+        Vector3f y;
+        // hemiesfera.cpp referenced vertex[3], but patches have three vertices; use a receiver-normal basis instead.
+        makeTangentBasis(my->normal, x, y);
+
+        const float halfGrid = static_cast<float>(gridSize / 2);
+        std::array<Vector3f, 3> gridPoints{};
+        for (std::size_t index = 0; index < projectedOnPlane.size(); ++index) {
+            float proj2D_x = (projectedOnPlane[index] - position).DotProduct(x);
+            float proj2D_y = (projectedOnPlane[index] - position).DotProduct(y);
+            gridPoints[index] = Vector3f(proj2D_y * halfGrid + halfGrid, proj2D_x * halfGrid + halfGrid, 0.0f);
+        }
+
+        int min_i = static_cast<int>(std::floor(std::min({gridPoints[0].x, gridPoints[1].x, gridPoints[2].x})));
+        int max_i = static_cast<int>(std::ceil(std::max({gridPoints[0].x, gridPoints[1].x, gridPoints[2].x})));
+        int min_j = static_cast<int>(std::floor(std::min({gridPoints[0].y, gridPoints[1].y, gridPoints[2].y})));
+        int max_j = static_cast<int>(std::ceil(std::max({gridPoints[0].y, gridPoints[1].y, gridPoints[2].y})));
+
+        // The original trusted these bounds; clamp them before indexing the fixed STL grid.
+        min_i = clampGridIndex(min_i);
+        max_i = clampGridIndex(max_i);
+        min_j = clampGridIndex(min_j);
+        max_j = clampGridIndex(max_j);
+
+        float area = triangleArea2D(
+            gridPoints[0].x,
+            gridPoints[0].y,
+            gridPoints[1].x,
+            gridPoints[1].y,
+            gridPoints[2].x,
+            gridPoints[2].y);
+        if (area <= kEpsilon) {
+            return;
+        }
+
+        const float sourceDistance = (other.centroid - my->centroid).Length();
+        for (int i = min_i; i <= max_i; ++i) {
+            for (int j = min_j; j <= max_j; ++j) {
+                Vector3f p(static_cast<float>(i), static_cast<float>(j), 0.0f);
+
+                float area1 = triangleArea2D(p.x, p.y, gridPoints[0].x, gridPoints[0].y, gridPoints[1].x, gridPoints[1].y) / area;
+                float area2 = triangleArea2D(p.x, p.y, gridPoints[0].x, gridPoints[0].y, gridPoints[2].x, gridPoints[2].y) / area;
+                float area3 = triangleArea2D(p.x, p.y, gridPoints[2].x, gridPoints[2].y, gridPoints[1].x, gridPoints[1].y) / area;
+
+                if (area1 + area2 + area3 <= 1.00001f) {
+                    SHemispherePixel &pixel = grid[pixelIndex(i, j)];
+                    if (sourceDistance < pixel.patch_z) {
+                        // hemiesfera.cpp used objID and only filled empty pixels; this keeps patch ids and lets nearer patches replace farther ones.
+                        pixel.patch_id = other.id;
+                        pixel.patch_z = sourceDistance;
+                    }
+                }
+            }
+        }
+    }
+
+    float calculateFormFactor(std::vector<SViewedPatch> &viewedPatches) const {
+        std::map<int, float> formFactorsByPatch;
+        for (int i = 0; i < gridSize; ++i) {
+            for (int j = 0; j < gridSize; ++j) {
+                const SHemispherePixel &pixel = grid[pixelIndex(i, j)];
+                if (pixel.patch_id != -1) {
+                    formFactorsByPatch[pixel.patch_id] += 1.0f;
+                }
+            }
+        }
+
+        viewedPatches.clear();
+        float rowSum = 0.0f;
+        const float halfGrid = static_cast<float>(gridSize / 2);
+        const float normalizer = halfGrid * halfGrid * kPi;
+        for (const auto &entry : formFactorsByPatch) {
+            float formFactor = entry.second / normalizer;
+            if (formFactor > kEpsilon) {
+                viewedPatches.push_back({entry.first, formFactor});
+                rowSum += formFactor;
+            }
+        }
+
+        return rowSum;
+    }
+
+private:
+    static int clampGridIndex(int value) {
+        return std::max(0, std::min(gridSize - 1, value));
+    }
+
+    static std::size_t pixelIndex(int i, int j) {
+        return static_cast<std::size_t>(i) * gridSize + static_cast<std::size_t>(j);
+    }
+
+    const SRadiosityPatch *my = nullptr;
+    Vector3f position;
+    std::array<SHemispherePixel, gridSize * gridSize> grid;
+};
+
 // Adapted from Editor/radiosity/original/hemiesfera.cpp:hemiEsfera::calculateFormFactor.
 //
 // Original role:
@@ -270,27 +421,15 @@ SRadiositySummary calculateFormFactorScenePorted(std::vector<SRadiosityPatch> &p
     summary.patchCount = static_cast<int>(patches.size());
 
     for (SRadiosityPatch &receiver : patches) {
-        receiver.patches.clear();
-        float rowSum = 0.0f;
+        CHemiEsferaPorted hemiEsfera(receiver);
 
         for (const SRadiosityPatch &source : patches) {
-            float formFactor = calculateProjectedFormFactorPorted(receiver, source);
-            if (formFactor > kEpsilon) {
-                receiver.patches.push_back({source.id, formFactor});
-                rowSum += formFactor;
-                summary.maxFormFactor = std::max(summary.maxFormFactor, formFactor);
-            }
+            hemiEsfera.paintGrid(source);
         }
 
-        // The old rasterized hemisphere naturally bounded visible pixel coverage.
-        // This compact projected-area adapter keeps the same stability expectation.
-        constexpr float maxRowCoverage = 0.90f;
-        if (rowSum > maxRowCoverage) {
-            float scale = maxRowCoverage / rowSum;
-            for (SViewedPatch &viewedPatch : receiver.patches) {
-                viewedPatch.formFactor *= scale;
-            }
-            rowSum = maxRowCoverage;
+        float rowSum = hemiEsfera.calculateFormFactor(receiver.patches);
+        for (const SViewedPatch &viewedPatch : receiver.patches) {
+            summary.maxFormFactor = std::max(summary.maxFormFactor, viewedPatch.formFactor);
         }
 
         summary.nonZeroFormFactors += static_cast<int>(receiver.patches.size());
@@ -447,6 +586,15 @@ bool nearlyEqual(float a, float b, float tolerance = 0.0001f) {
     return std::fabs(a - b) <= tolerance;
 }
 
+float findFormFactor(const SRadiosityPatch &patch, int viewedPatchId) {
+    for (const SViewedPatch &viewedPatch : patch.patches) {
+        if (viewedPatch.id == viewedPatchId) {
+            return viewedPatch.formFactor;
+        }
+    }
+    return 0.0f;
+}
+
 bool runSelfTest() {
     bool ok = true;
 
@@ -462,10 +610,18 @@ bool runSelfTest() {
     ok = expect(isVisiblePorted(receiver, sourceFacing), "facing source patch should be visible") && ok;
     ok = expect(!isVisiblePorted(receiver, sourceBackFacing), "back-facing source patch should not be visible") && ok;
 
-    float positiveFormFactor = calculateProjectedFormFactorPorted(receiver, sourceFacing);
-    float backFacingFormFactor = calculateProjectedFormFactorPorted(receiver, sourceBackFacing);
-    ok = expect(positiveFormFactor > 0.0f, "facing source patch should produce a positive form factor") && ok;
-    ok = expect(backFacingFormFactor == 0.0f, "back-facing source patch should produce a zero form factor") && ok;
+    std::vector<SRadiosityPatch> visibilityScene = {receiver, sourceFacing, sourceBackFacing};
+    calculateFormFactorScenePorted(visibilityScene);
+    ok = expect(findFormFactor(visibilityScene[0], sourceFacing.id) > 0.0f, "facing source patch should produce a positive rasterized form factor") && ok;
+    ok = expect(findFormFactor(visibilityScene[0], sourceBackFacing.id) == 0.0f, "back-facing source patch should produce a zero rasterized form factor") && ok;
+
+    SRadiosityPatch depthReceiver = makePatchPorted(0, "depth receiver", Vector3f(-1.0f, -1.0f, 0.0f), Vector3f(1.0f, -1.0f, 0.0f), Vector3f(0.0f, 2.0f, 0.0f), rgb(0.6f, 0.6f, 0.6f));
+    SRadiosityPatch farSource = makePatchPorted(1, "far overlapping source", Vector3f(-0.666667f, 0.666667f, 2.5f), Vector3f(0.666667f, -0.666667f, 2.5f), Vector3f(-0.666667f, -0.666667f, 2.5f), rgb(0.0f, 0.0f, 0.0f), rgb(2.0f, 2.0f, 2.0f));
+    SRadiosityPatch nearSource = makePatchPorted(2, "near overlapping source", Vector3f(-0.4f, 0.4f, 1.5f), Vector3f(0.4f, -0.4f, 1.5f), Vector3f(-0.4f, -0.4f, 1.5f), rgb(0.0f, 0.0f, 0.0f), rgb(2.0f, 2.0f, 2.0f));
+    std::vector<SRadiosityPatch> depthScene = {depthReceiver, farSource, nearSource};
+    calculateFormFactorScenePorted(depthScene);
+    ok = expect(findFormFactor(depthScene[0], nearSource.id) > 0.0f, "near overlapping source should be visible in the raster depth test") && ok;
+    ok = expect(findFormFactor(depthScene[0], farSource.id) == 0.0f, "nearer overlapping source should replace the farther source in the raster depth test") && ok;
 
     std::vector<SRadiosityPatch> scene = makeCornellBoxScenePorted();
     SRadiositySummary summary = calculateFormFactorScenePorted(scene);

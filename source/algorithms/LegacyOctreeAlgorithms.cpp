@@ -24,16 +24,6 @@ Vector3f maxCorner(const CBoundingBox3D &box) {
         std::max(first.z, second.z)};
 }
 
-bool containsTriangle(const std::vector<unsigned int> &triangles, unsigned int triangleIndex) {
-    return std::find(triangles.begin(), triangles.end(), triangleIndex) != triangles.end();
-}
-
-void addUnique(std::vector<unsigned int> &triangles, unsigned int triangleIndex) {
-    if (!containsTriangle(triangles, triangleIndex)) {
-        triangles.push_back(triangleIndex);
-    }
-}
-
 std::vector<unsigned int> allTriangleIndices(const CMeshBuffer &mesh) {
     std::vector<unsigned int> triangleIndices;
     triangleIndices.reserve(mesh.triangles.size() / 3);
@@ -157,7 +147,7 @@ void collectRayCandidates(const SMeshOctreeNode &node, const SRay3D &ray, std::v
     }
 
     for (unsigned int triangleIndex : node.triangleIndices) {
-        addUnique(candidateTriangles, triangleIndex);
+        candidateTriangles.push_back(triangleIndex);
     }
 
     for (const auto &child : node.children) {
@@ -173,7 +163,7 @@ void collectSphereCandidates(const SMeshOctreeNode &node, const SSphere3D &spher
     }
 
     for (unsigned int triangleIndex : node.triangleIndices) {
-        addUnique(candidateTriangles, triangleIndex);
+        candidateTriangles.push_back(triangleIndex);
     }
 
     for (const auto &child : node.children) {

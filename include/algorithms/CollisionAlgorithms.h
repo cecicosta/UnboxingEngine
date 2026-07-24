@@ -31,7 +31,7 @@ template<typename T, int dimension>
 Vector<T, dimension> findIntersectionBetweenLines(const Vector<T, dimension> &l1_point, const Vector<T, dimension> &l1_dir, const Vector<T, dimension> &l2_point, const Vector<T, dimension> &l2_dir);
 
 /// <summary>
-/// Algorithm for checking collision of a list of edges agains a trajectory defined by @start and @end parameters.
+/// Algorithm for checking collision of a list of edges against a trajectory defined by @start and @end parameters.
 /// </summary>
 /// <param name="vertices"> List of vertices representing interconnected edges. </param>
 /// <param name="start"> Start point of the trajectory. </param>

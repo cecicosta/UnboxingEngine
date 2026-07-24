@@ -33,11 +33,11 @@ struct SCornellBoxSubdivision {
 };
 
 struct SCornellTorusConfig {
-    bool enabled = false;
+    bool enabled = true;
     float majorRadius = 0.52f;
     float minorRadius = 0.20f;
-    unsigned int majorSegments = 24;
-    unsigned int minorSegments = 8;
+    unsigned int majorSegments = 8;
+    unsigned int minorSegments = 4;
     Vector3f center = Vector3f(0.15f, -0.10f, 1.35f);
     SRgb reflectance = {0.16f, 0.25f, 0.86f};
     SRgb emissivity;
@@ -46,7 +46,7 @@ struct SCornellTorusConfig {
 struct SCornellBoxConfig {
     SCornellBoxSubdivision subdivision;
     SCornellTorusConfig torus;
-    float lightEmissionScale = 2.0f;
+    float lightEmissionScale = 3.0f;
 };
 
 std::vector<SCornellMeshElement> makeCornellBoxMeshElements();

@@ -90,7 +90,7 @@ SCollisionResult<T, dimension> findPathIntersectionWithSegment(const std::vector
     }
 
     Vector<T, dimension> previous;
-    std::vector<Vector<T, dimension>>::const_iterator v;
+    typename std::vector<Vector<T, dimension>>::const_iterator v;
     if (connectLastVertex) {
         previous = *(vertices.end() - 1);
         v = vertices.begin();
