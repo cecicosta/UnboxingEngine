@@ -160,10 +160,14 @@ SRadiosityPatch makePatchPorted(
 // Original role:
 // - Reject patch pairs whose centroids/normals do not face each other.
 bool isVisiblePorted(const SRadiosityPatch &receiver, const SRadiosityPatch &source) {
-    Vector3f ray = receiver.centroid - source.centroid;
-    float receiverProjection = ray.DotProduct(receiver.normal);
-    float sourceProjection = ray.DotProduct(source.normal);
-    return receiverProjection < -kEpsilon && sourceProjection > kEpsilon;
+    auto dist = source.centroid - receiver.centroid;
+    auto distProjection = dist.DotProduct(receiver.normal);
+    bool isVisible = distProjection > kEpsilon;
+
+    auto normalProjection = receiver.normal.DotProduct(source.normal);
+    isVisible = isVisible || normalProjection < 0;
+
+    return isVisible;
 }
 
 // Adapted from Editor/radiosity/original/hemiesfera.cpp:hemiEsfera::intersectionWithRay.
