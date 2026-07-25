@@ -2,12 +2,14 @@
 
 This directory contains the maintained executable examples used to exercise engine features and preserve older academic algorithms as working ports.
 
-The default example build keeps three active targets:
+The default example build keeps five active targets:
 
 | Target | Main source | Purpose |
 | --- | --- | --- |
 | `2d_collision_vectors` | `2DCollisionVectors.cpp` | Interactive 2D segment and box collision visualization. |
 | `bresenham_voxelization_port` | `BresenhamVoxelizationPort.cpp` | Port of the legacy ray sweep and voxel fill algorithm. |
+| `coctree_torus_minimal` | `COctreeTorusMinimal.cpp` | Minimal torus render that constructs the `COctree` class. |
+| `octree_ray_picking_lab` | `OctreeRayPickingLab.cpp` | Mouse-click ray picking over a triangle mesh with octree traversal highlights. |
 | `radiosity_port` | `RadiosityPort.cpp` | Port of the legacy radiosity patch pipeline with rasterized hemisphere form factors. |
 
 Experimental or superseded examples live in `drafts/` and are not built by default.
@@ -98,6 +100,75 @@ Run one render pass without entering the main loop:
 - default sweep ray count and intersection count
 - filled voxel count for the default cube
 - expected inside and outside voxel membership
+
+## COctree Torus Minimal
+
+Target: `coctree_torus_minimal`
+
+Source file:
+
+- `COctreeTorusMinimal.cpp`
+
+This example creates a torus mesh with `primitive_utils::Torus(...)`, constructs a `COctree` from that mesh, and renders only the torus.
+
+### Running
+
+Build:
+
+```bash
+cmake --build build --target coctree_torus_minimal
+```
+
+Run:
+
+```bash
+./build/Examples/coctree_torus_minimal
+```
+
+## Octree Ray Picking Lab
+
+Target: `octree_ray_picking_lab`
+
+Source file:
+
+- `OctreeRayPickingLab.cpp`
+
+This example builds a triangle torus, builds a mesh octree, and fires a ray from each left mouse click into the object. The first intersected triangle is highlighted, the hit point is marked, the full octree is drawn as wire boxes, and the nodes touched by the current ray traversal are recolored after each pick.
+
+### What The Example Shows
+
+- Building a `SMeshOctree` from a `CMeshBuffer`.
+- Traversing octree node bounding boxes before testing triangles.
+- Comparing candidate triangle tests against a brute-force mesh-ray baseline.
+- Highlighting traversed nodes, candidate nodes, the node holding the first hit, and the first hit triangle.
+
+### Running
+
+Build:
+
+```bash
+cmake --build build --target octree_ray_picking_lab
+```
+
+Run the visual demo:
+
+```bash
+./build/Examples/octree_ray_picking_lab
+```
+
+Left-click inside the window to fire a ray from that screen position.
+
+Run the self-test:
+
+```bash
+./build/Examples/octree_ray_picking_lab --self-test
+```
+
+Run one render pass without entering the main loop:
+
+```bash
+./build/Examples/octree_ray_picking_lab --render-smoke-test
+```
 
 ## Radiosity Port
 

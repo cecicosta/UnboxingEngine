@@ -14,5 +14,11 @@ target_link_libraries(2d_collision_vectors unboxing_engine)
 add_executable(bresenham_voxelization_port BresenhamVoxelizationPort.cpp)
 target_link_libraries(bresenham_voxelization_port unboxing_engine)
 
+add_executable(octree_ray_picking_lab OctreeRayPickingLab.cpp)
+target_link_libraries(octree_ray_picking_lab unboxing_engine)
+
+add_executable(coctree_torus_minimal COctreeTorusMinimal.cpp ../source/COctree.cpp)
+target_link_libraries(coctree_torus_minimal unboxing_engine)
+
 add_executable(radiosity_port RadiosityPort.cpp RadiosityCornellBox.cpp)
 target_link_libraries(radiosity_port unboxing_engine)

@@ -76,8 +76,20 @@ target_link_libraries(unboxing_engine_legacy_collision_algorithm_tests
         gmock
 )
 
+add_executable(unboxing_engine_coctree_tests
+        main.cpp
+        COctreeTests.cpp
+        ../source/COctree.cpp)
+
+target_link_libraries(unboxing_engine_coctree_tests
+        unboxing_engine_src_lib
+        gtest
+        gmock
+)
+
 add_test(NAME unboxing_engine_legacy_collision_algorithm_tests COMMAND unboxing_engine_legacy_collision_algorithm_tests)
 add_test(NAME unboxing_engine_collision_algorithm_tests COMMAND unboxing_engine_collision_algorithm_tests)
+add_test(NAME unboxing_engine_coctree_tests COMMAND unboxing_engine_coctree_tests)
 
 if (WIN32)
     #Copy dll after building

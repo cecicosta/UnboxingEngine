@@ -23,14 +23,14 @@ public:
     std::vector<float> vertices;
     std::vector<float> texcoords;
     std::vector<float> normals;
-    std::vector<unsigned int> triangles; //List of triangle vertices indexes.
+    std::vector<unsigned> triangles; //List of triangle vertices indexes.
     std::vector<face> faces;
     //material *materials;
-    uint nvertices;
-    uint nnormals;
-    uint ntexcoords;
-    uint nfaces;
-    uint nmaterials;
+    unsigned nvertices = 0;
+    unsigned nnormals = 0;
+    unsigned ntexcoords = 0;
+    unsigned nfaces = 0;
+    unsigned nmaterials = 0;
     
     [[nodiscard]] std::unique_ptr<float*> &&GetVertexDataArray() const;
 };

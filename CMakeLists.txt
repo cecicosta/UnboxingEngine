@@ -11,6 +11,8 @@ set(BUILD_SHARED_LIBS FALSE)
 set(BUILD_GMOCK "ON")
 set(INSTALL_GTEST "OFF")
 
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+
 set(BUILD_WITH_EXTERNAL_LIBS ON)
 add_compile_definitions(-DBUILD_WITH_EXTERNAL_LIBS=1)
 
@@ -18,6 +20,7 @@ add_subdirectory(./source)
 add_subdirectory(./sdl_gl_render_system)
 option(UNBOXING_ENGINE_BUILD_TESTS "Build UnboxingEngine test targets" OFF)
 if (UNBOXING_ENGINE_BUILD_TESTS)
+        enable_testing()
         add_subdirectory(./tests)
 endif ()
 add_subdirectory(./Examples ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
