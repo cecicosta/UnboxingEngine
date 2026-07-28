@@ -3,7 +3,8 @@
 namespace unboxing_engine {
 TransformComponent::TransformComponent()
     : m_position(0, 0, 0)
-    , m_scale(1, 1, 1) {
+    , m_scale(1, 1, 1)
+    , m_rotation() {
 }
 
 const Vector3f &TransformComponent::GetPosition() const {
@@ -21,8 +22,8 @@ const Quaternion &TransformComponent::GetRotation() const {
 Matrix4f TransformComponent::GetTransformation() const {
     auto transformation = Matrix4f::Identity();
     transformation = Matrix4f::RotationMatrix(m_rotation) * transformation;
-    transformation = Matrix4f::TranslationMatrix(m_position) * transformation;
     transformation = Matrix4f::ScaleMatrix(m_scale) * transformation;
+    transformation = Matrix4f::TranslationMatrix(m_position) * transformation;
     return transformation;
 }
 
