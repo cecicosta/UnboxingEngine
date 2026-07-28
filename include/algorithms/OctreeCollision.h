@@ -6,6 +6,20 @@
 
 using namespace unboxing_engine;
 
+namespace DebugHelpers {
+inline void AddBoxToMesh(const CBoundingBox3D& box, CMeshBuffer& meshBuffer) {
+    auto vertices = box.GetVertices();
+    auto triangles = box.GetTriangles();
+    const uint32_t baseVertex = meshBuffer.vertices.size() / 3;
+    meshBuffer.vertices.insert(meshBuffer.vertices.end(), vertices.begin(), vertices.end());
+    for (uint32_t index : triangles) {
+        meshBuffer.triangles.push_back(baseVertex + index);
+    }
+}
+
+}
+
+
 struct SRayPointHit {
     bool hit;
     float t;
@@ -36,17 +50,17 @@ inline bool IsPointInsideTriangle(const Vector3f& v1, const Vector3f& v2, const 
     return area1 + area2 + area3 <= 1.0f;
 }
 
+inline std::vector<Vector3f> GetTriangleVertices(const CMeshBuffer& mesh, uint32_t id) {
+    std::vector<Vector3f> vertices(3);
+    for (uint j = 0; j < 3; ++j) {
+        const uint32_t vertexIndex = mesh.triangles[id * 3 + j];
+        const uint32_t vertexOffset = vertexIndex * 3;
 
-inline void GetTriangleFromArray(const std::vector<float>& vertices, unsigned triangleIndex, Vector3f& outV1, Vector3f& outV2, Vector3f& outV3) {
-    Vector3f* triangle[] = {&outV1, &outV2, &outV3};
-    // Iterate over the triangle vertices
-    for (int i = 0; i < 3; ++i) {
-        float x = vertices[triangleIndex + i*3];
-        float y = vertices[triangleIndex + i*3 + 1];
-        float z = vertices[triangleIndex + i*3 + 2];
-        *triangle[i] = Vector3f(x, y, z);
+        vertices[j].x = mesh.vertices[vertexOffset];
+        vertices[j].y = mesh.vertices[vertexOffset + 1];
+        vertices[j].z = mesh.vertices[vertexOffset + 2];
     }
-
+    return vertices;
 }
 
 inline SRayPointHit IntersectionRayWithTriangle(const Vector3f& v1, const Vector3f& v2, const Vector3f& v3, const Vector3f& start, const Vector3f& direction) {
@@ -72,13 +86,21 @@ inline bool IntersectionRayWithBox(const CBoundingBox3D& box, const Vector3f& st
     std::map<float, Vector3f> orderedIntersections;
 
     const auto vertices = box.GetVertices();
-    for (unsigned triangleIndex: box.GetTriangles()) {
-        Vector3f v1, v2, v3;
-        GetTriangleFromArray(vertices, triangleIndex, v1, v2, v3);
-        Vector3f normal = (v2 - v1).CrossProduct(v3 - v1).Normalized();
-        Vector3f ref = v1;
+    const auto triangles = box.GetTriangles();
+    for (unsigned triangleIndex: triangles) {
 
-        if (const auto [hit, t, point] = IntersectionRayWithTriangle(v1, v2, v3, start, direction); hit) {
+        std::vector<Vector3f> triangleVertices(3);
+        for (uint j = 0; j < 3; ++j) {
+            const uint32_t vertexIndex = triangles[triangleIndex * 3 + j];
+            const uint32_t vertexOffset = vertexIndex * 3;
+
+            triangleVertices[j].x = vertices[vertexOffset];
+            triangleVertices[j].y = vertices[vertexOffset + 1];
+            triangleVertices[j].z = vertices[vertexOffset + 2];
+        }
+
+        Vector3f normal = (triangleVertices[1] - triangleVertices[0]).CrossProduct(triangleVertices[2] - triangleVertices[0]).Normalized();
+        if (const auto [hit, t, point] = IntersectionRayWithTriangle(triangleVertices[0], triangleVertices[1], triangleVertices[2], start, direction); hit) {
             orderedIntersections.insert({t, point});
         }
     }
@@ -92,11 +114,14 @@ inline bool IntersectionRayWithBox(const CBoundingBox3D& box, const Vector3f& st
 }
 
 
-inline SRayTriangleHit RayWithOctree(const Vector3f &start, const Vector3f &direction, const COctree &octree) {
+inline SRayTriangleHit RayWithOctree(const Vector3f &start, const Vector3f &direction, const COctree &octree, CMeshBuffer *boxesDebugPathMesh = nullptr) {
 
     std::vector<SOctreeNode*> nodes;
     Vector3f firstHitWithBox;
     if (IntersectionRayWithBox(octree.root->box, start, direction, firstHitWithBox)) {
+        if (boxesDebugPathMesh) {
+            DebugHelpers::AddBoxToMesh(octree.root->box, *boxesDebugPathMesh);
+        }
         nodes.push_back(octree.root.get());
     }
 
@@ -106,22 +131,28 @@ inline SRayTriangleHit RayWithOctree(const Vector3f &start, const Vector3f &dire
         nodes.erase(nodes.begin());
         for (auto && child: u->child) {
             if (child && IntersectionRayWithBox(child->box, start, direction, firstHitWithBox)) {
+                if (boxesDebugPathMesh) {
+                    DebugHelpers::AddBoxToMesh(child->box, *boxesDebugPathMesh);
+                }
                 nodes.push_back(child.get());
             }
         }
 
         for (auto && triangleIndex: u->faces) {
-            Vector3f v1, v2, v3;
-            GetTriangleFromArray(octree.mesh.vertices, triangleIndex, v1, v2, v3);
+            auto vertices = GetTriangleVertices(octree.mesh, triangleIndex);
 
-            const auto [hit, t, intersection] = IntersectionRayWithTriangle(v1, v2, v3, start, direction);
+            const auto [hit, t, intersection] = IntersectionRayWithTriangle(vertices[0], vertices[1], vertices[2], start, direction);
             if (hit) {
-                SRayTriangleHit hitTriangle{true, t, intersection, v1, v2, v3};
+                SRayTriangleHit hitTriangle{true, t, intersection, vertices[0], vertices[1], vertices[2]};
                 orderedIntersections.insert({t, hitTriangle});
             }
         }
     }
     if (!orderedIntersections.empty()) {
+        if (boxesDebugPathMesh) {
+            boxesDebugPathMesh->nvertices += boxesDebugPathMesh->vertices.size() / 3;
+            boxesDebugPathMesh->nfaces += boxesDebugPathMesh->triangles.size() / 3;
+        }
         return orderedIntersections.begin()->second;
     }
 

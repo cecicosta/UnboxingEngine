@@ -35,19 +35,10 @@ void COctree::createOctree(SOctreeNode &node, uint32_t depth, const std::vector<
 
     std::vector<uint32_t> childrenTriangles[8];
     for (uint32_t id: triangleIds) {
-        Vector3f vertice[3];
 
         // Pick up the triangle vertices
         //GetTriangleFromArray(mesh.vertices, id, vertice[0], vertice[1], vertice[2]);
-
-        for (uint j = 0; j < 3; ++j) {
-            const uint32_t vertexIndex = mesh.triangles[id * 3 + j];
-            const uint32_t vertexOffset = vertexIndex * 3;
-
-            vertice[j].x = mesh.vertices[vertexOffset];
-            vertice[j].y = mesh.vertices[vertexOffset + 1];
-            vertice[j].z = mesh.vertices[vertexOffset + 2];
-        }
+        auto vertice = GetTriangleVertices(mesh, id);
 
         bool vertexForwarded = false;
         // Must verify if one of the node's children fully contain the triangle
@@ -173,15 +164,8 @@ void static CreateBoundingBoxesMesh(const SOctreeNode * node, CMeshBuffer& octre
         return;
     }
 
-    auto vertices = node->box.GetVertices();
-    auto triangles = node->box.GetTriangles();
-
     if (fromLevel <= 0 ) {
-        const uint32_t baseVertex = octreeMeshBuffer.vertices.size() / 3;
-        octreeMeshBuffer.vertices.insert(octreeMeshBuffer.vertices.end(), vertices.begin(), vertices.end());
-        for (uint32_t index : triangles) {
-            octreeMeshBuffer.triangles.push_back(baseVertex + index);
-        }
+        DebugHelpers::AddBoxToMesh(node->box, octreeMeshBuffer);
     }
 
     for (auto && child: node->child) {

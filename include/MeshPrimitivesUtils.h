@@ -4,7 +4,9 @@
 #include "BoundingBox2D.h"
 #include "UVector.h"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace unboxing_engine::primitive_utils {
 
@@ -256,6 +258,144 @@ namespace unboxing_engine::primitive_utils {
         float boundsXY = majorRadius + minorRadius;
         mesh->boundingBox = CBoundingBox3D(Vector3f(-boundsXY, -boundsXY, -minorRadius), Vector3f(boundsXY, boundsXY, minorRadius));
         return mesh;
+    }
+
+    [[nodiscard]] inline std::unique_ptr<CMeshBuffer> Cylinder(
+            const Vector3f &bottomCenter,
+            const Vector3f &topCenter,
+            float bottomRadius,
+            float topRadius,
+            unsigned int segments = 32) {
+        constexpr float pi = 3.14159265358979323846f;
+        constexpr float epsilon = 0.000001f;
+        segments = segments < 3 ? 3 : segments;
+        bottomRadius = std::fabs(bottomRadius);
+        topRadius = std::fabs(topRadius);
+
+        auto mesh = std::make_unique<CMeshBuffer>();
+        mesh->nnormals = 0;
+        mesh->ntexcoords = 0;
+        mesh->nmaterials = 0;
+
+        bool hasBounds = false;
+        Vector3f boundsMin;
+        Vector3f boundsMax;
+
+        auto appendVertex = [&](const Vector3f &point) {
+            mesh->vertices.push_back(point.x);
+            mesh->vertices.push_back(point.y);
+            mesh->vertices.push_back(point.z);
+
+            if (!hasBounds) {
+                boundsMin = point;
+                boundsMax = point;
+                hasBounds = true;
+            } else {
+                boundsMin.x = std::min(boundsMin.x, point.x);
+                boundsMin.y = std::min(boundsMin.y, point.y);
+                boundsMin.z = std::min(boundsMin.z, point.z);
+                boundsMax.x = std::max(boundsMax.x, point.x);
+                boundsMax.y = std::max(boundsMax.y, point.y);
+                boundsMax.z = std::max(boundsMax.z, point.z);
+            }
+
+            return static_cast<unsigned int>(mesh->vertices.size() / 3 - 1);
+        };
+
+        auto appendTriangle = [&](unsigned int vertex0, unsigned int vertex1, unsigned int vertex2) {
+            mesh->triangles.push_back(vertex0);
+            mesh->triangles.push_back(vertex1);
+            mesh->triangles.push_back(vertex2);
+        };
+
+        const bool hasBottomRadius = bottomRadius > epsilon;
+        const bool hasTopRadius = topRadius > epsilon;
+        if (!hasBottomRadius && !hasTopRadius) {
+            appendVertex(bottomCenter);
+            appendVertex(topCenter);
+            mesh->nvertices = static_cast<unsigned int>(mesh->vertices.size() / 3);
+            mesh->nfaces = 0;
+            mesh->boundingBox = CBoundingBox3D(boundsMin, boundsMax);
+            return mesh;
+        }
+
+        const Vector3f axis = topCenter - bottomCenter;
+        const float height = axis.Length();
+        const Vector3f axisDirection = height > epsilon ? axis / height : Vector3f(0.0f, 0.0f, 1.0f);
+        const Vector3f reference = std::fabs(axisDirection.y) < 0.999f
+                                           ? Vector3f(0.0f, 1.0f, 0.0f)
+                                           : Vector3f(1.0f, 0.0f, 0.0f);
+        Vector3f tangent = reference.CrossProduct(axisDirection);
+        const float tangentLength = tangent.Length();
+        tangent = tangentLength > epsilon ? tangent / tangentLength : Vector3f(1.0f, 0.0f, 0.0f);
+        const Vector3f bitangent = axisDirection.CrossProduct(tangent).Normalized();
+
+        std::vector<unsigned int> bottomRing;
+        std::vector<unsigned int> topRing;
+        bottomRing.reserve(segments);
+        topRing.reserve(segments);
+        mesh->vertices.reserve((segments * 2 + 2) * 3);
+        mesh->triangles.reserve(segments * 12);
+
+        for (unsigned int i = 0; i < segments; ++i) {
+            const float angle = 2.0f * pi * static_cast<float>(i) / static_cast<float>(segments);
+            const Vector3f radial = tangent * cosf(angle) + bitangent * sinf(angle);
+            if (hasBottomRadius) {
+                bottomRing.push_back(appendVertex(bottomCenter + radial * bottomRadius));
+            }
+            if (hasTopRadius) {
+                topRing.push_back(appendVertex(topCenter + radial * topRadius));
+            }
+        }
+
+        unsigned int bottomCenterIndex = std::numeric_limits<unsigned int>::max();
+        unsigned int topCenterIndex = std::numeric_limits<unsigned int>::max();
+        if (!hasBottomRadius) {
+            bottomCenterIndex = appendVertex(bottomCenter);
+        }
+        if (!hasTopRadius) {
+            topCenterIndex = appendVertex(topCenter);
+        }
+        if (hasBottomRadius) {
+            bottomCenterIndex = appendVertex(bottomCenter);
+        }
+        if (hasTopRadius) {
+            topCenterIndex = appendVertex(topCenter);
+        }
+
+        for (unsigned int i = 0; i < segments; ++i) {
+            const unsigned int next = (i + 1) % segments;
+
+            if (hasBottomRadius && hasTopRadius) {
+                appendTriangle(bottomRing[i], bottomRing[next], topRing[next]);
+                appendTriangle(bottomRing[i], topRing[next], topRing[i]);
+            } else if (hasBottomRadius) {
+                appendTriangle(bottomRing[i], bottomRing[next], topCenterIndex);
+            } else if (hasTopRadius) {
+                appendTriangle(bottomCenterIndex, topRing[next], topRing[i]);
+            }
+
+            if (hasBottomRadius) {
+                appendTriangle(bottomCenterIndex, bottomRing[next], bottomRing[i]);
+            }
+            if (hasTopRadius) {
+                appendTriangle(topCenterIndex, topRing[i], topRing[next]);
+            }
+        }
+
+        mesh->nvertices = static_cast<unsigned int>(mesh->vertices.size() / 3);
+        mesh->nfaces = static_cast<unsigned int>(mesh->triangles.size() / 3);
+        mesh->faces.resize(mesh->nfaces);
+        mesh->boundingBox = CBoundingBox3D(boundsMin, boundsMax);
+        return mesh;
+    }
+
+    [[nodiscard]] inline std::unique_ptr<CMeshBuffer> Cylinder(
+            const Vector3f &bottomCenter,
+            const Vector3f &topCenter,
+            float radius,
+            unsigned int segments = 32) {
+        return Cylinder(bottomCenter, topCenter, radius, radius, segments);
     }
 
     
