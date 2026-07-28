@@ -259,7 +259,7 @@ public:
         }
 
         glPolygonMode(GL_FRONT_AND_BACK, polygonMode == EPolygonMode::Fill ? GL_FILL : GL_LINE);
-        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_TRUE, (mCamera.mTransformation * renderContextHandle.sceneComposite.GetWorldTransformation()).ToArray());
+        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection_matrix"), 1, GL_TRUE, (mCamera.GetProjectionMatrix() * mCamera.GetViewMatrix() * renderContextHandle.sceneComposite.GetWorldTransformation()).ToArray());
         glUniform4fv(glGetUniformLocation(program, "color"), 1, material->materialDif);
         glBindVertexArray(renderContextHandle.renderBufferHandle->vao);
         glDrawElements(GL_TRIANGLES, renderContextHandle.renderBufferHandle->ntriangles * 3, GL_UNSIGNED_INT, nullptr);

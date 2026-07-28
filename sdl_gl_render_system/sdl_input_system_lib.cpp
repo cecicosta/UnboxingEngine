@@ -25,16 +25,18 @@ inline static bool OnMouseInput(const SDL_Event& event, core_events::SCursor& cu
             event_detected = true;
             break;
         case SDL_MOUSEBUTTONDOWN:
+            cursor.x = event.button.x;
+            cursor.y = event.button.y;
 
             if (event.button.button == SDL_BUTTON_LEFT && !cursor.isButtonPressed) {
                 cursor.cursorState[L_BUTTON] = 1;
-                cursor.buttonPressedX = event.motion.x;
-                cursor.buttonPressedY = event.motion.y;
+                cursor.buttonPressedX = event.button.x;
+                cursor.buttonPressedY = event.button.y;
             }
             if (event.button.button == SDL_BUTTON_RIGHT && !cursor.isButtonPressed) {
                 cursor.cursorState[R_BUTTON] = 1;
-                cursor.buttonPressedX = event.motion.x;
-                cursor.buttonPressedY = event.motion.y;
+                cursor.buttonPressedX = event.button.x;
+                cursor.buttonPressedY = event.button.y;
             }
             cursor.isButtonPressed = true;
 

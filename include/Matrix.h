@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <cstring>
 
+constexpr float pi = 3.1415926f;
+
 template<typename T, int Rows, int Columns = Rows>
 class Matrix {
 
