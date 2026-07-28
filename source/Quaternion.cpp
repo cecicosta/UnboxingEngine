@@ -6,15 +6,15 @@
 
 constexpr static float s_PI = 3.14159265359;
 
-Quaternion::Quaternion() = default;
+Quaternion::Quaternion() : Vector3f() , w(1) {}
 
 Quaternion::Quaternion(const Vector3f &v)
     : Vector3f(v)
-    , w(0) {}
+    , w(1) {}
 
 Quaternion::Quaternion(const Vector2f &v)
     : Vector3f(v.x, v.y, 0)
-    , w(0) {}
+    , w(1) {}
 
 Quaternion::Quaternion(float angle, Vector3f axi) {
     float angle_rad = s_PI * angle / 180.0f;
