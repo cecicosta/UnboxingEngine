@@ -38,7 +38,7 @@ void COctree::createOctree(SOctreeNode &node, uint32_t depth, const std::vector<
 
         // Pick up the triangle vertices
         //GetTriangleFromArray(mesh.vertices, id, vertice[0], vertice[1], vertice[2]);
-        auto vertice = GetTriangleVertices(mesh, id);
+        auto vertice = collision_primitives::GetTriangleVertices(mesh, id);
 
         bool vertexForwarded = false;
         // Must verify if one of the node's children fully contain the triangle
@@ -185,5 +185,4 @@ std::unique_ptr<CMeshBuffer> COctree::Debug_CreateBoundingBoxesMesh(int fromLeve
 
     return std::move(octreeMeshBuffer);
 }
-
 
