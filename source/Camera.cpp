@@ -77,28 +77,28 @@ void Camera::SetOrthographicIsometric(float viewWidth, float viewHeight, float d
     const float cosPitch = cosf(pitch);
     const float sinPitch = sinf(pitch);
 
-    mTransformation = Matrix4f::Identity();
-    mTransformation.at(0, 0) = cosYaw * 2.0f / safeViewWidth;
-    mTransformation.at(0, 1) = -sinYaw * 2.0f / safeViewWidth;
-    mTransformation.at(0, 2) = 0.0f;
-    mTransformation.at(0, 3) = -(mTransformation.at(0, 0) * focus.x + mTransformation.at(0, 1) * focus.y + mTransformation.at(0, 2) * focus.z);
+    mProjectionMatrix = Matrix4f::Identity();
+    mProjectionMatrix.at(0, 0) = cosYaw * 2.0f / safeViewWidth;
+    mProjectionMatrix.at(0, 1) = -sinYaw * 2.0f / safeViewWidth;
+    mProjectionMatrix.at(0, 2) = 0.0f;
+    mProjectionMatrix.at(0, 3) = -(mProjectionMatrix.at(0, 0) * focus.x + mProjectionMatrix.at(0, 1) * focus.y + mProjectionMatrix.at(0, 2) * focus.z);
 
-    mTransformation.at(1, 0) = sinPitch * sinYaw * 2.0f / safeViewHeight;
-    mTransformation.at(1, 1) = sinPitch * cosYaw * 2.0f / safeViewHeight;
-    mTransformation.at(1, 2) = cosPitch * 2.0f / safeViewHeight;
-    mTransformation.at(1, 3) = -(mTransformation.at(1, 0) * focus.x + mTransformation.at(1, 1) * focus.y + mTransformation.at(1, 2) * focus.z);
+    mProjectionMatrix.at(1, 0) = sinPitch * sinYaw * 2.0f / safeViewHeight;
+    mProjectionMatrix.at(1, 1) = sinPitch * cosYaw * 2.0f / safeViewHeight;
+    mProjectionMatrix.at(1, 2) = cosPitch * 2.0f / safeViewHeight;
+    mProjectionMatrix.at(1, 3) = -(mProjectionMatrix.at(1, 0) * focus.x + mProjectionMatrix.at(1, 1) * focus.y + mProjectionMatrix.at(1, 2) * focus.z);
 
-    mTransformation.at(2, 0) = cosPitch * sinYaw * 2.0f / safeDepthRange;
-    mTransformation.at(2, 1) = cosPitch * cosYaw * 2.0f / safeDepthRange;
-    mTransformation.at(2, 2) = -sinPitch * 2.0f / safeDepthRange;
-    mTransformation.at(2, 3) = -(mTransformation.at(2, 0) * focus.x + mTransformation.at(2, 1) * focus.y + mTransformation.at(2, 2) * focus.z);
+    mProjectionMatrix.at(2, 0) = cosPitch * sinYaw * 2.0f / safeDepthRange;
+    mProjectionMatrix.at(2, 1) = cosPitch * cosYaw * 2.0f / safeDepthRange;
+    mProjectionMatrix.at(2, 2) = -sinPitch * 2.0f / safeDepthRange;
+    mProjectionMatrix.at(2, 3) = -(mProjectionMatrix.at(2, 0) * focus.x + mProjectionMatrix.at(2, 1) * focus.y + mProjectionMatrix.at(2, 2) * focus.z);
 
-    mTransformation.at(3, 0) = 0.0f;
-    mTransformation.at(3, 1) = 0.0f;
-    mTransformation.at(3, 2) = 0.0f;
-    mTransformation.at(3, 3) = 1.0f;
+    mProjectionMatrix.at(3, 0) = 0.0f;
+    mProjectionMatrix.at(3, 1) = 0.0f;
+    mProjectionMatrix.at(3, 2) = 0.0f;
+    mProjectionMatrix.at(3, 3) = 1.0f;
 
-    mWorldToCamTransformation = mTransformation;
+    mWorldToCamTransformation = mProjectionMatrix;
     mPosition = focus;
 }
 
