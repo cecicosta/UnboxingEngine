@@ -34,6 +34,8 @@ public:
 
     [[nodiscard]] T Length() const;
 
+    [[nodiscard]] T SqrLength() const;
+
     [[nodiscard]] Vector<T, Axis> Normalized() const;
 
     [[nodiscard]] T DotProduct(const Vector<T, Axis> &vet) const;

@@ -33,6 +33,16 @@ public:
     unsigned nmaterials = 0;
     
     [[nodiscard]] std::unique_ptr<float*> &&GetVertexDataArray() const;
+
+    CMeshBuffer() = default;
+    CMeshBuffer(size_t numberOfVertices) {
+        nnormals = 0;
+        ntexcoords = 0;
+        nfaces = 0;
+        vertices.resize(3 * 2 * numberOfVertices - 3);
+        triangles.resize(3 * (numberOfVertices-1));
+        nvertices = 0;
+    }
 };
 
 }// namespace unboxing_engine

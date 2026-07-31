@@ -132,7 +132,7 @@ std::vector<unsigned int> CBoundingBox3D::GetVertexIdList(EFace face) const {
     return { mFaces.begin() + static_cast<unsigned int>(face)*6, mFaces.begin() + static_cast<unsigned int>(face)*6 + 6 };
 }
 
-Vector3f CBoundingBox3D::GetVertex(EFace face, int vIndex) {
+Vector3f CBoundingBox3D::GetVertex(EFace face, int vIndex) const {
     auto vIndexList = GetVertexIdList(face);
     return {*mVertices[vIndexList[vIndex]*3], *mVertices[(vIndexList[vIndex])*3 + 1], *mVertices[(vIndexList[vIndex])*3 + 2]};
 }

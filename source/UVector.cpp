@@ -67,6 +67,11 @@ T Vector<T, Axis>::Length() const {
     return std::sqrt(x * x + y * y + z * z);
 }
 
+template<class T, int Axis>
+T Vector<T, Axis>::SqrLength() const {
+    return x * x + y * y + z * z;
+}
+
 TEMPLATE_PREDICATE_ARG0_RETURN_ARG1 Normalized() const {
     T length = Length();
     return {x / length, y / length, z / length};

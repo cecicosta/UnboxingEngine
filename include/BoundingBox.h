@@ -22,7 +22,7 @@ public:
     [[nodiscard]] Vector3f getSecond() const;
     [[nodiscard]] Vector3f getPivot() const;
 
-    [[nodiscard]] Vector3f GetVertex(EFace face, int vIndex);
+    [[nodiscard]] Vector3f GetVertex(EFace face, int vIndex) const;
     [[nodiscard]] std::vector<float> GetVertices() const;
     [[nodiscard]] std::vector<unsigned int> GetTriangles() const;
     [[nodiscard]] std::vector<unsigned int> GetVertexIdList(EFace face) const;

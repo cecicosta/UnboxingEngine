@@ -22,3 +22,6 @@ target_link_libraries(coctree_torus_minimal unboxing_engine)
 
 add_executable(radiosity_port RadiosityPort.cpp RadiosityCornellBox.cpp)
 target_link_libraries(radiosity_port unboxing_engine)
+
+add_executable(circle_triangle_collision CircleTriangleCollision.cpp)
+target_link_libraries(circle_triangle_collision unboxing_engine)
