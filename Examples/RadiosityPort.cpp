@@ -660,7 +660,7 @@ void runVisualExample(bool enterMainLoop) {
     std::cout << "Final max delta: " << summary.maxDelta << "\n";
 
     CCore engine(1200, 720, 32);
-    Camera camera(1200, 720, 70.0f, 1.0f, 1.0f);
+    Camera camera(1200, 720, 70.0f, 1.0f, 100.0f);
     camera.SetOrthographicIsometric(10.5f, 7.0f, 22.0f, Vector3f(0.0f, 0.0f, 1.4f), -45.0f, 33.0f);
     engine.SetCamera(camera);
     engine.Start();
