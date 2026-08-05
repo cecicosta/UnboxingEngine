@@ -96,6 +96,10 @@ private:
 
 int main(int argc, char *argv[]) {
     CCore engine(640, 480, 32);
+    Camera camera(1280, 720, 10, 1, 100);
+    camera.SetOrthographicProjection();
+    camera.SetPosition({0, 0, 10});
+    engine.SetCamera(camera);
     engine.Start();
 
     std::unique_ptr<CSegment> segment = std::make_unique<CSegment>(engine);
