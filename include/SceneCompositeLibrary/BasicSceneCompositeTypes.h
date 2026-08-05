@@ -119,4 +119,182 @@ public:
 private:
     CMeshBuffer mMesh;
 };
+
+
+
+static const char *vertex_shader_source = R"(
+#version 150 core
+
+in vec3 i_position;
+uniform mat4 u_projection_matrix;
+uniform vec4 color;
+
+out vec4 vGlobalPosition;
+out vec3 vLocalPosition;
+out vec4 v_color;
+void main()
+{
+    vLocalPosition = i_position;
+    vGlobalPosition = u_projection_matrix *
+        vec4(i_position, 1.0);
+    v_color = color;
+
+    gl_Position = vGlobalPosition;
+}
+)";
+
+static const char *fragment_shader_source = R"(
+#version 150 core
+
+in vec4 vGlobalPosition;
+in vec3 vLocalPosition;
+in vec4 v_color;
+
+// Elementary charge
+float e = 1.602e-19; // [C]
+
+// Permittivity of free space
+float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
+
+// Atomic unit of length
+float a0 = 5.29177210544e-11; //[m] Borh radius (4\pi*\empsilon_0*\hbar^2) / (e^2 * m_e);
+
+out vec4 FragColor;
+
+
+
+void main()
+{
+    vec3 dx = dFdx(vGlobalPosition.xyz);
+    vec3 dy = dFdy(vGlobalPosition.xyz);
+
+    vec3 camera = vec3(0,0,100);
+
+    vec3 faceNormal = normalize(cross(dx, dy));
+
+    float direction = dot(camera - vGlobalPosition.xyz, faceNormal);
+    vec4 color;
+    float distance = length(camera - vGlobalPosition.xyz)/100;
+
+    if(gl_FrontFacing) {
+        color = vec4(0.15/-distance, 0, 0, -distance);
+    } else {
+        color = vec4(0, 0.15/distance, 0, distance);
+    }
+
+    float PI = 3.141592;
+
+    // We cannot simply use the 3D vector length as all the points of the sphere sits on ints surface
+    float r = length(vGlobalPosition.xy)*(a0);
+
+    float V0 = (e*e)/(4*PI*E0*a0);
+    float V = (e*e)/(4*PI*E0*r);
+
+    // Get the inverse of the decay, since we want fade the color
+    float decay = 1 - V/V0;
+
+    // There will always be at least 2 fragments of the sphere at the same projected position.
+    // As the points get near the radius, there will be proportionally more points compressed together
+    // Their alpha will be summed up on the z buffer. We either must account for that, or use solid colors
+    FragColor = vec4(
+        v_color.rgb - v_color.rgb*decay,
+        v_color.a
+    );
+    FragColor = color;
+}
+)";
+
+
+class CustomShaderComposite : public CSceneComposite {
+public:
+    explicit CustomShaderComposite(const CMeshBuffer &mesh)
+        : mMesh(mesh) {
+        auto render = std::make_unique<CustomShaderMeshRenderComponent>(mMesh);
+        render->SetMaterial(yellowMaterial());
+        render->SetPolygonMode(EPolygonMode::Fill);
+
+        render->SetVertexShader(vertex_shader_source);
+        render->SetFragmentShader(fragment_shader_source);
+
+        AddComponent<IRenderComponent>(std::move(render));
+    }
+
+    void SetMaterial(const SMaterial &material) {
+        auto render = GetComponent<IRenderComponent>();
+        render->SetMaterial(material);
+    }
+
+private:
+    CMeshBuffer mMesh;
+};
+
+
+
+
+static const char *electron_fragment_shader = R"(
+#version 330 core
+
+in vec3 vLocalPosition; // Position relative to electron's reference
+in vec4 v_color;
+
+vec3 vNucleusCenter(0, 0, 0);
+
+// Elementary charge
+float e = 1.602e-19; // [C]
+
+// Permittivity of free space
+float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
+
+// Atomic unit of length
+float a0 = 5.29177210544e-11; //[m] Borh radius (4\pi*\empsilon_0*\hbar^2) / (e^2 * m_e);
+
+out vec4 FragColor;
+
+void main()
+{
+    float PI = 3.141592;
+
+    // We cannot simply use the 3D vector length as all the points of the sphere sits on ints surface
+    float r = length(vLocalPosition.xy)*(a0);
+
+    float V0 = (e*e)/(4*PI*E0*a0);
+    float V = (e*e)/(4*PI*E0*r);
+
+    // Get the inverse of the decay, since we want fade the color
+    float decay = 1 - V/V0;
+
+    // There will always be at least 2 fragments of the sphere at the same projected position.
+    // As the points get near the radius, there will be proportionally more points compressed together
+    // Their alpha will be summed up on the z buffer. We either must account for that, or use solid colors
+    FragColor = vec4(
+        v_color.rgb - v_color.rgb*decay,
+        v_color.a
+    );
+}
+)";
+
+
+constexpr float PI = 3.141592653589793238462643383279;
+constexpr float kEpsilon = 1e-10;
+
+// Permittivity of free space
+constexpr float vacuum_permittivity = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
+// Elementary charge
+constexpr float elementary_charge = 1.602e-19; // [C]
+
+/**
+ * Calculates the value of the potential at a given radius (r [m]) from the charge (z [C]).
+ * param r - Radius of the shell, in meters, for which to calculate the radial potential.
+ * param z - Elementary charge the particle or group of particles, in Coulombs, generating the field possesses.
+ */
+inline float CoulombRadialPotential(const float r, const int z) {
+    return (static_cast<float>(z)*pow(elementary_charge, 2.0f))/(4*PI*vacuum_permittivity*r);
+}
+
+inline float KineticEnergy(const float m, const Vector3f& v) {
+    return 0.5f * v.DotProduct(v) * m; // 1/2 mv^2
+}
+
+
+
 }// namespace unboxing_engine

@@ -5,6 +5,7 @@
 #include "systems/IRenderSystem.h"
 
 #include <memory>
+#include <string>
 
 namespace unboxing_engine {
 class CMeshBuffer;
@@ -47,8 +48,26 @@ public:
     void OnInitialize(systems::IRenderSystem &renderSystem) override;
     void ReleaseRenderContext() override;
     void OnRender() override;
-private:
-    void UpdateRenderContext();
-    systems::IRenderSystem *mRenderSystem;
+protected:
+    virtual void UpdateRenderContext();
+    systems::IRenderSystem *mRenderSystem = nullptr;
 };
+
+namespace systems {
+struct SShaderHandle;
+}
+class CustomShaderMeshRenderComponent : public CDefaultMeshRenderComponent {
+public:
+    CustomShaderMeshRenderComponent(const CMeshBuffer &meshBuffer);
+    void SetVertexShader(const char* shader);
+    void SetFragmentShader(const char* shader);
+
+    void OnInitialize(systems::IRenderSystem &renderSystem) override;
+private:
+    void UpdateRenderContext() override;
+    std::string mVertexShader;
+    std::string mFragmentShader;
+    const systems::SShaderHandle *mShaderHandle = nullptr;
+};
+
 }// namespace unboxing_engine
