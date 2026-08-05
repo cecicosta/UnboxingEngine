@@ -5,10 +5,10 @@
 
 using namespace unboxing_engine;
 
-class CMouseTrackingCircle : public CSceneComposite
+class CMouseTrackingSphere : public CSceneComposite
     , public UListener<core_events::IMouseInputEvent> {
 public:
-    CMouseTrackingCircle(CCore& engine, float radius) : mEngine(engine) {
+    CMouseTrackingSphere(CCore& engine, float radius) : mEngine(engine) {
         float angleIncrement = 360*(pi / 180) / 24.0;
         CMeshBuffer circleMesh(24);
         for (int i = 0; i < 24; ++i) {
@@ -45,7 +45,7 @@ private:
 
 class CCircleTriangleCollisionTest : public CSceneComposite, public UListener<core_events::IUpdateListener> {
 public:
-    CCircleTriangleCollisionTest(CCore& engine, const CMouseTrackingCircle& circle) : mCircle(circle) {
+    CCircleTriangleCollisionTest(CCore& engine, const CMouseTrackingSphere& circle) : mCircle(circle) {
 
 
         mEdges.emplace_back(std::make_unique<CSimpleMeshWireFrame>(*primitive_utils::Lines(v1, v2)));
@@ -102,7 +102,7 @@ public:
 private:
     float mCircleRadius {0};
     Vector3f mCircleCenter;
-    const CMouseTrackingCircle& mCircle;
+    const CMouseTrackingSphere& mCircle;
     std::vector<std::unique_ptr<CSimpleMeshWireFrame>> mEdges;
 
     const Vector3f v1{0.5f, 0.5f, 0};
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     engine.Start();
 
     float radius = 0.05f;
-    CMouseTrackingCircle trackingCircle(engine, radius);
+    CMouseTrackingSphere trackingCircle(engine, radius);
     trackingCircle.SetPosition({0, -0.6f, 0});
     engine.RegisterSceneElement(trackingCircle);
 
