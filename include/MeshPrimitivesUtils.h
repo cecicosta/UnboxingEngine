@@ -260,6 +260,86 @@ namespace unboxing_engine::primitive_utils {
         return mesh;
     }
 
+    [[nodiscard]] inline std::unique_ptr<CMeshBuffer> Sphere(float radius, unsigned int longitudeSegments = 32, unsigned int latitudeSegments = 16) {
+        constexpr float pi = 3.14159265358979323846f;
+        radius = std::fabs(radius);
+        longitudeSegments = longitudeSegments < 3 ? 3 : longitudeSegments;
+        latitudeSegments = latitudeSegments < 2 ? 2 : latitudeSegments;
+
+        auto mesh = std::make_unique<CMeshBuffer>();
+        mesh->nnormals = 0;
+        mesh->ntexcoords = 0;
+        mesh->nmaterials = 0;
+
+        const unsigned int ringCount = latitudeSegments - 1;
+        mesh->nvertices = ringCount * longitudeSegments + 2;
+        mesh->nfaces = 2 * longitudeSegments + (latitudeSegments - 2) * longitudeSegments * 2;
+        mesh->vertices.reserve(mesh->nvertices * 3);
+        mesh->triangles.reserve(mesh->nfaces * 3);
+        mesh->faces.resize(mesh->nfaces);
+
+        auto appendVertex = [&](const Vector3f &point) {
+            mesh->vertices.push_back(point.x);
+            mesh->vertices.push_back(point.y);
+            mesh->vertices.push_back(point.z);
+            return static_cast<unsigned int>(mesh->vertices.size() / 3 - 1);
+        };
+
+        auto appendTriangle = [&](unsigned int vertex0, unsigned int vertex1, unsigned int vertex2) {
+            mesh->triangles.push_back(vertex0);
+            mesh->triangles.push_back(vertex1);
+            mesh->triangles.push_back(vertex2);
+        };
+
+        const unsigned int topIndex = appendVertex(Vector3f(0.0f, 0.0f, radius));
+        for (unsigned int latitude = 1; latitude < latitudeSegments; ++latitude) {
+            const float latitudeAngle = pi * static_cast<float>(latitude) / static_cast<float>(latitudeSegments);
+            const float z = radius * cosf(latitudeAngle);
+            const float ringRadius = radius * sinf(latitudeAngle);
+
+            for (unsigned int longitude = 0; longitude < longitudeSegments; ++longitude) {
+                const float longitudeAngle = 2.0f * pi * static_cast<float>(longitude) / static_cast<float>(longitudeSegments);
+                appendVertex(Vector3f(ringRadius * cosf(longitudeAngle), ringRadius * sinf(longitudeAngle), z));
+            }
+        }
+        const unsigned int bottomIndex = appendVertex(Vector3f(0.0f, 0.0f, -radius));
+
+        auto ringVertex = [longitudeSegments](unsigned int ring, unsigned int longitude) {
+            return 1 + ring * longitudeSegments + longitude;
+        };
+
+        for (unsigned int longitude = 0; longitude < longitudeSegments; ++longitude) {
+            const unsigned int nextLongitude = (longitude + 1) % longitudeSegments;
+            appendTriangle(topIndex, ringVertex(0, longitude), ringVertex(0, nextLongitude));
+        }
+
+        for (unsigned int ring = 0; ring + 1 < ringCount; ++ring) {
+            const unsigned int nextRing = ring + 1;
+            for (unsigned int longitude = 0; longitude < longitudeSegments; ++longitude) {
+                const unsigned int nextLongitude = (longitude + 1) % longitudeSegments;
+                const unsigned int current = ringVertex(ring, longitude);
+                const unsigned int nextLatitude = ringVertex(nextRing, longitude);
+                const unsigned int nextLongitudeCurrent = ringVertex(ring, nextLongitude);
+                const unsigned int nextBoth = ringVertex(nextRing, nextLongitude);
+
+                appendTriangle(current, nextLatitude, nextBoth);
+                appendTriangle(nextBoth, nextLongitudeCurrent, current);
+            }
+        }
+
+        const unsigned int lastRing = ringCount - 1;
+        for (unsigned int longitude = 0; longitude < longitudeSegments; ++longitude) {
+            const unsigned int nextLongitude = (longitude + 1) % longitudeSegments;
+            appendTriangle(ringVertex(lastRing, longitude), bottomIndex, ringVertex(lastRing, nextLongitude));
+        }
+
+        mesh->nvertices = static_cast<unsigned int>(mesh->vertices.size() / 3);
+        mesh->nfaces = static_cast<unsigned int>(mesh->triangles.size() / 3);
+        const Vector3f bounds(radius, radius, radius);
+        mesh->boundingBox = CBoundingBox3D(bounds * -1.0f, bounds);
+        return mesh;
+    }
+
     [[nodiscard]] inline std::unique_ptr<CMeshBuffer> Cylinder(
             const Vector3f &bottomCenter,
             const Vector3f &topCenter,
