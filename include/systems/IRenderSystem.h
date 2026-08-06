@@ -17,19 +17,35 @@ namespace unboxing_engine::systems {
 
 struct SShaderHandle;
 struct SRenderBufferHandle;
+struct STextureHandle;
+
+enum class ETextureFormat {
+    RGBA32F,
+    RGBA8U,
+};
+
+enum class ERenderTargetKind {
+    DefaultFramebuffer,
+    FloatingPointAccumulation
+};
+
 struct SRenderContextHandle {
-    SRenderContextHandle(const SRenderBufferHandle* _renderBufferHandle, const SShaderHandle* _shaderHandle, const CSceneComposite& _sceneComposite)
+    SRenderContextHandle(const SRenderBufferHandle* _renderBufferHandle, const SShaderHandle* _shaderHandle, const CSceneComposite& _sceneComposite, const STextureHandle* _textureHandle = nullptr, ERenderTargetKind _renderTargetKind = ERenderTargetKind::DefaultFramebuffer)
     : renderBufferHandle(_renderBufferHandle)
     , shaderHandle(_shaderHandle)
-    , sceneComposite(_sceneComposite) {}
+    , sceneComposite(_sceneComposite)
+    , textureHandle(_textureHandle)
+    , renderTargetKind(_renderTargetKind) {}
     const SRenderBufferHandle *renderBufferHandle;
     const SShaderHandle *shaderHandle;
     const CSceneComposite &sceneComposite;
+    const STextureHandle *textureHandle;
+    ERenderTargetKind renderTargetKind;
 };
 
 class IRenderSystem: public UListener<core_events::IPreRenderListener, core_events::IPostRenderListener> {
 public:
-    virtual ~IRenderSystem() = default;
+    ~IRenderSystem() override = default;
 
     [[nodiscard]] virtual bool Initialize() = 0;
     [[nodiscard]] virtual SShaderHandle* CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) const = 0;
@@ -38,8 +54,9 @@ public:
     [[nodiscard]] virtual const Camera &GetCamera() const = 0;
     [[nodiscard]] virtual const SShaderHandle *GetDefaultShader() const = 0;
     virtual void SetCamera(const Camera& camera) = 0;
-
     virtual void Render(const SRenderContextHandle &renderContextHandle) = 0;
+    virtual STextureHandle *CreateTexture(uint32_t width, uint32_t height, ETextureFormat format) = 0;
+    virtual void RenderToTexture(const SRenderContextHandle &renderContextHandle, STextureHandle *textureHandle) = 0;
 };
 
 }// namespace unboxing_engine

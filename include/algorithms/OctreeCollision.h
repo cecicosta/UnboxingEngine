@@ -67,3 +67,9 @@ inline collision_primitives::SRayTriangleHit RayWithOctree(const Vector3f &start
 
     return {};
 }
+
+
+inline void SphereWithOctree(const Vector3f &center, float radius, CMeshBuffer &meshBuffer) {
+
+
+}

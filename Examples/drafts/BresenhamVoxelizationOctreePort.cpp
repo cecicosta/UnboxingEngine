@@ -335,7 +335,7 @@ std::vector<Vector3f> rayCollisionsWithMeshOctreePorted(
     std::size_t &candidateTriangleTests) {
 
     const SRay3D ray3D{point, ray};
-    const std::vector<STriangleHit3D> hits = rayWithMeshOctreePorted(mesh, octree, ray3D, false, &candidateTriangleTests);
+    const std::vector<STriangleHit3D> hits = rayWithMeshOctreePorted(mesh, octree, ray3D, &candidateTriangleTests);
     return uniqueIntersectionsFromHits(hits, point);
 }
 

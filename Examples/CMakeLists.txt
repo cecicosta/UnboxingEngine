@@ -25,3 +25,6 @@ target_link_libraries(radiosity_port unboxing_engine)
 
 add_executable(circle_triangle_collision CircleTriangleCollision.cpp)
 target_link_libraries(circle_triangle_collision unboxing_engine)
+
+add_executable(atom_simulation AtomSimulation.cpp)
+target_link_libraries(atom_simulation unboxing_engine)

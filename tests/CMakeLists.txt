@@ -87,9 +87,20 @@ target_link_libraries(unboxing_engine_coctree_tests
         gmock
 )
 
+add_executable(unboxing_engine_mesh_primitive_tests
+        main.cpp
+        MeshPrimitivesUtilsTests.cpp)
+
+target_link_libraries(unboxing_engine_mesh_primitive_tests
+        unboxing_engine_src_lib
+        gtest
+        gmock
+)
+
 add_test(NAME unboxing_engine_legacy_collision_algorithm_tests COMMAND unboxing_engine_legacy_collision_algorithm_tests)
 add_test(NAME unboxing_engine_collision_algorithm_tests COMMAND unboxing_engine_collision_algorithm_tests)
 add_test(NAME unboxing_engine_coctree_tests COMMAND unboxing_engine_coctree_tests)
+add_test(NAME unboxing_engine_mesh_primitive_tests COMMAND unboxing_engine_mesh_primitive_tests)
 
 if (WIN32)
     #Copy dll after building

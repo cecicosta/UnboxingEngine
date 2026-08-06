@@ -63,11 +63,24 @@ public:
     void SetFragmentShader(const char* shader);
 
     void OnInitialize(systems::IRenderSystem &renderSystem) override;
-private:
+protected:
     void UpdateRenderContext() override;
     std::string mVertexShader;
     std::string mFragmentShader;
     const systems::SShaderHandle *mShaderHandle = nullptr;
+};
+
+class RenderToTextureComponent : public CustomShaderMeshRenderComponent {
+public:
+    RenderToTextureComponent(const CMeshBuffer &meshBuffer);
+
+    void UpdateRenderContext() override;
+    void OnInitialize(systems::IRenderSystem &renderSystem) override;
+    void OnRender() override;
+private:
+    std::unique_ptr<CMeshBuffer> mQuadMesh;
+    std::unique_ptr<systems::SRenderContextHandle> mQuadRenderContext;
+    systems::STextureHandle *mTextureHandle = nullptr;
 };
 
 }// namespace unboxing_engine

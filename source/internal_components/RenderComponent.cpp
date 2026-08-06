@@ -1,4 +1,7 @@
 #include "internal_components/RenderComponent.h"
+
+#include "Camera.h"
+#include "MeshPrimitivesUtils.h"
 #include "systems/IRenderSystem.h"
 
 namespace unboxing_engine {
@@ -23,7 +26,7 @@ void CDefaultMeshRenderComponent::ReleaseRenderContext() {
 
 void CDefaultMeshRenderComponent::OnRender() {
     if (mIsDirty) {
-        if(mRenderContextHandle && mRenderContextHandle->renderBufferHandle) {
+        if(mRenderSystem && mRenderContextHandle && mRenderContextHandle->renderBufferHandle) {
             mRenderSystem->EraseRenderBufferData(*mRenderContextHandle->renderBufferHandle);
         }
         UpdateRenderContext();
@@ -75,8 +78,51 @@ void CustomShaderMeshRenderComponent::UpdateRenderContext() {
                 renderBufferHandle,
                 mShaderHandle,
                 *mSceneComposite,
+                nullptr,
                 systems::ERenderTargetKind::FloatingPointAccumulation);
         mIsDirty = false;
     }
 }
+
+RenderToTextureComponent::RenderToTextureComponent(const CMeshBuffer &meshBuffer)
+: CustomShaderMeshRenderComponent(meshBuffer)
+, mQuadMesh(primitive_utils::Quad()){
 }
+
+void RenderToTextureComponent::UpdateRenderContext() {
+    CustomShaderMeshRenderComponent::UpdateRenderContext();
+}
+
+void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem) {
+    CustomShaderMeshRenderComponent::OnInitialize(renderSystem);
+
+    mTextureHandle = renderSystem.CreateTexture(
+        renderSystem.GetCamera().mWidth,
+        renderSystem.GetCamera().mHeight,
+        systems::ETextureFormat::RGBA32F); // Creates texture with screen Width, Height and support to float point values
+
+    auto renderBufferHandle = mRenderSystem->WriteRenderBufferData(*mQuadMesh);
+    auto shaderHandle = mRenderSystem->GetDefaultShader();
+
+    mQuadRenderContext = std::make_unique<systems::SRenderContextHandle>(
+            renderBufferHandle,
+            shaderHandle,
+            *mSceneComposite,
+            mTextureHandle);
+}
+void RenderToTextureComponent::OnRender() {
+    if (mIsDirty) {
+        if(mRenderSystem && mRenderContextHandle && mRenderContextHandle->renderBufferHandle) {
+            mRenderSystem->EraseRenderBufferData(*mRenderContextHandle->renderBufferHandle);
+        }
+        UpdateRenderContext();
+    }
+
+    if(mRenderSystem && mRenderContextHandle) {
+        mRenderSystem->RenderToTexture(*mRenderContextHandle, mTextureHandle);
+        mRenderSystem->Render(*mQuadRenderContext);
+    }
+}
+
+
+}// namespace unboxing_engine

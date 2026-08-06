@@ -250,6 +250,30 @@ bool CCollisionManager::isInsideTriangle(Vector3f v1, Vector3f v2, Vector3f v3, 
     return false;
 }
 
+
+bool CCollisionManager::isInsideTriangleArray(const std::vector<float>& triangle, Vector3f intersection) {
+    //Checa se a coordenada está limitada pelo triangulo
+    double area = (v2 - v1).CrossProduct(v3 - v1).modulo() * 0.5;
+    Vector3f vet1 = intersection - v1;
+    Vector3f vet2 = v2 - v1;
+    double area1 = vet1.CrossProduct(vet2).modulo() * 0.5 / area;
+
+    vet1 = intersection - v1;
+    vet2 = v3 - v1;
+    double area2 = vet1.CrossProduct(vet2).modulo() * 0.5 / area;
+
+    vet1 = intersection - v3;
+    vet2 = v2 - v3;
+    double area3 = vet1.CrossProduct(vet2).modulo() * 0.5 / area;
+
+    //Condição para que o ponto esteja contido no triangulo
+    if (area1 + area2 + area3 <= 1.00001)
+        return true;
+
+    return false;
+}
+
+
 bool CCollisionManager::sphereWithTriangle(sphere spr, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f &intersection) {
     Vector3f normal = (v2 - v1).CrossProduct(v3 - v1).Normalized();
     float a = normal.x;
