@@ -71,13 +71,6 @@ typedef enum t_attrib_id {
 void CreateView(std::uint32_t width, std::uint32_t heigth) {
     glClearColor(0.02f, 0.025f, 0.035f, 1.0f);
     glClearDepth(1.0f);
-    //glEnable(GL_CULL_FACE);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE);
-    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
-
     glViewport(0, 0, static_cast<GLint>(width), static_cast<GLint>(heigth));
 }
 
@@ -108,6 +101,8 @@ struct SRenderTarget {
     std::uint32_t texture = 0;
     std::uint32_t width = 0;
     std::uint32_t height = 0;
+    STextureHandle textureHandle;
+    ERenderTargetKind renderTargetKind;
 };
 
 
@@ -148,7 +143,6 @@ public:
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 
 
-
         //Creates the window
         mWindow = SDL_CreateWindow("My Game Window",
                                    SDL_WINDOWPOS_CENTERED,
@@ -175,6 +169,8 @@ public:
         CreateScreenQuad();
         CreateView(mCamera.mWidth, mCamera.mHeight);
 
+        SRenderTarget renderTarget{0, 0, mCamera.mWidth, mCamera.mHeight, {}, ERenderTargetKind::DefaultFramebuffer};
+        mRenderTarget.emplace(0, std::make_unique<SRenderTarget>(renderTarget));
         return true;
     }
 
@@ -287,10 +283,18 @@ public:
         mCamera = camera;
     }
     void Render(const SRenderContextHandle& renderContextHandle) {
+        // TODO: Should store all render contexts and group by render configurations, so the render pass can avoid multiple redundant operations
         if (renderContextHandle.renderTargetKind == ERenderTargetKind::FloatingPointAccumulation) {
             RenderToFloatingPointTarget(renderContextHandle);
             return;
         }
+
+        auto* renderTarget = renderContextHandle.renderTarget;
+        if (!renderTarget) {
+            renderTarget = mRenderTarget.at(0).get();
+        }
+
+        SetRenderTarget(*renderTarget);
         DrawRenderContext(renderContextHandle);
     }
 
@@ -336,6 +340,7 @@ public:
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDisable(GL_DEPTH_TEST);
+        // TODO: Separation between opaque and transparent objects when rendering. Enable glDepthMask for opaque and render first, then disable and render transparent.
         glDepthMask(GL_FALSE);
     }
     void OnPostRender() {
@@ -528,8 +533,70 @@ public:
         return mTextures.at(textureId).get();
     }
 
-    void RenderToTexture(const SRenderContextHandle & renderContextHandle, STextureHandle *textureHandle) {
+    SRenderTarget* CreateTextureRenderTarget(const uint32_t width, const uint32_t height, const ETextureFormat format) {
+        SRenderTarget renderTarget;
 
+        if (const auto *handle = CreateTexture(width, height, format)) {
+            renderTarget.textureHandle = *handle;
+        } else {
+            return nullptr;
+        }
+        renderTarget.width = width;
+        renderTarget.height = height;
+        renderTarget.renderTargetKind = ERenderTargetKind::FloatingPointAccumulation;
+
+        glGenFramebuffers(1, &renderTarget.framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTarget.textureHandle.texture, 0);
+        const GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
+        glDrawBuffers(1, drawBuffers);
+
+        const GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
+            std::cout << "Floating-point framebuffer initialization failed: " << framebufferStatus << std::endl;
+            ReleaseTextureRenderTarget(renderTarget);
+            return nullptr;
+        }
+
+        mRenderTarget.emplace(renderTarget.framebuffer, std::make_unique<SRenderTarget>(renderTarget));
+        return mRenderTarget.at(renderTarget.framebuffer).get();
+    }
+
+    static void SetRenderTarget(const SRenderTarget &renderTarget) {
+        glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
+        glViewport(0, 0, static_cast<GLint>(renderTarget.width), static_cast<GLint>(renderTarget.height));
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        switch (renderTarget.renderTargetKind) {
+            case ERenderTargetKind::FloatingPointAccumulation:
+                glDisable(GL_DEPTH_TEST);
+                glDepthMask(GL_FALSE);
+                glDisable(GL_CULL_FACE);
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFunc(GL_ONE, GL_ONE);
+            break;
+            case ERenderTargetKind::DefaultFramebuffer:
+            default:
+                glEnable(GL_CULL_FACE);
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        }
+    }
+
+    static void ReleaseTextureRenderTarget(const SRenderTarget &renderTarget) {
+        if (renderTarget.textureHandle.texture != 0) {
+            glDeleteTextures(1, &renderTarget.textureHandle.texture);
+        }
+        if (renderTarget.framebuffer != 0) {
+            glDeleteFramebuffers(1, &renderTarget.framebuffer);
+        }
     }
 
 private:
@@ -544,6 +611,7 @@ private:
     std::vector<std::unique_ptr<SShaderHandle>> mShaders;
     std::vector<std::unique_ptr<SRenderBufferHandle>> mRenderBuffers;
     std::unordered_map<uint32_t, std::unique_ptr<STextureHandle>> mTextures;
+    std::unordered_map<uint32_t, std::unique_ptr<SRenderTarget>> mRenderTarget;
 };
 
 COpenGLRenderSystem::COpenGLRenderSystem(const Camera& camera)
@@ -595,8 +663,8 @@ STextureHandle *COpenGLRenderSystem::CreateTexture(uint32_t width, uint32_t heig
     return mImpl->CreateTexture(width, height, format);
 }
 
-void COpenGLRenderSystem::RenderToTexture(const SRenderContextHandle &renderContextHandle, STextureHandle *textureHandle) {
-    mImpl->RenderToTexture(renderContextHandle, textureHandle);
+SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(const uint32_t width, const uint32_t height, const ETextureFormat format) {
+    return mImpl->CreateTextureRenderTarget(width, height, format);
 }
 
 }// namespace unboxing_engine::systems

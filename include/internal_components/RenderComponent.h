@@ -81,6 +81,7 @@ private:
     std::unique_ptr<CMeshBuffer> mQuadMesh;
     std::unique_ptr<systems::SRenderContextHandle> mQuadRenderContext;
     systems::STextureHandle *mTextureHandle = nullptr;
+    systems::SRenderTarget * mRenderTarget = nullptr;
 };
 
 }// namespace unboxing_engine

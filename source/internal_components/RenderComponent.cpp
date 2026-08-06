@@ -70,17 +70,15 @@ void CustomShaderMeshRenderComponent::OnInitialize(systems::IRenderSystem &rende
 }
 
 void CustomShaderMeshRenderComponent::UpdateRenderContext() {
-    if(mRenderSystem && mShaderHandle) {
-        const CMeshBuffer &meshBuffer = GetMeshBuffer();
-        auto renderBufferHandle = mRenderSystem->WriteRenderBufferData(meshBuffer);
-
+    CDefaultMeshRenderComponent::UpdateRenderContext();
+    if (mRenderContextHandle && mShaderHandle) {
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
-                renderBufferHandle,
+                mRenderContextHandle->renderBufferHandle,
                 mShaderHandle,
                 *mSceneComposite,
                 nullptr,
+                nullptr,
                 systems::ERenderTargetKind::FloatingPointAccumulation);
-        mIsDirty = false;
     }
 }
 
@@ -89,17 +87,11 @@ RenderToTextureComponent::RenderToTextureComponent(const CMeshBuffer &meshBuffer
 , mQuadMesh(primitive_utils::Quad()){
 }
 
-void RenderToTextureComponent::UpdateRenderContext() {
-    CustomShaderMeshRenderComponent::UpdateRenderContext();
-}
-
 void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem) {
-    CustomShaderMeshRenderComponent::OnInitialize(renderSystem);
-
-    mTextureHandle = renderSystem.CreateTexture(
+    mRenderTarget = renderSystem.CreateTextureRenderTarget(
         renderSystem.GetCamera().mWidth,
         renderSystem.GetCamera().mHeight,
-        systems::ETextureFormat::RGBA32F); // Creates texture with screen Width, Height and support to float point values
+        systems::ETextureFormat::RGBA32F);
 
     auto renderBufferHandle = mRenderSystem->WriteRenderBufferData(*mQuadMesh);
     auto shaderHandle = mRenderSystem->GetDefaultShader();
@@ -107,9 +99,23 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
     mQuadRenderContext = std::make_unique<systems::SRenderContextHandle>(
             renderBufferHandle,
             shaderHandle,
-            *mSceneComposite,
-            mTextureHandle);
+            *mSceneComposite);
+
+    CustomShaderMeshRenderComponent::OnInitialize(renderSystem);
 }
+
+void RenderToTextureComponent::UpdateRenderContext() {
+    CustomShaderMeshRenderComponent::UpdateRenderContext();
+    if (mRenderTarget && mRenderContextHandle) {
+        mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
+                mRenderContextHandle->renderBufferHandle,
+                mRenderContextHandle->shaderHandle,
+                *mSceneComposite,
+                nullptr,
+                mRenderTarget);
+    }
+}
+
 void RenderToTextureComponent::OnRender() {
     if (mIsDirty) {
         if(mRenderSystem && mRenderContextHandle && mRenderContextHandle->renderBufferHandle) {
@@ -119,7 +125,7 @@ void RenderToTextureComponent::OnRender() {
     }
 
     if(mRenderSystem && mRenderContextHandle) {
-        mRenderSystem->RenderToTexture(*mRenderContextHandle, mTextureHandle);
+        mRenderSystem->Render(*mRenderContextHandle);
         mRenderSystem->Render(*mQuadRenderContext);
     }
 }

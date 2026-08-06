@@ -19,7 +19,7 @@ public:
     void Render(const SRenderContextHandle &renderContextHandle) override;
 
     STextureHandle *CreateTexture(uint32_t width, uint32_t height, ETextureFormat format) override;
-    void RenderToTexture(const SRenderContextHandle &renderContextHandle, STextureHandle *textureHandle) override;
+    SRenderTarget *CreateTextureRenderTarget(uint32_t width, uint32_t height, ETextureFormat format) override;
 
     void OnPreRender() override;
     void OnPostRender() override;
