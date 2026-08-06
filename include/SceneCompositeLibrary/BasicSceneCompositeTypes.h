@@ -122,7 +122,7 @@ private:
 
 
 
-static const char *vertex_shader_source = R"(
+static const char *customVertexShader = R"(
 #version 150 core
 
 in vec3 i_position;
@@ -143,7 +143,7 @@ void main()
 }
 )";
 
-static const char *fragment_shader_source = R"(
+static const char *customFragmentShader = R"(
 #version 150 core
 
 in vec4 vGlobalPosition;
@@ -213,8 +213,8 @@ public:
         render->SetMaterial(yellowMaterial());
         render->SetPolygonMode(EPolygonMode::Fill);
 
-        render->SetVertexShader(vertex_shader_source);
-        render->SetFragmentShader(fragment_shader_source);
+        render->SetVertexShader(customVertexShader);
+        render->SetFragmentShader(customFragmentShader);
 
         AddComponent<IRenderComponent>(std::move(render));
     }

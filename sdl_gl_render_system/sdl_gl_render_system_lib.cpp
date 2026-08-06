@@ -440,7 +440,7 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         glBindTexture(GL_TEXTURE_2D, 0);
-        STextureHandle textureHandle{width, height, textureId, format};
+        STextureHandle textureHandle{textureId, width, height, format};
         mTextures.emplace(textureId, std::make_unique<STextureHandle>(textureHandle));
         return mTextures.at(textureId).get();
     }
@@ -495,7 +495,7 @@ public:
             break;
             case ERenderTargetKind::DefaultFramebuffer:
             default:
-                glEnable(GL_CULL_FACE);
+                //glEnable(GL_CULL_FACE);
                 glEnable(GL_BLEND);
                 glBlendEquation(GL_FUNC_ADD);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
