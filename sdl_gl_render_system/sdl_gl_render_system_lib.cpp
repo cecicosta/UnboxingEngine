@@ -17,10 +17,12 @@ static const char *vertex_shader_source =
     "in vec3 i_position;\n"
     "uniform vec4 color;\n"
     "out vec4 v_color;\n"
+    "uniform mat4 u_model_matrix;\n"
+    "uniform mat4 u_view_matrix;\n"
     "uniform mat4 u_projection_matrix;\n"
     "void main() {\n"
     "    v_color = color;\n"
-    "    gl_Position = u_projection_matrix * vec4( i_position.x, i_position.y, i_position.z, 1.0 );\n"
+    "    gl_Position = u_projection_matrix * u_view_matrix * u_model_matrix * vec4(i_position, 1.0);\n"
     "}\n";
 
 static const char *fragment_shader_source =
@@ -33,10 +35,13 @@ static const char *fragment_shader_source =
 
 static const char *signed_texture_debug_vertex_shader_source =
     "#version 150 core\n"
+    "uniform vec4 color;\n"
     "in vec2 i_position;\n"
     "out vec2 v_uv;\n"
+    "out vec4 v_color;\n"
     "void main() {\n"
     "    v_uv = i_position + 0.5;\n"
+    "    v_color = color;\n"
     "    gl_Position = vec4(i_position * 2.0, 0.0, 1.0);\n"
     "}\n";
 
@@ -44,13 +49,12 @@ static const char *signed_texture_debug_fragment_shader_source =
     "#version 150 core\n"
     "uniform sampler2D u_texture;\n"
     "uniform float u_visualization_scale;\n"
+    "in vec4 v_color;\n"
     "in vec2 v_uv;\n"
     "out vec4 o_color;\n"
     "void main() {\n"
-    "    float signedValue = texture(u_texture, v_uv).a * u_visualization_scale;\n"
-    "    vec3 negativeColor = vec3(clamp(-signedValue, 0.0, 1.0), 0.0, 0.0);\n"
-    "    vec3 positiveColor = vec3(0.0, clamp(signedValue, 0.0, 1.0), 0.0);\n"
-    "    o_color = vec4(negativeColor + positiveColor, 1.0);\n"
+    "    float volumetricOpacityValue = texture(u_texture, v_uv).a * u_visualization_scale;\n"
+    "    o_color = v_color * vec4(1.0, 1.0, 1.0, volumetricOpacityValue);\n"
     "}\n";
 
 namespace {
@@ -289,44 +293,6 @@ public:
     }
     void SetCamera(const Camera& camera) {
         mCamera = camera;
-        if (!mWindow) {
-            return;
-        }
-
-        for (const auto &entry : mTextures) {
-            auto &texture = *entry.second;
-            if (texture.width == camera.mWidth && texture.height == camera.mHeight) {
-                continue;
-            }
-
-            GLint internalFormat = GL_RGBA;
-            GLenum type = GL_UNSIGNED_BYTE;
-            if (texture.format == ETextureFormat::RGBA32F) {
-                internalFormat = GL_RGBA32F;
-                type = GL_FLOAT;
-            }
-
-            glBindTexture(GL_TEXTURE_2D, texture.texture);
-            glTexImage2D(GL_TEXTURE_2D,
-                         0,
-                         internalFormat,
-                         static_cast<GLsizei>(camera.mWidth),
-                         static_cast<GLsizei>(camera.mHeight),
-                         0,
-                         GL_RGBA,
-                         type,
-                         nullptr);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            texture.width = camera.mWidth;
-            texture.height = camera.mHeight;
-            for (const auto &target : mRenderTarget) {
-                if (target.second->textureHandle == &texture) {
-                    target.second->width = texture.width;
-                    target.second->height = texture.height;
-                }
-            }
-        }
     }
     void Render(const SRenderContextHandle& renderContextHandle) {
         // TODO: Should store all render contexts and group by render configurations, so the render pass can avoid multiple redundant operations
@@ -360,9 +326,31 @@ public:
 
         glPolygonMode(GL_FRONT_AND_BACK,
                       renderContextHandle.textureHandle || polygonMode == EPolygonMode::Fill ? GL_FILL : GL_LINE);
+
+        auto modelMatrix = renderContextHandle.sceneComposite.GetWorldTransformation();
+        auto viewMatrix = mCamera.GetViewMatrix();
+        auto projectionMatrix = mCamera.GetProjectionMatrix();
+
+        const GLint modelUniform = glGetUniformLocation(program, "u_model_matrix");
+        if (modelUniform >= 0) {
+            glUniformMatrix4fv(modelUniform, 1, GL_TRUE, modelMatrix.ToArray());
+        }
+        const GLint viewUniform = glGetUniformLocation(program, "u_view_matrix");
+        if (viewUniform >= 0) {
+            glUniformMatrix4fv(viewUniform, 1, GL_TRUE, viewMatrix.ToArray());
+        }
         const GLint projectionUniform = glGetUniformLocation(program, "u_projection_matrix");
         if (projectionUniform >= 0) {
-            glUniformMatrix4fv(projectionUniform, 1, GL_TRUE, (mCamera.GetProjectionMatrix() * mCamera.GetViewMatrix() * renderContextHandle.sceneComposite.GetWorldTransformation()).ToArray());
+            glUniformMatrix4fv(projectionUniform, 1, GL_TRUE, projectionMatrix.ToArray());
+        }
+        const GLint cameraPositionUniform = glGetUniformLocation(program, "u_camera_world_position");
+        if (cameraPositionUniform >= 0) {
+            const auto cameraPosition = mCamera.GetPosition();
+            glUniform3fv(cameraPositionUniform, 1, cameraPosition.ToArray());
+        }
+        const GLint cameraFarUniform = glGetUniformLocation(program, "u_camera_far");
+        if (cameraFarUniform >= 0) {
+            glUniform1f(cameraFarUniform, mCamera.mZFar);
         }
         const GLint colorUniform = glGetUniformLocation(program, "color");
         if (colorUniform >= 0) {
@@ -389,16 +377,23 @@ public:
     }
 
     void OnPreRender() {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, static_cast<GLint>(mCamera.mWidth), static_cast<GLint>(mCamera.mHeight));
-        glClearColor(0.02f, 0.025f, 0.035f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_BLEND);
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_DEPTH_TEST);
-        // TODO: Separation between opaque and transparent objects when rendering. Enable glDepthMask for opaque and render first, then disable and render transparent.
-        glDepthMask(GL_FALSE);
+        for (const auto &entry : mRenderTarget) {
+            const auto &renderTarget = *entry.second;
+            glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
+            glViewport(0, 0, static_cast<GLint>(renderTarget.width), static_cast<GLint>(renderTarget.height));
+
+            if (renderTarget.framebuffer == 0) {
+                glClearColor(0.02f, 0.025f, 0.035f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            } else {
+                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+            }
+        }
+
+        const auto &defaultTarget = *mRenderTarget.at(0);
+        glBindFramebuffer(GL_FRAMEBUFFER, defaultTarget.framebuffer);
+        glViewport(0, 0, static_cast<GLint>(defaultTarget.width), static_cast<GLint>(defaultTarget.height));
     }
     void OnPostRender() {
         glDepthMask(GL_TRUE);
@@ -479,27 +474,20 @@ public:
     static void SetRenderTarget(const SRenderTarget &renderTarget) {
         glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
         glViewport(0, 0, static_cast<GLint>(renderTarget.width), static_cast<GLint>(renderTarget.height));
-        if (renderTarget.framebuffer != 0) {
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
+
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        glBlendEquation(GL_FUNC_ADD);
 
         switch (renderTarget.renderTargetKind) {
             case ERenderTargetKind::FloatingPointAccumulation:
-                glDisable(GL_DEPTH_TEST);
-                glDepthMask(GL_FALSE);
-                glDisable(GL_CULL_FACE);
-                glEnable(GL_BLEND);
-                glBlendEquation(GL_FUNC_ADD);
                 glBlendFunc(GL_ONE, GL_ONE);
             break;
             case ERenderTargetKind::DefaultFramebuffer:
             default:
-                //glEnable(GL_CULL_FACE);
-                glEnable(GL_BLEND);
-                glBlendEquation(GL_FUNC_ADD);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
         }
     }
 

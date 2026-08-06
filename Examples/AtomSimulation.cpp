@@ -65,8 +65,8 @@ private:
 
 int main(int argc, char *argv[]) {
     unboxing_engine::CCore engine(640, 480, 32);
-    Camera camera(720, 720, 10, 1, 1000);
-    camera.SetOrthographicProjection();
+    Camera camera(720, 720, 60, 1, 200);
+    camera.SetPerspectiveProjection();
     camera.SetPosition({0, 0, 100});
     engine.SetCamera(camera);
     engine.Start();
@@ -91,12 +91,12 @@ int main(int argc, char *argv[]) {
 
     CSimpleMeshWireFrame test(*primitive_utils::Cube());
     test.SetMaterial(redMaterial());
-    //engine.RegisterSceneElement(test);
+    engine.RegisterSceneElement(test);
 
     engine.Run();
 
     engine.UnregisterSceneElement(trackingCircle);
-    //engine.UnregisterSceneElement(test);
+    engine.UnregisterSceneElement(test);
     engine.Release();
     return 0;
 }

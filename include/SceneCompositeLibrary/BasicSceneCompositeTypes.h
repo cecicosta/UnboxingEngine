@@ -126,29 +126,39 @@ static const char *customVertexShader = R"(
 #version 150 core
 
 in vec3 i_position;
+uniform mat4 u_model_matrix;
+uniform mat4 u_view_matrix;
 uniform mat4 u_projection_matrix;
 uniform vec4 color;
 
-out vec4 vGlobalPosition;
+out vec3 vWorldPosition;
+out vec3 vViewPosition;
 out vec3 vLocalPosition;
 out vec4 v_color;
 void main()
 {
+    vec4 worldPosition = u_model_matrix * vec4(i_position, 1.0);
+    vec4 viewPosition = u_view_matrix * worldPosition;
+
     vLocalPosition = i_position;
-    vGlobalPosition = u_projection_matrix *
-        vec4(i_position, 1.0);
+    vWorldPosition = worldPosition.xyz;
+    vViewPosition = viewPosition.xyz;
     v_color = color;
 
-    gl_Position = vGlobalPosition;
+    gl_Position = u_projection_matrix * viewPosition;
 }
 )";
 
 static const char *customFragmentShader = R"(
 #version 150 core
 
-in vec4 vGlobalPosition;
+in vec3 vWorldPosition;
+in vec3 vViewPosition;
 in vec3 vLocalPosition;
 in vec4 v_color;
+
+uniform vec3 u_camera_world_position;
+uniform float u_camera_far;
 
 // Elementary charge
 float e = 1.602e-19; // [C]
@@ -165,27 +175,18 @@ out vec4 FragColor;
 
 void main()
 {
-    vec3 dx = dFdx(vGlobalPosition.xyz);
-    vec3 dy = dFdy(vGlobalPosition.xyz);
+    float maximumDistance = max(u_camera_far, 0.000001);
+    float distanceFromCamera = length(u_camera_world_position - vWorldPosition);
+    float normalizedDistance = distanceFromCamera / maximumDistance;
 
-    vec3 camera = vec3(0,0,100);
-
-    vec3 faceNormal = normalize(cross(dx, dy));
-
-    float direction = dot(camera - vGlobalPosition.xyz, faceNormal);
-    vec4 color;
-    float distance = length(camera - vGlobalPosition.xyz)/100;
-
-    if(gl_FrontFacing) {
-        color = vec4(0.15, 0, 0, -distance);
-    } else {
-        color = vec4(0, 0.15, 0, distance);
-    }
-
+    FragColor = gl_FrontFacing
+        ? vec4(0.0, 0.0, 0.0, -normalizedDistance)
+        : vec4(0.0, 0.0, 0.0,  normalizedDistance);
+/*
     float PI = 3.141592;
 
     // We cannot simply use the 3D vector length as all the points of the sphere sits on ints surface
-    float r = length(vGlobalPosition.xy)*(a0);
+    float r = length(vWorldPosition.xy)*(a0);
 
     float V0 = (e*e)/(4*PI*E0*a0);
     float V = (e*e)/(4*PI*E0*r);
@@ -200,7 +201,7 @@ void main()
         v_color.rgb - v_color.rgb*decay,
         v_color.a
     );
-    FragColor = color;
+*/
 }
 )";
 
