@@ -24,7 +24,8 @@ add_executable(
         unboxing_engine_tests
         main.cpp
         ComponentSystemTests.cpp
-        EventSystemTests.cpp)
+        EventSystemTests.cpp
+        RenderComponentTests.cpp)
 
 target_link_libraries(
         unboxing_engine_tests

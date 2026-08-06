@@ -15,11 +15,12 @@ public:
     void EraseRenderBufferData(const SRenderBufferHandle &renderBufferHandle) override;
     [[nodiscard]] const Camera &GetCamera() const override;
     [[nodiscard]] const SShaderHandle *GetDefaultShader() const override;
+    [[nodiscard]] const SShaderHandle *GetTexturePresentationShader() const override;
     void SetCamera(const Camera &camera) override;
     void Render(const SRenderContextHandle &renderContextHandle) override;
 
     STextureHandle *CreateTexture(uint32_t width, uint32_t height, ETextureFormat format) override;
-    SRenderTarget *CreateTextureRenderTarget(uint32_t width, uint32_t height, ETextureFormat format) override;
+    SRenderTarget *CreateTextureRenderTarget(STextureHandle *textureHandle, ERenderTargetKind renderTargetKind) override;
 
     void OnPreRender() override;
     void OnPostRender() override;

@@ -22,7 +22,7 @@ namespace unboxing_engine::primitive_utils {
         InsertCoordinates(++vertices, ++offset, arg...);
     }
 
-    void AddVetex(CMeshBuffer &mesh, Vector3f point) {
+    inline void AddVetex(CMeshBuffer &mesh, Vector3f point) {
         uint vertexOffset = 3 * mesh.nvertices;
         InsertCoordinates(&mesh.vertices[vertexOffset], vertexOffset, point.x, point.y, point.z);
         if (mesh.nvertices > 0) {
@@ -66,7 +66,7 @@ namespace unboxing_engine::primitive_utils {
     }
 
     //Create a cube mesh
-    [[nodiscard]] CMeshBuffer *Cube() {
+    [[nodiscard]] inline CMeshBuffer *Cube() {
         auto mesh = new CMeshBuffer();
         mesh->boundingBox = CBoundingBox3D(Vector3f(-0.5f, -0.5f, -0.5f), Vector3f(0.5f, 0.5f, 0.5f));
         mesh->nvertices = 8;
@@ -170,7 +170,7 @@ namespace unboxing_engine::primitive_utils {
     }
 
     //Create a cube mesh
-    [[nodiscard]] std::unique_ptr<CMeshBuffer> Quad() {
+    [[nodiscard]] inline std::unique_ptr<CMeshBuffer> Quad() {
         auto mesh = std::make_unique<CMeshBuffer>();
         auto boundingBox = CBoundingBox2D(Vector2f(-0.5f, -0.5f), Vector2f(0.5f, 0.5f));
         mesh->boundingBox = CBoundingBox3D(Vector3f(-0.5f, -0.5f, 0), Vector3f(0.5f, 0.5f, 0));

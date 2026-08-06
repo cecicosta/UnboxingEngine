@@ -36,18 +36,18 @@ static const char *signed_texture_debug_vertex_shader_source =
     "in vec2 i_position;\n"
     "out vec2 v_uv;\n"
     "void main() {\n"
-    "    v_uv = i_position * 0.5 + 0.5;\n"
-    "    gl_Position = vec4(i_position, 0.0, 1.0);\n"
+    "    v_uv = i_position + 0.5;\n"
+    "    gl_Position = vec4(i_position * 2.0, 0.0, 1.0);\n"
     "}\n";
 
 static const char *signed_texture_debug_fragment_shader_source =
     "#version 150 core\n"
-    "uniform sampler2D u_signed_texture;\n"
+    "uniform sampler2D u_texture;\n"
     "uniform float u_visualization_scale;\n"
     "in vec2 v_uv;\n"
     "out vec4 o_color;\n"
     "void main() {\n"
-    "    float signedValue = texture(u_signed_texture, v_uv).a * u_visualization_scale;\n"
+    "    float signedValue = texture(u_texture, v_uv).a * u_visualization_scale;\n"
     "    vec3 negativeColor = vec3(clamp(-signedValue, 0.0, 1.0), 0.0, 0.0);\n"
     "    vec3 positiveColor = vec3(0.0, clamp(signedValue, 0.0, 1.0), 0.0);\n"
     "    o_color = vec4(negativeColor + positiveColor, 1.0);\n"
@@ -101,7 +101,7 @@ struct SRenderTarget {
     std::uint32_t texture = 0;
     std::uint32_t width = 0;
     std::uint32_t height = 0;
-    STextureHandle textureHandle;
+    STextureHandle *textureHandle = nullptr;
     ERenderTargetKind renderTargetKind;
 };
 
@@ -110,8 +110,7 @@ class COpenGLRenderSystem::Impl {
 public:
     Impl(const Camera& camera) : mCamera(camera) {}
     ~Impl() {
-        ReleaseFloatingPointRenderTarget();
-        ReleaseScreenQuad();
+        ReleaseTextureRenderTargets();
         mRenderBuffers.clear();
         mShaders.clear();
        
@@ -166,10 +165,9 @@ public:
 
         (void) CompileShader(vertex_shader_source, fragment_shader_source);
         mSignedTextureDebugShader = CompileShader(signed_texture_debug_vertex_shader_source, signed_texture_debug_fragment_shader_source);
-        CreateScreenQuad();
         CreateView(mCamera.mWidth, mCamera.mHeight);
 
-        SRenderTarget renderTarget{0, 0, mCamera.mWidth, mCamera.mHeight, {}, ERenderTargetKind::DefaultFramebuffer};
+        SRenderTarget renderTarget{0, 0, mCamera.mWidth, mCamera.mHeight, nullptr, ERenderTargetKind::DefaultFramebuffer};
         mRenderTarget.emplace(0, std::make_unique<SRenderTarget>(renderTarget));
         return true;
     }
@@ -272,6 +270,13 @@ public:
         glDeleteBuffers(1, &renderBufferHandle.vbo);
         glDeleteBuffers(1, &renderBufferHandle.ebo);
 
+        for (auto it = mRenderBuffers.begin(); it != mRenderBuffers.end(); ++it) {
+            if (it->get() == &renderBufferHandle) {
+                mRenderBuffers.erase(it);
+                break;
+            }
+        }
+
     }
     [[nodiscard]] const Camera& GetCamera() const {
         return mCamera;
@@ -279,16 +284,52 @@ public:
     [[nodiscard]] const SShaderHandle* GetDefaultShader() const {
         return mShaders.begin() != mShaders.end() ? mShaders.begin()->get() : nullptr;
     }
+    [[nodiscard]] const SShaderHandle* GetTexturePresentationShader() const {
+        return mSignedTextureDebugShader;
+    }
     void SetCamera(const Camera& camera) {
         mCamera = camera;
-    }
-    void Render(const SRenderContextHandle& renderContextHandle) {
-        // TODO: Should store all render contexts and group by render configurations, so the render pass can avoid multiple redundant operations
-        if (renderContextHandle.renderTargetKind == ERenderTargetKind::FloatingPointAccumulation) {
-            RenderToFloatingPointTarget(renderContextHandle);
+        if (!mWindow) {
             return;
         }
 
+        for (const auto &entry : mTextures) {
+            auto &texture = *entry.second;
+            if (texture.width == camera.mWidth && texture.height == camera.mHeight) {
+                continue;
+            }
+
+            GLint internalFormat = GL_RGBA;
+            GLenum type = GL_UNSIGNED_BYTE;
+            if (texture.format == ETextureFormat::RGBA32F) {
+                internalFormat = GL_RGBA32F;
+                type = GL_FLOAT;
+            }
+
+            glBindTexture(GL_TEXTURE_2D, texture.texture);
+            glTexImage2D(GL_TEXTURE_2D,
+                         0,
+                         internalFormat,
+                         static_cast<GLsizei>(camera.mWidth),
+                         static_cast<GLsizei>(camera.mHeight),
+                         0,
+                         GL_RGBA,
+                         type,
+                         nullptr);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            texture.width = camera.mWidth;
+            texture.height = camera.mHeight;
+            for (const auto &target : mRenderTarget) {
+                if (target.second->textureHandle == &texture) {
+                    target.second->width = texture.width;
+                    target.second->height = texture.height;
+                }
+            }
+        }
+    }
+    void Render(const SRenderContextHandle& renderContextHandle) {
+        // TODO: Should store all render contexts and group by render configurations, so the render pass can avoid multiple redundant operations
         auto* renderTarget = renderContextHandle.renderTarget;
         if (!renderTarget) {
             renderTarget = mRenderTarget.at(0).get();
@@ -317,7 +358,8 @@ public:
             return;
         }
 
-        glPolygonMode(GL_FRONT_AND_BACK, polygonMode == EPolygonMode::Fill ? GL_FILL : GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK,
+                      renderContextHandle.textureHandle || polygonMode == EPolygonMode::Fill ? GL_FILL : GL_LINE);
         const GLint projectionUniform = glGetUniformLocation(program, "u_projection_matrix");
         if (projectionUniform >= 0) {
             glUniformMatrix4fv(projectionUniform, 1, GL_TRUE, (mCamera.GetProjectionMatrix() * mCamera.GetViewMatrix() * renderContextHandle.sceneComposite.GetWorldTransformation()).ToArray());
@@ -326,8 +368,23 @@ public:
         if (colorUniform >= 0) {
             glUniform4fv(colorUniform, 1, material->materialDif);
         }
+        if (renderContextHandle.textureHandle) {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, renderContextHandle.textureHandle->texture);
+            const GLint textureUniform = glGetUniformLocation(program, "u_texture");
+            if (textureUniform >= 0) {
+                glUniform1i(textureUniform, 0);
+            }
+            const GLint visualizationScaleUniform = glGetUniformLocation(program, "u_visualization_scale");
+            if (visualizationScaleUniform >= 0) {
+                glUniform1f(visualizationScaleUniform, 1.0f);
+            }
+        }
         glBindVertexArray(renderContextHandle.renderBufferHandle->vao);
         glDrawElements(GL_TRIANGLES, renderContextHandle.renderBufferHandle->ntriangles * 3, GL_UNSIGNED_INT, nullptr);
+        if (renderContextHandle.textureHandle) {
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
 
     }
 
@@ -349,151 +406,6 @@ public:
         SDL_Delay(1);
     }
 
-    bool EnsureFloatingPointRenderTarget() {
-        if (mFloatingPointRenderTarget.framebuffer != 0 &&
-            mFloatingPointRenderTarget.width == mCamera.mWidth &&
-            mFloatingPointRenderTarget.height == mCamera.mHeight) {
-            return true;
-        }
-
-        ReleaseFloatingPointRenderTarget();
-
-        mFloatingPointRenderTarget.width = mCamera.mWidth;
-        mFloatingPointRenderTarget.height = mCamera.mHeight;
-
-        glGenFramebuffers(1, &mFloatingPointRenderTarget.framebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, mFloatingPointRenderTarget.framebuffer);
-
-        glGenTextures(1, &mFloatingPointRenderTarget.texture);
-        glBindTexture(GL_TEXTURE_2D, mFloatingPointRenderTarget.texture);
-        glTexImage2D(GL_TEXTURE_2D,
-                     0,
-                     GL_RGBA32F,
-                     static_cast<GLsizei>(mFloatingPointRenderTarget.width),
-                     static_cast<GLsizei>(mFloatingPointRenderTarget.height),
-                     0,
-                     GL_RGBA,
-                     GL_FLOAT,
-                     nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mFloatingPointRenderTarget.texture, 0);
-        const GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-        glDrawBuffers(1, drawBuffers);
-
-        const GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << "Floating-point framebuffer initialization failed: " << framebufferStatus << std::endl;
-            ReleaseFloatingPointRenderTarget();
-            return false;
-        }
-
-        return true;
-    }
-
-    void RenderToFloatingPointTarget(const SRenderContextHandle& renderContextHandle) {
-        if (!EnsureFloatingPointRenderTarget()) {
-            return;
-        }
-
-        glBindFramebuffer(GL_FRAMEBUFFER, mFloatingPointRenderTarget.framebuffer);
-        glViewport(0, 0, static_cast<GLint>(mFloatingPointRenderTarget.width), static_cast<GLint>(mFloatingPointRenderTarget.height));
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFunc(GL_ONE, GL_ONE);
-
-        DrawRenderContext(renderContextHandle);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, static_cast<GLint>(mCamera.mWidth), static_cast<GLint>(mCamera.mHeight));
-        RenderSignedTextureDebugView();
-
-        glEnable(GL_BLEND);
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    }
-
-    void CreateScreenQuad() {
-        if (mScreenQuadVao != 0) {
-            return;
-        }
-
-        const float vertices[] = {
-                -1.0f, -1.0f,
-                1.0f, -1.0f,
-                -1.0f, 1.0f,
-                1.0f, 1.0f};
-
-        glGenVertexArrays(1, &mScreenQuadVao);
-        glGenBuffers(1, &mScreenQuadVbo);
-
-        glBindVertexArray(mScreenQuadVao);
-        glBindBuffer(GL_ARRAY_BUFFER, mScreenQuadVbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(attrib_position);
-        glVertexAttribPointer(attrib_position, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
-    void RenderSignedTextureDebugView() const {
-        if (!mSignedTextureDebugShader || mFloatingPointRenderTarget.texture == 0 || mScreenQuadVao == 0) {
-            return;
-        }
-
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
-        glDisable(GL_BLEND);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        const auto program = mSignedTextureDebugShader->program;
-        glUseProgram(program);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mFloatingPointRenderTarget.texture);
-        glUniform1i(glGetUniformLocation(program, "u_signed_texture"), 0);
-        glUniform1f(glGetUniformLocation(program, "u_visualization_scale"), 1.0f);
-
-        glBindVertexArray(mScreenQuadVao);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-        glBindVertexArray(0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    void ReleaseFloatingPointRenderTarget() {
-        if (mFloatingPointRenderTarget.texture != 0) {
-            glDeleteTextures(1, &mFloatingPointRenderTarget.texture);
-        }
-        if (mFloatingPointRenderTarget.framebuffer != 0) {
-            glDeleteFramebuffers(1, &mFloatingPointRenderTarget.framebuffer);
-        }
-        mFloatingPointRenderTarget = {};
-    }
-
-    void ReleaseScreenQuad() {
-        if (mScreenQuadVbo != 0) {
-            glDeleteBuffers(1, &mScreenQuadVbo);
-        }
-        if (mScreenQuadVao != 0) {
-            glDeleteVertexArrays(1, &mScreenQuadVao);
-        }
-        mScreenQuadVbo = 0;
-        mScreenQuadVao = 0;
-    }
-
     STextureHandle * CreateTexture(const uint32_t width, const uint32_t height, const ETextureFormat format) {
         uint32_t textureId;
 
@@ -508,7 +420,7 @@ public:
             case ETextureFormat::RGBA8U:
             default:
             glFormat = GL_RGBA;
-            glType = GL_UNSIGNED_INT;
+            glType = GL_UNSIGNED_BYTE;
         };
 
         glGenTextures(1, &textureId);
@@ -533,22 +445,21 @@ public:
         return mTextures.at(textureId).get();
     }
 
-    SRenderTarget* CreateTextureRenderTarget(const uint32_t width, const uint32_t height, const ETextureFormat format) {
-        SRenderTarget renderTarget;
-
-        if (const auto *handle = CreateTexture(width, height, format)) {
-            renderTarget.textureHandle = *handle;
-        } else {
+    SRenderTarget* CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
+        if (!textureHandle || textureHandle->texture == 0) {
             return nullptr;
         }
-        renderTarget.width = width;
-        renderTarget.height = height;
-        renderTarget.renderTargetKind = ERenderTargetKind::FloatingPointAccumulation;
+
+        SRenderTarget renderTarget;
+        renderTarget.textureHandle = textureHandle;
+        renderTarget.width = textureHandle->width;
+        renderTarget.height = textureHandle->height;
+        renderTarget.renderTargetKind = renderTargetKind;
 
         glGenFramebuffers(1, &renderTarget.framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTarget.textureHandle.texture, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTarget.textureHandle->texture, 0);
         const GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
         glDrawBuffers(1, drawBuffers);
 
@@ -556,8 +467,8 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << "Floating-point framebuffer initialization failed: " << framebufferStatus << std::endl;
-            ReleaseTextureRenderTarget(renderTarget);
+            std::cout << "Texture framebuffer initialization failed: " << framebufferStatus << std::endl;
+            glDeleteFramebuffers(1, &renderTarget.framebuffer);
             return nullptr;
         }
 
@@ -568,8 +479,10 @@ public:
     static void SetRenderTarget(const SRenderTarget &renderTarget) {
         glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
         glViewport(0, 0, static_cast<GLint>(renderTarget.width), static_cast<GLint>(renderTarget.height));
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        if (renderTarget.framebuffer != 0) {
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
 
         switch (renderTarget.renderTargetKind) {
             case ERenderTargetKind::FloatingPointAccumulation:
@@ -590,13 +503,19 @@ public:
         }
     }
 
-    static void ReleaseTextureRenderTarget(const SRenderTarget &renderTarget) {
-        if (renderTarget.textureHandle.texture != 0) {
-            glDeleteTextures(1, &renderTarget.textureHandle.texture);
+    void ReleaseTextureRenderTargets() {
+        for (const auto &entry : mRenderTarget) {
+            if (entry.first != 0 && entry.second->framebuffer != 0) {
+                glDeleteFramebuffers(1, &entry.second->framebuffer);
+            }
         }
-        if (renderTarget.framebuffer != 0) {
-            glDeleteFramebuffers(1, &renderTarget.framebuffer);
+        mRenderTarget.clear();
+        for (const auto &entry : mTextures) {
+            if (entry.second && entry.second->texture != 0) {
+                glDeleteTextures(1, &entry.second->texture);
+            }
         }
+        mTextures.clear();
     }
 
 private:
@@ -605,9 +524,6 @@ private:
     SDL_GLContext mGLContext;
     Camera mCamera;
     SShaderHandle *mSignedTextureDebugShader = nullptr;
-    SRenderTarget mFloatingPointRenderTarget;
-    std::uint32_t mScreenQuadVao = 0;
-    std::uint32_t mScreenQuadVbo = 0;
     std::vector<std::unique_ptr<SShaderHandle>> mShaders;
     std::vector<std::unique_ptr<SRenderBufferHandle>> mRenderBuffers;
     std::unordered_map<uint32_t, std::unique_ptr<STextureHandle>> mTextures;
@@ -655,6 +571,10 @@ const SShaderHandle *COpenGLRenderSystem::GetDefaultShader() const {
     return mImpl->GetDefaultShader();
 }
 
+const SShaderHandle *COpenGLRenderSystem::GetTexturePresentationShader() const {
+    return mImpl->GetTexturePresentationShader();
+}
+
 void COpenGLRenderSystem::Render(const SRenderContextHandle &renderContextHandle) {
     mImpl->Render(renderContextHandle);
 }
@@ -663,8 +583,8 @@ STextureHandle *COpenGLRenderSystem::CreateTexture(uint32_t width, uint32_t heig
     return mImpl->CreateTexture(width, height, format);
 }
 
-SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(const uint32_t width, const uint32_t height, const ETextureFormat format) {
-    return mImpl->CreateTextureRenderTarget(width, height, format);
+SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
+    return mImpl->CreateTextureRenderTarget(textureHandle, renderTargetKind);
 }
 
 }// namespace unboxing_engine::systems

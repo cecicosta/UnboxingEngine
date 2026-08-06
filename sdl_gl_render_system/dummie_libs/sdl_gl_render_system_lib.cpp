@@ -11,8 +11,11 @@ SRenderBufferHandle* COpenGLRenderSystem::WriteRenderBufferData(const CMeshBuffe
 void COpenGLRenderSystem::EraseRenderBufferData(const SRenderBufferHandle &renderBufferHandle) {}
 const Camera &COpenGLRenderSystem::GetCamera() const { return *mCamera; }
 const SShaderHandle *COpenGLRenderSystem::GetDefaultShader() const { return nullptr; }
+const SShaderHandle *COpenGLRenderSystem::GetTexturePresentationShader() const { return nullptr; }
 void COpenGLRenderSystem::SetCamera(const Camera &camera) { mCamera = &camera; }
 void COpenGLRenderSystem::Render(const SRenderContextHandle &) {};
+STextureHandle *COpenGLRenderSystem::CreateTexture(uint32_t, uint32_t, ETextureFormat) { return nullptr; }
+SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(STextureHandle *, ERenderTargetKind) { return nullptr; }
 
 void COpenGLRenderSystem::OnPreRender() {}
 void COpenGLRenderSystem::OnPostRender() {}

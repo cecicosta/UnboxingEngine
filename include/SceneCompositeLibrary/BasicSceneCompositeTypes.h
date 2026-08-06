@@ -177,9 +177,9 @@ void main()
     float distance = length(camera - vGlobalPosition.xyz)/100;
 
     if(gl_FrontFacing) {
-        color = vec4(0.15/-distance, 0, 0, -distance);
+        color = vec4(0.15, 0, 0, -distance);
     } else {
-        color = vec4(0, 0.15/distance, 0, distance);
+        color = vec4(0, 0.15, 0, distance);
     }
 
     float PI = 3.141592;
@@ -209,7 +209,7 @@ class CustomShaderComposite : public CSceneComposite {
 public:
     explicit CustomShaderComposite(const CMeshBuffer &mesh)
         : mMesh(mesh) {
-        auto render = std::make_unique<CustomShaderMeshRenderComponent>(mMesh);
+        auto render = std::make_unique<RenderToTextureComponent>(mMesh);
         render->SetMaterial(yellowMaterial());
         render->SetPolygonMode(EPolygonMode::Fill);
 

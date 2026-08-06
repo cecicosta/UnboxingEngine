@@ -73,10 +73,12 @@ protected:
 class RenderToTextureComponent : public CustomShaderMeshRenderComponent {
 public:
     RenderToTextureComponent(const CMeshBuffer &meshBuffer);
+    ~RenderToTextureComponent() override;
 
     void UpdateRenderContext() override;
     void OnInitialize(systems::IRenderSystem &renderSystem) override;
     void OnRender() override;
+    void ReleaseRenderContext() override;
 private:
     std::unique_ptr<CMeshBuffer> mQuadMesh;
     std::unique_ptr<systems::SRenderContextHandle> mQuadRenderContext;
