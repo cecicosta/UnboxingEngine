@@ -135,6 +135,7 @@ out vec3 vWorldPosition;
 out vec3 vViewPosition;
 out vec3 vLocalPosition;
 out vec4 v_color;
+out float vRadius;
 void main()
 {
     vec4 worldPosition = u_model_matrix * vec4(i_position, 1.0);
@@ -145,6 +146,7 @@ void main()
     vViewPosition = viewPosition.xyz;
     v_color = color;
 
+    vRadius = length(i_position);
     gl_Position = u_projection_matrix * viewPosition;
 }
 )";
@@ -156,54 +158,28 @@ in vec3 vWorldPosition;
 in vec3 vViewPosition;
 in vec3 vLocalPosition;
 in vec4 v_color;
+in float vRadius;
 
 uniform vec3 u_camera_world_position;
 uniform float u_camera_far;
 
-// Elementary charge
-float e = 1.602e-19; // [C]
-
-// Permittivity of free space
-float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
-
-// Atomic unit of length
-float a0 = 5.29177210544e-11; //[m] Borh radius (4\pi*\empsilon_0*\hbar^2) / (e^2 * m_e);
-
 out vec4 FragColor;
-
-
 
 void main()
 {
     float maximumDistance = max(u_camera_far, 0.000001);
-    float distanceFromCamera = length(u_camera_world_position - vWorldPosition);
-    float normalizedDistance = distanceFromCamera / maximumDistance;
+    vec3 ray = u_camera_world_position - vWorldPosition;
+    float distanceFromCamera = length(ray);
 
-    FragColor = gl_FrontFacing
-        ? vec4(0.0, 0.0, 0.0, -normalizedDistance)
-        : vec4(0.0, 0.0, 0.0,  normalizedDistance);
-/*
-    float PI = 3.141592;
+    float signValue = gl_FrontFacing ? -1.0 : 1.0;
 
-    // We cannot simply use the 3D vector length as all the points of the sphere sits on ints surface
-    float r = length(vWorldPosition.xy)*(a0);
-
-    float V0 = (e*e)/(4*PI*E0*a0);
-    float V = (e*e)/(4*PI*E0*r);
-
-    // Get the inverse of the decay, since we want fade the color
-    float decay = 1 - V/V0;
-
-    // There will always be at least 2 fragments of the sphere at the same projected position.
-    // As the points get near the radius, there will be proportionally more points compressed together
-    // Their alpha will be summed up on the z buffer. We either must account for that, or use solid colors
     FragColor = vec4(
-        v_color.rgb - v_color.rgb*decay,
-        v_color.a
+        signValue * ray,
+        signValue * distanceFromCamera * vRadius //Encodes the radius value r*(dNear - dFar)
     );
-*/
 }
 )";
+
 
 
 class CustomShaderComposite : public CSceneComposite {

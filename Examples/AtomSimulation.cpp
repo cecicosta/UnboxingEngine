@@ -65,7 +65,7 @@ private:
 
 int main(int argc, char *argv[]) {
     unboxing_engine::CCore engine(640, 480, 32);
-    Camera camera(720, 720, 60, 1, 200);
+    Camera camera(720, 720, 60, 1, 300);
     camera.SetPerspectiveProjection();
     camera.SetPosition({0, 0, 100});
     engine.SetCamera(camera);

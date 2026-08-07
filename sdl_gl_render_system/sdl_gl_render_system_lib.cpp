@@ -12,50 +12,56 @@
 #include <iostream>
 #include <memory>
 
-static const char *vertex_shader_source =
-    "#version 150 core\n"
-    "in vec3 i_position;\n"
-    "uniform vec4 color;\n"
-    "out vec4 v_color;\n"
-    "uniform mat4 u_model_matrix;\n"
-    "uniform mat4 u_view_matrix;\n"
-    "uniform mat4 u_projection_matrix;\n"
-    "void main() {\n"
-    "    v_color = color;\n"
-    "    gl_Position = u_projection_matrix * u_view_matrix * u_model_matrix * vec4(i_position, 1.0);\n"
-    "}\n";
+static const char *vertex_shader_source = R"(#version 150 core
+in vec3 i_position;
+uniform vec4 color;
+out vec4 v_color;
+uniform mat4 u_model_matrix;
+uniform mat4 u_view_matrix;
+uniform mat4 u_projection_matrix;
+void main() {
+    v_color = color;
+    gl_Position = u_projection_matrix * u_view_matrix * u_model_matrix * vec4(i_position, 1.0);
+}
+)";
 
-static const char *fragment_shader_source =
-    "#version 150\n"
-    "in vec4 v_color;\n"
-    "out vec4 o_color;\n"
-    "void main() {\n"
-    "    o_color = v_color;\n"
-    "}\n";
+static const char *fragment_shader_source = R"(#version 150
+in vec4 v_color;
+out vec4 o_color;
+void main() {
+    o_color = v_color;
+}
+)";
 
-static const char *signed_texture_debug_vertex_shader_source =
-    "#version 150 core\n"
-    "uniform vec4 color;\n"
-    "in vec2 i_position;\n"
-    "out vec2 v_uv;\n"
-    "out vec4 v_color;\n"
-    "void main() {\n"
-    "    v_uv = i_position + 0.5;\n"
-    "    v_color = color;\n"
-    "    gl_Position = vec4(i_position * 2.0, 0.0, 1.0);\n"
-    "}\n";
+static const char *signed_texture_debug_vertex_shader_source = R"(#version 150 core
+uniform vec4 color;
+in vec2 i_position;
+out vec2 v_uv;
+out vec4 v_color;
+void main() {
+    v_uv = i_position + 0.5;
+    v_color = color;
+    gl_Position = vec4(i_position * 2.0, 0.0, 1.0);
+}
+)";
 
-static const char *signed_texture_debug_fragment_shader_source =
-    "#version 150 core\n"
-    "uniform sampler2D u_texture;\n"
-    "uniform float u_visualization_scale;\n"
-    "in vec4 v_color;\n"
-    "in vec2 v_uv;\n"
-    "out vec4 o_color;\n"
-    "void main() {\n"
-    "    float volumetricOpacityValue = texture(u_texture, v_uv).a * u_visualization_scale;\n"
-    "    o_color = v_color * vec4(1.0, 1.0, 1.0, volumetricOpacityValue);\n"
-    "}\n";
+static const char *signed_texture_debug_fragment_shader_source = R"(#version 150 core
+uniform sampler2D u_texture;
+uniform float u_visualization_scale;
+in vec4 v_color;
+in vec2 v_uv;
+out vec4 o_color;
+void main() {
+    vec4 texture = texture(u_texture, v_uv);
+    float volumetricOpacityValue = texture.a * u_visualization_scale;
+
+    if(gl_FrontFacing) {
+
+    }
+
+    o_color = v_color * vec4(texture.rgb, volumetricOpacityValue);
+}
+)";
 
 namespace {
 void GetError() {
