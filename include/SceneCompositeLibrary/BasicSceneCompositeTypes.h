@@ -48,6 +48,48 @@ inline SMaterial redMaterial() {
     return material;
 }
 
+inline SMaterial someMaterial() {
+    SMaterial material{};
+    material.materialDif[0] = 0.5f;
+    material.materialDif[1] = 0.74f;
+    material.materialDif[2] = 0.2f;
+    material.materialDif[3] = 1.0f;
+    material.enable = true;
+    return material;
+}
+
+inline SMaterial otherMaterial() {
+    SMaterial material{};
+    material.materialDif[0] = 0.74f;
+    material.materialDif[1] = 0.5f;
+    material.materialDif[2] = 0.2f;
+    material.materialDif[3] = 1.0f;
+    material.enable = true;
+    return material;
+}
+
+inline SMaterial anotherMaterial() {
+    SMaterial material{};
+    material.materialDif[0] = 0.5f;
+    material.materialDif[1] = 0.2f;
+    material.materialDif[2] = 0.74f;
+    material.materialDif[3] = 1.0f;
+    material.enable = true;
+    return material;
+}
+
+
+inline SMaterial whiteMaterial() {
+    SMaterial material{};
+    material.materialDif[0] = 1;
+    material.materialDif[1] = 1;
+    material.materialDif[2] = 1;
+    material.materialDif[3] = 1.0f;
+    material.enable = true;
+    return material;
+}
+
+
 class CSegment
     : public CSceneComposite {
 public:
@@ -271,6 +313,8 @@ inline float CoulombRadialPotential(const float r, const int z) {
 inline float KineticEnergy(const float m, const Vector3f& v) {
     return 0.5f * v.DotProduct(v) * m; // 1/2 mv^2
 }
+
+
 
 
 

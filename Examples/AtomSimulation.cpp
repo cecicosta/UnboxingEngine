@@ -1,5 +1,6 @@
 #pragma once
 #include "SceneCompositeLibrary/BasicSceneCompositeTypes.h"
+#include "ShaderLibrary.h"
 #include "UnboxingEngine.h"
 #include "algorithms/CollisionPrimitives.h"
 
@@ -56,11 +57,89 @@ public:
         float x = outPoint.x + outDirection.x*(camera.GetPosition().z - currentZ);
         float y = outPoint.y + outDirection.y*(camera.GetPosition().z - currentZ);
         SetPosition(Vector3f{x, y, currentZ});
-
     }
 private:
     CCore& mEngine;
 };
+
+class SimpleTextureComposite : public CSceneComposite {
+    public:
+    SimpleTextureComposite() {
+        auto render = std::make_unique<RenderTextureComponent>();
+        render->SetPolygonMode(EPolygonMode::Fill);
+        AddComponent<IRenderComponent>(std::move(render));
+    }
+
+    void SetTexture(systems::STextureHandle* texture) {
+        if (const auto render = GetComponent<RenderTextureComponent>()) {
+            render->SetTexture(texture);
+        }
+    }
+};
+
+class RenderToTextureComposite0 : public CSceneComposite {
+public:
+    explicit RenderToTextureComposite0(const CMeshBuffer& mesh) : mMesh(mesh) {
+        auto render = std::make_unique<RenderToTextureComponent>(mMesh);
+        render->SetMaterial(yellowMaterial());
+        render->SetPolygonMode(EPolygonMode::Fill);
+
+        render->SetVertexShader(customVertexShader);
+        render->SetFragmentShader(customFragmentShader);
+
+        AddComponent<IRenderComponent>(std::move(render));
+    }
+
+    void SetMaterial(const SMaterial &material) {
+        auto render = GetComponent<IRenderComponent>();
+        render->SetMaterial(material);
+    }
+
+    [[nodiscard]] systems::STextureHandle* GetTexture() const {
+        if(const auto render = GetComponent<IRenderComponent>()) {
+            return dynamic_cast<RenderToTextureComponent*>(render)->GetDstTexture();
+        }
+        return nullptr;
+    }
+private:
+    CMeshBuffer mMesh;
+};
+
+class RenderToTextureComposite1 : public CSceneComposite {
+public:
+    explicit RenderToTextureComposite1(const CMeshBuffer& mesh) : mMesh(mesh) {
+        auto render = std::make_unique<RenderTextureComponent>();
+        render->SetMaterial(yellowMaterial());
+        render->SetPolygonMode(EPolygonMode::Fill);
+
+        render->SetVertexShader(quad_render_vertex_shader);
+        render->SetFragmentShader(potential_region_fragment_shader);
+
+        AddComponent<IRenderComponent>(std::move(render));
+    }
+
+    void SetMaterial(const SMaterial &material) {
+        auto render = GetComponent<IRenderComponent>();
+        render->SetMaterial(material);
+    }
+
+    [[nodiscard]] systems::STextureHandle* GetTexture() const {
+        if(const auto render = GetComponent<RenderTextureComponent>()) {
+            return nullptr; //render->GetDstTexture();
+        }
+        return nullptr;
+    }
+
+    void SetTexture(systems::STextureHandle* texture) {
+        if (const auto render = GetComponent<IRenderComponent>()) {
+            dynamic_cast<RenderTextureComponent*>(render)->SetTexture(texture);
+        }
+    }
+
+private:
+    CMeshBuffer mMesh;
+};
+
 
 
 int main(int argc, char *argv[]) {
@@ -87,16 +166,23 @@ int main(int argc, char *argv[]) {
     float radius = 40;
     CMouseTrackingSphere trackingCircle(engine, radius);
     trackingCircle.SetPosition({0, 0, 0});
-    engine.RegisterSceneElement(trackingCircle);
+    trackingCircle.SetMaterial(anotherMaterial());
+//    engine.RegisterSceneElement(trackingCircle);
 
-    CSimpleMeshWireFrame test(*primitive_utils::Cube());
-    test.SetMaterial(redMaterial());
-    engine.RegisterSceneElement(test);
+    RenderToTextureComposite0 nucleus1st(*primitive_utils::Sphere(radius));
+    nucleus1st.SetPosition({0, 0, 0});
+    nucleus1st.SetMaterial(anotherMaterial());
+    engine.RegisterSceneElement(nucleus1st);
+
+    RenderToTextureComposite1 nucleus2nd(*primitive_utils::Quad());
+    nucleus2nd.SetTexture(nucleus1st.GetTexture());
+    nucleus2nd.SetMaterial(anotherMaterial());
+    engine.RegisterSceneElement(nucleus2nd);
 
     engine.Run();
 
-    engine.UnregisterSceneElement(trackingCircle);
-    engine.UnregisterSceneElement(test);
+    engine.UnregisterSceneElement(nucleus1st);
+    engine.UnregisterSceneElement(nucleus2nd);
     engine.Release();
     return 0;
 }
