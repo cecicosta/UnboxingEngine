@@ -94,6 +94,16 @@ void CCore::UpdateFlyingController(const core_events::SCursor& cursor) {
 }
 
 void CCore::Release() {
+    if (mRenderSystem) {
+        for (auto* sceneComposite : mRenderQueue) {
+            if (sceneComposite) {
+                if (auto* renderComponent = sceneComposite->GetComponent<IRenderComponent>()) {
+                    renderComponent->ReleaseRenderContext();
+                }
+            }
+        }
+    }
+    mRenderQueue.clear();
     mRenderSystem.reset();
     
     for (auto &&listener: GetListeners<core_events::IReleaseListener>()) {

@@ -61,15 +61,18 @@ struct SShaderHandle;
 class CustomShaderMeshRenderComponent : public CDefaultMeshRenderComponent {
 public:
     CustomShaderMeshRenderComponent(const CMeshBuffer &meshBuffer);
+    ~CustomShaderMeshRenderComponent() override;
     void SetVertexShader(const char* shader);
     void SetFragmentShader(const char* shader);
 
     void OnInitialize(systems::IRenderSystem &renderSystem) override;
+    void ReleaseRenderContext() override;
 protected:
     void UpdateRenderContext() override;
     std::string mVertexShader;
     std::string mFragmentShader;
     const systems::SShaderHandle *mShaderHandle = nullptr;
+    bool mOwnsShaderHandle = false;
 };
 
 class RenderToTextureComponent : public CustomShaderMeshRenderComponent {
@@ -89,6 +92,7 @@ public:
 private:
     std::unique_ptr<CMeshBuffer> mQuadMesh;
     std::unique_ptr<systems::SRenderContextHandle> mQuadRenderContext;
+    const systems::SShaderHandle *mQuadShaderHandle = nullptr;
     std::vector<systems::STextureBinding> mTextureSrcBindings;
     systems::STextureHandle *mTexturedstHandle = nullptr;
     systems::SRenderTarget * mRenderTarget = nullptr;

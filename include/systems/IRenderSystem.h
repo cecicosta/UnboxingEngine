@@ -60,6 +60,7 @@ public:
 
     [[nodiscard]] virtual bool Initialize() = 0;
     [[nodiscard]] virtual SShaderHandle* CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) const = 0;
+    virtual void EraseShaderData(const SShaderHandle &shaderHandle) = 0;
     [[nodiscard]] virtual SRenderBufferHandle* WriteRenderBufferData(const CMeshBuffer &meshBuffer) = 0;
     virtual void EraseRenderBufferData(const SRenderBufferHandle &renderBufferHandle) = 0;
     [[nodiscard]] virtual const Camera &GetCamera() const = 0;
@@ -68,7 +69,9 @@ public:
     virtual void SetCamera(const Camera& camera) = 0;
     virtual void Render(const SRenderContextHandle &renderContextHandle) = 0;
     virtual STextureHandle *CreateTexture(uint32_t width, uint32_t height, ETextureFormat format) = 0;
+    virtual void EraseTextureData(const STextureHandle &textureHandle) = 0;
     virtual SRenderTarget *CreateTextureRenderTarget(STextureHandle *textureHandle, ERenderTargetKind renderTargetKind) = 0;
+    virtual void EraseRenderTargetData(const SRenderTarget &renderTarget) = 0;
 };
 
 }// namespace unboxing_engine

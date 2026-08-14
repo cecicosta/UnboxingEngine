@@ -26,7 +26,10 @@ public:
         CreateTexture,
         CreateRenderTarget,
         Render,
-        EraseRenderBuffer
+        EraseRenderBuffer,
+        EraseShader,
+        EraseTexture,
+        EraseRenderTarget
     };
 
     FakeRenderSystem()
@@ -36,7 +39,13 @@ public:
 
     unboxing_engine::systems::SShaderHandle *CompileShader(
         const char *, const char *) const override {
-        return &customShader;
+        return &customShaders[compileShaderCount++];
+    }
+
+    void EraseShaderData(
+        const unboxing_engine::systems::SShaderHandle &handle) override {
+        erasedShaders.push_back(&handle);
+        actions.push_back(EAction::EraseShader);
     }
 
     unboxing_engine::systems::SRenderBufferHandle *WriteRenderBufferData(
@@ -83,6 +92,12 @@ public:
         return createTextureResult ? &texture : nullptr;
     }
 
+    void EraseTextureData(
+        const unboxing_engine::systems::STextureHandle &handle) override {
+        erasedTextures.push_back(&handle);
+        actions.push_back(EAction::EraseTexture);
+    }
+
     unboxing_engine::systems::SRenderTarget *CreateTextureRenderTarget(
         unboxing_engine::systems::STextureHandle *textureHandle,
         unboxing_engine::systems::ERenderTargetKind kind) override {
@@ -92,12 +107,18 @@ public:
         return createRenderTargetResult ? &renderTarget : nullptr;
     }
 
+    void EraseRenderTargetData(
+        const unboxing_engine::systems::SRenderTarget &handle) override {
+        erasedRenderTargets.push_back(&handle);
+        actions.push_back(EAction::EraseRenderTarget);
+    }
+
     void OnPreRender() override {}
     void OnPostRender() override {}
 
     unboxing_engine::Camera camera;
     unboxing_engine::systems::SShaderHandle defaultShader;
-    mutable unboxing_engine::systems::SShaderHandle customShader;
+    mutable unboxing_engine::systems::SShaderHandle customShaders[4];
     unboxing_engine::systems::SShaderHandle presentationShader;
     unboxing_engine::systems::STextureHandle texture;
     unboxing_engine::systems::STextureHandle secondTexture;
@@ -114,9 +135,13 @@ public:
     unboxing_engine::systems::ERenderTargetKind targetKind =
         unboxing_engine::systems::ERenderTargetKind::DefaultFramebuffer;
     unsigned int writeRenderBufferCount = 0;
+    mutable unsigned int compileShaderCount = 0;
     std::vector<EAction> actions;
     std::vector<const unboxing_engine::systems::SRenderContextHandle *> renderContexts;
     std::vector<const unboxing_engine::systems::SRenderBufferHandle *> erasedBuffers;
+    std::vector<const unboxing_engine::systems::SShaderHandle *> erasedShaders;
+    std::vector<const unboxing_engine::systems::STextureHandle *> erasedTextures;
+    std::vector<const unboxing_engine::systems::SRenderTarget *> erasedRenderTargets;
 };
 
 unboxing_engine::CMeshBuffer MakeTestMesh() {
@@ -210,6 +235,64 @@ TEST(RenderToTextureComponentTest, ReleasesMeshAndPresentationBuffers) {
     ASSERT_EQ(renderSystem.erasedBuffers.size(), 2u);
     EXPECT_EQ(renderSystem.erasedBuffers[0], &renderSystem.renderBuffers[1]);
     EXPECT_EQ(renderSystem.erasedBuffers[1], &renderSystem.renderBuffers[0]);
+}
+
+TEST(RenderToTextureComponentTest, ReleasesAllOwnedRenderResources) {
+    FakeRenderSystem renderSystem;
+    auto mesh = MakeTestMesh();
+
+    {
+        unboxing_engine::CSceneComposite scene;
+        auto component = std::make_unique<unboxing_engine::RenderToTextureComponent>(mesh);
+        auto *componentPtr = component.get();
+        scene.AddComponent<unboxing_engine::IRenderComponent>(std::move(component));
+        componentPtr->SetVertexShader("vertex");
+        componentPtr->SetFragmentShader("fragment");
+        componentPtr->OnInitialize(renderSystem);
+    }
+
+    ASSERT_EQ(renderSystem.erasedShaders.size(), 2u);
+    EXPECT_EQ(renderSystem.erasedShaders[0], &renderSystem.customShaders[1]);
+    EXPECT_EQ(renderSystem.erasedShaders[1], &renderSystem.customShaders[0]);
+    ASSERT_EQ(renderSystem.erasedRenderTargets.size(), 1u);
+    EXPECT_EQ(renderSystem.erasedRenderTargets[0], &renderSystem.renderTarget);
+    ASSERT_EQ(renderSystem.erasedTextures.size(), 1u);
+    EXPECT_EQ(renderSystem.erasedTextures[0], &renderSystem.texture);
+}
+
+TEST(RenderToTextureComponentTest, ReleasesTextureWhenTargetCreationFails) {
+    FakeRenderSystem renderSystem;
+    renderSystem.createRenderTargetResult = false;
+    auto mesh = MakeTestMesh();
+
+    {
+        unboxing_engine::CSceneComposite scene;
+        auto component = std::make_unique<unboxing_engine::RenderToTextureComponent>(mesh);
+        auto *componentPtr = component.get();
+        scene.AddComponent<unboxing_engine::IRenderComponent>(std::move(component));
+        componentPtr->OnInitialize(renderSystem);
+    }
+
+    EXPECT_TRUE(renderSystem.erasedRenderTargets.empty());
+    ASSERT_EQ(renderSystem.erasedTextures.size(), 1u);
+    EXPECT_EQ(renderSystem.erasedTextures[0], &renderSystem.texture);
+}
+
+TEST(RenderTextureComponentTest, DoesNotReleaseBorrowedResources) {
+    FakeRenderSystem renderSystem;
+
+    {
+        unboxing_engine::CSceneComposite scene;
+        auto component = std::make_unique<unboxing_engine::RenderTextureComponent>();
+        auto *componentPtr = component.get();
+        scene.AddComponent<unboxing_engine::IRenderComponent>(std::move(component));
+        componentPtr->SetTexture(&renderSystem.texture);
+        componentPtr->OnInitialize(renderSystem);
+    }
+
+    EXPECT_TRUE(renderSystem.erasedShaders.empty());
+    EXPECT_TRUE(renderSystem.erasedTextures.empty());
+    EXPECT_TRUE(renderSystem.erasedRenderTargets.empty());
 }
 
 TEST(RenderToTextureComponentTest, DoesNotRenderWhenTargetCreationFails) {

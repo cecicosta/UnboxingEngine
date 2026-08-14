@@ -10,8 +10,12 @@
 #include <GL/glew.h>
 #include <SDL.h>
 
+#include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
 
 
@@ -73,8 +77,8 @@ public:
     Impl(const Camera& camera) : mCamera(camera) {}
     ~Impl() {
         ReleaseTextureRenderTargets();
-        mRenderBuffers.clear();
-        mShaders.clear();
+        ReleaseRenderBuffers();
+        ReleaseShaders();
        
         SDL_GL_DeleteContext(mGLContext);
         SDL_DestroyWindow(mWindow);
@@ -149,6 +153,7 @@ public:
                 glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
                 std::cout << "Vertex shader compilation failed: \n"
                           << infoLog << std::endl;
+                glDeleteShader(vertexShader);
                 return nullptr;
             }
         }
@@ -168,6 +173,8 @@ public:
                 glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
                 std::cout << "Fragment shader compilation failed:\n"
                           << infoLog << std::endl;
+                glDeleteShader(fragmentShader);
+                glDeleteShader(vertexShader);
                 return nullptr;
             }
         }
@@ -189,6 +196,9 @@ public:
                 glGetProgramInfoLog(program, 512, nullptr, infoLog);
                 std::cout << "Compiling shader program failed: \n"
                           << infoLog << std::endl;
+                glDeleteProgram(program);
+                glDeleteShader(fragmentShader);
+                glDeleteShader(vertexShader);
                 return nullptr;
             }
         }
@@ -202,6 +212,27 @@ public:
         mShaders.emplace_back(std::move(handle));
         return mShaders[mShaders.size() - 1].get();
     }
+
+    void EraseShaderData(const SShaderHandle& shaderHandle) {
+        const auto shader = std::find_if(
+            mShaders.begin(),
+            mShaders.end(),
+            [&shaderHandle](const auto& ownedShader) {
+                return ownedShader.get() == &shaderHandle;
+            });
+        if (shader == mShaders.end()) {
+            return;
+        }
+
+        if (mSignedTextureDebugShader == shader->get()) {
+            mSignedTextureDebugShader = nullptr;
+        }
+        if ((*shader)->program != 0) {
+            glDeleteProgram((*shader)->program);
+        }
+        mShaders.erase(shader);
+    }
+
     [[nodiscard]] SRenderBufferHandle* WriteRenderBufferData(const unboxing_engine::CMeshBuffer& meshBuffer) {
         auto handle = std::make_unique<SRenderBufferHandle>();
         glGenVertexArrays(1, &handle->vao);
@@ -228,17 +259,20 @@ public:
     }
 
     void EraseRenderBufferData(const SRenderBufferHandle& renderBufferHandle) {
-        glDeleteVertexArrays(1, &renderBufferHandle.vao);
-        glDeleteBuffers(1, &renderBufferHandle.vbo);
-        glDeleteBuffers(1, &renderBufferHandle.ebo);
-
-        for (auto it = mRenderBuffers.begin(); it != mRenderBuffers.end(); ++it) {
-            if (it->get() == &renderBufferHandle) {
-                mRenderBuffers.erase(it);
-                break;
-            }
+        const auto renderBuffer = std::find_if(
+            mRenderBuffers.begin(),
+            mRenderBuffers.end(),
+            [&renderBufferHandle](const auto& ownedBuffer) {
+                return ownedBuffer.get() == &renderBufferHandle;
+            });
+        if (renderBuffer == mRenderBuffers.end()) {
+            return;
         }
 
+        glDeleteVertexArrays(1, &(*renderBuffer)->vao);
+        glDeleteBuffers(1, &(*renderBuffer)->vbo);
+        glDeleteBuffers(1, &(*renderBuffer)->ebo);
+        mRenderBuffers.erase(renderBuffer);
     }
     [[nodiscard]] const Camera& GetCamera() const {
         return mCamera;
@@ -409,6 +443,18 @@ public:
         return mTextures.at(textureId).get();
     }
 
+    void EraseTextureData(const STextureHandle& textureHandle) {
+        const auto texture = mTextures.find(textureHandle.texture);
+        if (texture == mTextures.end() || texture->second.get() != &textureHandle) {
+            return;
+        }
+
+        if (texture->second->texture != 0) {
+            glDeleteTextures(1, &texture->second->texture);
+        }
+        mTextures.erase(texture);
+    }
+
     SRenderTarget* CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
         if (!textureHandle || textureHandle->texture == 0) {
             return nullptr;
@@ -438,6 +484,20 @@ public:
 
         mRenderTarget.emplace(renderTarget.framebuffer, std::make_unique<SRenderTarget>(renderTarget));
         return mRenderTarget.at(renderTarget.framebuffer).get();
+    }
+
+    void EraseRenderTargetData(const SRenderTarget& renderTarget) {
+        if (renderTarget.framebuffer == 0) {
+            return;
+        }
+
+        const auto target = mRenderTarget.find(renderTarget.framebuffer);
+        if (target == mRenderTarget.end() || target->second.get() != &renderTarget) {
+            return;
+        }
+
+        glDeleteFramebuffers(1, &target->second->framebuffer);
+        mRenderTarget.erase(target);
     }
 
     static void SetRenderTarget(const SRenderTarget &renderTarget) {
@@ -475,6 +535,25 @@ public:
         mTextures.clear();
     }
 
+    void ReleaseRenderBuffers() {
+        for (const auto& renderBuffer : mRenderBuffers) {
+            glDeleteVertexArrays(1, &renderBuffer->vao);
+            glDeleteBuffers(1, &renderBuffer->vbo);
+            glDeleteBuffers(1, &renderBuffer->ebo);
+        }
+        mRenderBuffers.clear();
+    }
+
+    void ReleaseShaders() {
+        for (const auto& shader : mShaders) {
+            if (shader->program != 0) {
+                glDeleteProgram(shader->program);
+            }
+        }
+        mShaders.clear();
+        mSignedTextureDebugShader = nullptr;
+    }
+
 private:
     ///Window and opengl handlers
     SDL_Window *mWindow = nullptr;
@@ -498,6 +577,10 @@ bool COpenGLRenderSystem::Initialize() {
 
 SShaderHandle* COpenGLRenderSystem::CompileShader(const char *vertexShaderSrc, const char *fragmentShaderSrc) const {
     return mImpl->CompileShader(vertexShaderSrc, fragmentShaderSrc);
+}
+
+void COpenGLRenderSystem::EraseShaderData(const SShaderHandle &shaderHandle) {
+    mImpl->EraseShaderData(shaderHandle);
 }
 
 SRenderBufferHandle* COpenGLRenderSystem::WriteRenderBufferData(const unboxing_engine::CMeshBuffer &meshBuffer) {
@@ -540,8 +623,16 @@ STextureHandle *COpenGLRenderSystem::CreateTexture(uint32_t width, uint32_t heig
     return mImpl->CreateTexture(width, height, format);
 }
 
+void COpenGLRenderSystem::EraseTextureData(const STextureHandle &textureHandle) {
+    mImpl->EraseTextureData(textureHandle);
+}
+
 SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
     return mImpl->CreateTextureRenderTarget(textureHandle, renderTargetKind);
+}
+
+void COpenGLRenderSystem::EraseRenderTargetData(const SRenderTarget &renderTarget) {
+    mImpl->EraseRenderTargetData(renderTarget);
 }
 
 }// namespace unboxing_engine::systems

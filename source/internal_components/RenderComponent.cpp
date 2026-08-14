@@ -54,6 +54,7 @@ void CDefaultMeshRenderComponent::ReleaseRenderContext() {
         mRenderSystem->EraseRenderBufferData(*mRenderContextHandle->renderBufferHandle);
     }
     mRenderContextHandle.reset();
+    mRenderSystem = nullptr;
 }
 
 void CDefaultMeshRenderComponent::OnRender() {
@@ -83,6 +84,10 @@ CustomShaderMeshRenderComponent::CustomShaderMeshRenderComponent(const CMeshBuff
     : CDefaultMeshRenderComponent(meshBuffer) {
 }
 
+CustomShaderMeshRenderComponent::~CustomShaderMeshRenderComponent() {
+    ReleaseRenderContext();
+}
+
 void CustomShaderMeshRenderComponent::SetVertexShader(const char *shader) {
     mVertexShader = shader;
 }
@@ -91,14 +96,23 @@ void CustomShaderMeshRenderComponent::SetFragmentShader(const char *shader) {
     mFragmentShader = shader;
 }
 void CustomShaderMeshRenderComponent::OnInitialize(systems::IRenderSystem &renderSystem) {
-    // TODO: See how to delete the shader later
     if (!mVertexShader.empty() && !mFragmentShader.empty()) {
         mShaderHandle = renderSystem.CompileShader(mVertexShader.c_str(), mFragmentShader.c_str());
+        mOwnsShaderHandle = mShaderHandle != nullptr;
     }
     if (!mShaderHandle) {
         mShaderHandle = renderSystem.GetDefaultShader();
     }
     CDefaultMeshRenderComponent::OnInitialize(renderSystem);
+}
+
+void CustomShaderMeshRenderComponent::ReleaseRenderContext() {
+    if (mRenderSystem && mOwnsShaderHandle && mShaderHandle) {
+        mRenderSystem->EraseShaderData(*mShaderHandle);
+    }
+    mShaderHandle = nullptr;
+    mOwnsShaderHandle = false;
+    CDefaultMeshRenderComponent::ReleaseRenderContext();
 }
 
 void CustomShaderMeshRenderComponent::UpdateRenderContext() {
@@ -143,11 +157,11 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
     CustomShaderMeshRenderComponent::OnInitialize(renderSystem);
 
     auto renderBufferHandle = mRenderSystem->WriteRenderBufferData(*mQuadMesh);
-    auto shaderHandle = mRenderSystem->CompileShader(quad_render_vertex_shader, potential_region_fragment_shader);
+    mQuadShaderHandle = mRenderSystem->CompileShader(quad_render_vertex_shader, potential_region_fragment_shader);
 
     mQuadRenderContext = std::make_unique<systems::SRenderContextHandle>(
             renderBufferHandle,
-            shaderHandle,
+            mQuadShaderHandle,
             *mSceneComposite,
             std::vector<systems::STextureBinding>{{"u_texture", mTexturedstHandle}});
 }
@@ -179,11 +193,26 @@ void RenderToTextureComponent::OnRender() {
 }
 
 void RenderToTextureComponent::ReleaseRenderContext() {
+    auto* renderSystem = mRenderSystem;
     if (mRenderSystem && mQuadRenderContext && mQuadRenderContext->renderBufferHandle) {
         mRenderSystem->EraseRenderBufferData(*mQuadRenderContext->renderBufferHandle);
     }
     mQuadRenderContext.reset();
-    CDefaultMeshRenderComponent::ReleaseRenderContext();
+    if (mRenderSystem && mQuadShaderHandle) {
+        mRenderSystem->EraseShaderData(*mQuadShaderHandle);
+    }
+    mQuadShaderHandle = nullptr;
+
+    CustomShaderMeshRenderComponent::ReleaseRenderContext();
+
+    if (renderSystem && mRenderTarget) {
+        renderSystem->EraseRenderTargetData(*mRenderTarget);
+    }
+    mRenderTarget = nullptr;
+    if (renderSystem && mTexturedstHandle) {
+        renderSystem->EraseTextureData(*mTexturedstHandle);
+    }
+    mTexturedstHandle = nullptr;
 }
 
 void RenderToTextureComponent::SetSrcTexture(systems::STextureHandle *texture) {
