@@ -5,7 +5,38 @@
 #include "MeshPrimitivesUtils.h"
 #include "systems/IRenderSystem.h"
 
+#include <algorithm>
+
 namespace unboxing_engine {
+namespace {
+
+void SetTextureBinding(
+    std::vector<systems::STextureBinding>& bindings,
+    const std::string& uniformName,
+    systems::STextureHandle* texture) {
+    const auto existing = std::find_if(
+        bindings.begin(),
+        bindings.end(),
+        [&uniformName](const systems::STextureBinding& binding) {
+            return binding.uniformName == uniformName;
+        });
+
+    if (!texture) {
+        if (existing != bindings.end()) {
+            bindings.erase(existing);
+        }
+        return;
+    }
+
+    if (existing != bindings.end()) {
+        existing->texture = texture;
+    } else {
+        bindings.push_back({uniformName, texture});
+    }
+}
+
+}
+
 CDefaultMeshRenderComponent::CDefaultMeshRenderComponent(const CMeshBuffer &meshBuffer)
     : CRenderComponentBase(meshBuffer) {}
 
@@ -77,7 +108,7 @@ void CustomShaderMeshRenderComponent::UpdateRenderContext() {
                 mRenderContextHandle->renderBufferHandle,
                 mShaderHandle,
                 *mSceneComposite,
-                nullptr,
+                std::vector<systems::STextureBinding>{},
                 nullptr);
     }
 }
@@ -118,7 +149,7 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
             renderBufferHandle,
             shaderHandle,
             *mSceneComposite,
-            mTexturedstHandle);
+            std::vector<systems::STextureBinding>{{"u_texture", mTexturedstHandle}});
 }
 
 void RenderToTextureComponent::UpdateRenderContext() {
@@ -128,7 +159,7 @@ void RenderToTextureComponent::UpdateRenderContext() {
                 mRenderContextHandle->renderBufferHandle,
                 mRenderContextHandle->shaderHandle,
                 *mSceneComposite,
-                mTextureSrcHandle,
+                mTextureSrcBindings,
                 mRenderTarget);
     }
 }
@@ -156,7 +187,14 @@ void RenderToTextureComponent::ReleaseRenderContext() {
 }
 
 void RenderToTextureComponent::SetSrcTexture(systems::STextureHandle *texture) {
-    mTextureSrcHandle = texture;
+    SetSrcTexture("u_texture", texture);
+}
+
+void RenderToTextureComponent::SetSrcTexture(
+    const std::string& uniformName,
+    systems::STextureHandle* texture) {
+    SetTextureBinding(mTextureSrcBindings, uniformName, texture);
+    mIsDirty = true;
 }
 
 systems::STextureHandle *RenderToTextureComponent::GetDstTexture() const {
@@ -173,19 +211,24 @@ void RenderTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem) 
 }
 
 void RenderTextureComponent::SetTexture(systems::STextureHandle *texture) {
-    mTexture = texture;
-    // TODO: Review the "isDirty" mechanism. Maybe we can make it more robust and not neet updating manually
-    UpdateRenderContext();
+    SetTexture("u_texture", texture);
+}
+
+void RenderTextureComponent::SetTexture(
+    const std::string& uniformName,
+    systems::STextureHandle* texture) {
+    SetTextureBinding(mTextureBindings, uniformName, texture);
+    mIsDirty = true;
 }
 
 void RenderTextureComponent::UpdateRenderContext() {
     CustomShaderMeshRenderComponent::UpdateRenderContext();
-    if (mTexture && mRenderContextHandle) {
+    if (mRenderContextHandle) {
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
                 mRenderContextHandle->renderBufferHandle,
                 mRenderContextHandle->shaderHandle,
                 *mSceneComposite,
-                mTexture);
+                mTextureBindings);
     }
 }
 

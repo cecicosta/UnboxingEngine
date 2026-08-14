@@ -283,7 +283,7 @@ public:
         }
 
         glPolygonMode(GL_FRONT_AND_BACK,
-                      renderContextHandle.textureHandle || polygonMode == EPolygonMode::Fill ? GL_FILL : GL_LINE);
+                      !renderContextHandle.textureBindings.empty() || polygonMode == EPolygonMode::Fill ? GL_FILL : GL_LINE);
 
         auto modelMatrix = renderContextHandle.sceneComposite.GetWorldTransformation();
         auto viewMatrix = mCamera.GetViewMatrix();
@@ -314,23 +314,34 @@ public:
         if (colorUniform >= 0) {
             glUniform4fv(colorUniform, 1, material->materialDif);
         }
-        if (renderContextHandle.textureHandle) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderContextHandle.textureHandle->texture);
-            const GLint textureUniform = glGetUniformLocation(program, "u_texture");
-            if (textureUniform >= 0) {
-                glUniform1i(textureUniform, 0);
+        for (size_t unit = 0; unit < renderContextHandle.textureBindings.size(); ++unit) {
+            const auto& binding = renderContextHandle.textureBindings[unit];
+            if (!binding.texture) {
+                continue;
             }
-            const GLint visualizationScaleUniform = glGetUniformLocation(program, "u_visualization_scale");
-            if (visualizationScaleUniform >= 0) {
-                glUniform1f(visualizationScaleUniform, 1.0f);
+
+            glActiveTexture(GL_TEXTURE0 + static_cast<GLenum>(unit));
+            glBindTexture(GL_TEXTURE_2D, binding.texture->texture);
+
+            const GLint textureUniform = glGetUniformLocation(program, binding.uniformName.c_str());
+            if (textureUniform >= 0) {
+                glUniform1i(textureUniform, static_cast<GLint>(unit));
             }
         }
+
+        const GLint visualizationScaleUniform = glGetUniformLocation(program, "u_visualization_scale");
+        if (visualizationScaleUniform >= 0) {
+            glUniform1f(visualizationScaleUniform, 1.0f);
+        }
+
         glBindVertexArray(renderContextHandle.renderBufferHandle->vao);
         glDrawElements(GL_TRIANGLES, renderContextHandle.renderBufferHandle->ntriangles * 3, GL_UNSIGNED_INT, nullptr);
-        if (renderContextHandle.textureHandle) {
+
+        for (size_t unit = 0; unit < renderContextHandle.textureBindings.size(); ++unit) {
+            glActiveTexture(GL_TEXTURE0 + static_cast<GLenum>(unit));
             glBindTexture(GL_TEXTURE_2D, 0);
         }
+        glActiveTexture(GL_TEXTURE0);
 
     }
 

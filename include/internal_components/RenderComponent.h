@@ -83,12 +83,13 @@ public:
     void ReleaseRenderContext() override;
 
     void SetSrcTexture(systems::STextureHandle* texture);
+    void SetSrcTexture(const std::string& uniformName, systems::STextureHandle* texture);
     [[nodiscard]] systems::STextureHandle* GetDstTexture() const;
 
 private:
     std::unique_ptr<CMeshBuffer> mQuadMesh;
     std::unique_ptr<systems::SRenderContextHandle> mQuadRenderContext;
-    systems::STextureHandle *mTextureSrcHandle = nullptr;
+    std::vector<systems::STextureBinding> mTextureSrcBindings;
     systems::STextureHandle *mTexturedstHandle = nullptr;
     systems::SRenderTarget * mRenderTarget = nullptr;
 };
@@ -99,7 +100,8 @@ class RenderTextureComponent : public CustomShaderMeshRenderComponent {
 public:
     RenderTextureComponent(std::unique_ptr<CMeshBuffer> meshBuffer  = primitive_utils::Quad()); // TODO: to create a Quad a default parameter was a workaround to create the mesh before the parent class initialization. We need to fix the storaging of the mesh on the base classes
     void OnInitialize(systems::IRenderSystem &renderSystem) override;
-        void SetTexture(systems::STextureHandle* texture);
+    void SetTexture(systems::STextureHandle* texture);
+    void SetTexture(const std::string& uniformName, systems::STextureHandle* texture);
 
 protected:
     void UpdateRenderContext() override;
@@ -107,7 +109,7 @@ protected:
 
 private:
     std::unique_ptr<CMeshBuffer> mMeshBuffer;
-    systems::STextureHandle *mTexture = nullptr;
+    std::vector<systems::STextureBinding> mTextureBindings;
 };
 
 }// namespace unboxing_engine

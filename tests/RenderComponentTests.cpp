@@ -100,6 +100,7 @@ public:
     mutable unboxing_engine::systems::SShaderHandle customShader;
     unboxing_engine::systems::SShaderHandle presentationShader;
     unboxing_engine::systems::STextureHandle texture;
+    unboxing_engine::systems::STextureHandle secondTexture;
     unboxing_engine::systems::SRenderTarget renderTarget;
     unboxing_engine::systems::SRenderBufferHandle renderBuffers[2];
 
@@ -151,24 +152,47 @@ TEST(RenderToTextureComponentTest, CreatesTargetBeforeRendering) {
 
     ASSERT_EQ(renderSystem.renderContexts.size(), 1u);
     EXPECT_EQ(renderSystem.renderContexts[0]->renderTarget, &renderSystem.renderTarget);
-    EXPECT_EQ(renderSystem.renderContexts[0]->textureHandle, nullptr);
+    EXPECT_TRUE(renderSystem.renderContexts[0]->textureBindings.empty());
 }
 
-TEST(RenderTextureComponentTest, RendersAssignedTexture) {
+TEST(RenderTextureComponentTest, RendersAssignedTextures) {
     FakeRenderSystem renderSystem;
     unboxing_engine::CSceneComposite scene;
     auto component = std::make_unique<unboxing_engine::RenderTextureComponent>();
     auto *componentPtr = component.get();
     scene.AddComponent<unboxing_engine::IRenderComponent>(std::move(component));
 
-    componentPtr->SetTexture(&renderSystem.texture);
+    componentPtr->SetTexture("u_accumulation", &renderSystem.texture);
+    componentPtr->SetTexture("u_noise", &renderSystem.secondTexture);
     componentPtr->OnInitialize(renderSystem);
     componentPtr->OnRender();
 
     ASSERT_EQ(renderSystem.renderContexts.size(), 1u);
     EXPECT_EQ(renderSystem.renderContexts[0]->renderTarget, nullptr);
-    EXPECT_EQ(renderSystem.renderContexts[0]->textureHandle, &renderSystem.texture);
+    ASSERT_EQ(renderSystem.renderContexts[0]->textureBindings.size(), 2u);
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[0].uniformName, "u_accumulation");
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[0].texture, &renderSystem.texture);
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[1].uniformName, "u_noise");
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[1].texture, &renderSystem.secondTexture);
     EXPECT_EQ(renderSystem.renderContexts[0]->shaderHandle, &renderSystem.presentationShader);
+}
+
+TEST(RenderTextureComponentTest, ReplacesTextureWithSameUniformName) {
+    FakeRenderSystem renderSystem;
+    unboxing_engine::CSceneComposite scene;
+    auto component = std::make_unique<unboxing_engine::RenderTextureComponent>();
+    auto *componentPtr = component.get();
+    scene.AddComponent<unboxing_engine::IRenderComponent>(std::move(component));
+
+    componentPtr->SetTexture("u_texture", &renderSystem.texture);
+    componentPtr->SetTexture("u_texture", &renderSystem.secondTexture);
+    componentPtr->OnInitialize(renderSystem);
+    componentPtr->OnRender();
+
+    ASSERT_EQ(renderSystem.renderContexts.size(), 1u);
+    ASSERT_EQ(renderSystem.renderContexts[0]->textureBindings.size(), 1u);
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[0].uniformName, "u_texture");
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[0].texture, &renderSystem.secondTexture);
 }
 
 TEST(RenderToTextureComponentTest, ReleasesMeshAndPresentationBuffers) {
@@ -201,6 +225,27 @@ TEST(RenderToTextureComponentTest, DoesNotRenderWhenTargetCreationFails) {
     componentPtr->OnRender();
 
     EXPECT_TRUE(renderSystem.renderContexts.empty());
+}
+
+TEST(RenderToTextureComponentTest, RendersWithAssignedSourceTextures) {
+    FakeRenderSystem renderSystem;
+    unboxing_engine::CSceneComposite scene;
+    auto mesh = MakeTestMesh();
+    auto component = std::make_unique<unboxing_engine::RenderToTextureComponent>(mesh);
+    auto *componentPtr = component.get();
+    scene.AddComponent<unboxing_engine::IRenderComponent>(std::move(component));
+
+    componentPtr->SetSrcTexture("u_previous", &renderSystem.texture);
+    componentPtr->SetSrcTexture("u_mask", &renderSystem.secondTexture);
+    componentPtr->OnInitialize(renderSystem);
+    componentPtr->OnRender();
+
+    ASSERT_EQ(renderSystem.renderContexts.size(), 1u);
+    ASSERT_EQ(renderSystem.renderContexts[0]->textureBindings.size(), 2u);
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[0].uniformName, "u_previous");
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[0].texture, &renderSystem.texture);
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[1].uniformName, "u_mask");
+    EXPECT_EQ(renderSystem.renderContexts[0]->textureBindings[1].texture, &renderSystem.secondTexture);
 }
 
 

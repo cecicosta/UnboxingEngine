@@ -4,6 +4,9 @@
 #include "material.h"
 #include <cstdint>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "CoreEvents.h"
 
@@ -30,18 +33,23 @@ enum class ERenderTargetKind {
     FloatingPointAccumulation
 };
 
+struct STextureBinding {
+    std::string uniformName;
+    const STextureHandle *texture = nullptr;
+};
+
 struct SRenderContextHandle {
-    SRenderContextHandle(const SRenderBufferHandle* _renderBufferHandle, const SShaderHandle* _shaderHandle, const CSceneComposite& _sceneComposite, const STextureHandle* _textureHandle = nullptr, const SRenderTarget* _renderTarget = nullptr, ERenderTargetKind _renderTargetKind = ERenderTargetKind::DefaultFramebuffer)
+    SRenderContextHandle(const SRenderBufferHandle* _renderBufferHandle, const SShaderHandle* _shaderHandle, const CSceneComposite& _sceneComposite, std::vector<STextureBinding> _textureBindings = {}, const SRenderTarget* _renderTarget = nullptr, ERenderTargetKind _renderTargetKind = ERenderTargetKind::DefaultFramebuffer)
     : renderBufferHandle(_renderBufferHandle)
     , shaderHandle(_shaderHandle)
     , sceneComposite(_sceneComposite)
-    , textureHandle(_textureHandle)
+    , textureBindings(std::move(_textureBindings))
     , renderTarget(_renderTarget)
     , renderTargetKind(_renderTargetKind) {}
     const SRenderBufferHandle *renderBufferHandle;
     const SShaderHandle *shaderHandle;
     const CSceneComposite &sceneComposite;
-    const STextureHandle *textureHandle;
+    std::vector<STextureBinding> textureBindings;
     const SRenderTarget* renderTarget;
     ERenderTargetKind renderTargetKind;
 };
