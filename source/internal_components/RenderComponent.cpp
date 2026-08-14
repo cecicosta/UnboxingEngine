@@ -142,6 +142,10 @@ void main() {
     float volumetric_opacity = (thickness/maximumDistance) * u_visualization_scale;
     float radius = accumulated.a / thickness;
 
+    if(volumetric_opacity < 0.00001) {
+        discard;
+    }
+
     float sqr_half_ray = (thickness*thickness)/4;
     float sqr_radius = radius*radius;
 
@@ -172,7 +176,7 @@ void main() {
 
     float normalizedDecay = V/V_max;
 
-    o_color = vec4(vec3(normalizedDecay, 0, 1-normalizedDecay), volumetric_opacity);
+    o_color = vec4(vec3(v_color.r*normalizedDecay, v_color.g, v_color.b*(1-normalizedDecay)), volumetric_opacity);
 }
 )";
 
