@@ -64,8 +64,11 @@ void CCore::Render() {
         listener->OnPreRender();
     }
 
-    for (auto &&data: mRenderQueue) {
-        auto sceneComposite = GetSceneElement(data.second->id);
+    for (auto *sceneComposite : mRenderQueue) {
+        if (!sceneComposite) {
+            continue;
+        }
+
         if (auto render = sceneComposite->GetComponent<IRenderComponent>()) {
             render->OnRender();
         }
@@ -130,6 +133,15 @@ void unboxing_engine::CCore::OnKeyboardInputtEvent(const core_events::SKeyboard 
 }
 
 void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
+    const auto existing = std::find(
+        mRenderQueue.begin(),
+        mRenderQueue.end(),
+        &sceneComposite);
+
+    if (existing != mRenderQueue.end()) {
+        return;
+    }
+
     if (auto collider = sceneComposite.GetComponent<IColliderComponent>()) {
         mCollisionSystem.RegisterCollider(*collider);
     }
@@ -148,7 +160,7 @@ void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
         mInputSystem->RegisterListener(*inputListener);
     }
 
-    mRenderQueue.try_emplace(sceneComposite.id, &sceneComposite);
+    mRenderQueue.push_back(&sceneComposite);
 }
 
 void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
@@ -160,8 +172,15 @@ void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
         mCollisionSystem.UnregisterCollider(*collider);
     }
 
-    if (auto it = mRenderQueue.find(sceneComposite.id); it != mRenderQueue.end()) {
-        if(auto renderComponent = it->second->GetComponent<IRenderComponent>()) {
+    const auto it = std::find_if(
+        mRenderQueue.begin(),
+        mRenderQueue.end(),
+        [&sceneComposite](const CSceneComposite *registered) {
+            return registered && registered->id == sceneComposite.id;
+        });
+
+    if (it != mRenderQueue.end()) {
+        if(auto renderComponent = (*it)->GetComponent<IRenderComponent>()) {
             renderComponent->ReleaseRenderContext();
         }
         mRenderQueue.erase(it);
@@ -176,11 +195,14 @@ void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
 }
 
 CSceneComposite *CCore::GetSceneElement(int id) const {
-    auto it = mRenderQueue.find(id);
-    if (it != mRenderQueue.end()) {
-        return it->second;
-    }
-    return nullptr;
+    const auto it = std::find_if(
+        mRenderQueue.begin(),
+        mRenderQueue.end(),
+        [id](const CSceneComposite *sceneComposite) {
+            return sceneComposite && sceneComposite->id == id;
+        });
+
+    return it != mRenderQueue.end() ? *it : nullptr;
 }
 
 void CCore::RegisterEventListener(UListener<> &listener) {

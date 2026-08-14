@@ -1,7 +1,5 @@
 #pragma once
 
-#include <unordered_map>
-
 #include "Camera.h"
 #include "IEngine.h"
 #include "texture.h"
@@ -129,7 +127,8 @@ private:
     std::uint32_t BPP = 32;
 
     ///
-    std::unordered_map<int, CSceneComposite*> mRenderQueue;
+    // Preserves RegisterSceneElement() order.
+    std::vector<CSceneComposite*> mRenderQueue;
     std::vector<CSceneComposite*> mPendingWriteQueue;
 
     //Handle objects with a ICollisionComponent registered
