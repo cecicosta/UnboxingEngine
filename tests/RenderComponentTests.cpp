@@ -79,6 +79,12 @@ public:
         return *this;
     }
 
+    std::optional<unboxing_engine::systems::STextureSnapshot> CaptureTexture(
+        const unboxing_engine::systems::STextureHandle &,
+        const unboxing_engine::systems::STextureInspectionOptions &) const override {
+        return std::nullopt;
+    }
+
     std::optional<unboxing_engine::systems::STextureStatistics> InspectTexture(
         const unboxing_engine::systems::STextureHandle &,
         const unboxing_engine::systems::STextureInspectionOptions &) const override {

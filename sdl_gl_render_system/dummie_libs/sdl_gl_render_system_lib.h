@@ -27,6 +27,9 @@ public:
     SRenderTarget *CreateTextureRenderTarget(STextureHandle *, ERenderTargetKind) override;
     void SetRenderTargetClearEnabled(SRenderTarget &renderTarget, bool enabled) override;
     void EraseRenderTargetData(const SRenderTarget &renderTarget) override;
+    [[nodiscard]] std::optional<STextureSnapshot> CaptureTexture(
+        const STextureHandle &texture,
+        const STextureInspectionOptions &options = {}) const override;
     [[nodiscard]] std::optional<STextureStatistics> InspectTexture(
         const STextureHandle &texture,
         const STextureInspectionOptions &options = {}) const override;

@@ -11,8 +11,37 @@ The default example build keeps five active targets:
 | `coctree_torus_minimal` | `COctreeTorusMinimal.cpp` | Minimal torus render that constructs the `COctree` class. |
 | `octree_ray_picking_lab` | `OctreeRayPickingLab.cpp` | Mouse-click ray picking over a triangle mesh with octree traversal highlights. |
 | `radiosity_port` | `RadiosityPort.cpp` | Port of the legacy radiosity patch pipeline with rasterized hemisphere form factors. |
+| `render_debug_example` | `RenderDebugExample.cpp` | Render an `RGBA32F` field and inspect consecutive GPU texture snapshots. |
 
 Experimental or superseded examples live in `drafts/` and are not built by default.
+
+## Render Debug Example
+
+Target: `render_debug_example`
+
+Source file:
+
+- `RenderDebugExample.cpp`
+
+This non-interactive example renders a radial field into a floating-point
+texture, prints its channel statistics, changes the field scale, and compares
+the texture before and after the second render step. It exercises the real
+OpenGL texture readback, snapshot, and difference APIs.
+
+Build:
+
+```bash
+cmake --build build --target render_debug_example
+```
+
+Run:
+
+```bash
+./build/Examples/render_debug_example
+```
+
+The complete render-debug API and report semantics are documented in
+`documentation/RenderDebug.md`.
 
 ## 2D Collision Vectors
 

@@ -28,3 +28,6 @@ target_link_libraries(circle_triangle_collision unboxing_engine)
 
 add_executable(atom_simulation AtomSimulation.cpp)
 target_link_libraries(atom_simulation unboxing_engine)
+
+add_executable(render_debug_example RenderDebugExample.cpp)
+target_link_libraries(render_debug_example unboxing_engine)

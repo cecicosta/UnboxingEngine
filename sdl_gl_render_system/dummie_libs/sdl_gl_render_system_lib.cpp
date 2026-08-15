@@ -14,6 +14,9 @@ const Camera &COpenGLRenderSystem::GetCamera() const { return *mCamera; }
 const SShaderHandle *COpenGLRenderSystem::GetDefaultShader() const { return nullptr; }
 const SShaderHandle *COpenGLRenderSystem::GetTexturePresentationShader() const { return nullptr; }
 const IRenderDebug &COpenGLRenderSystem::GetRenderDebug() const { return *this; }
+std::optional<STextureSnapshot> COpenGLRenderSystem::CaptureTexture(
+    const STextureHandle &,
+    const STextureInspectionOptions &) const { return std::nullopt; }
 std::optional<STextureStatistics> COpenGLRenderSystem::InspectTexture(
     const STextureHandle &,
     const STextureInspectionOptions &) const { return std::nullopt; }

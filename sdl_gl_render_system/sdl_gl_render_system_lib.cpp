@@ -461,7 +461,7 @@ public:
         mTextures.erase(texture);
     }
 
-    [[nodiscard]] std::optional<STextureStatistics> InspectTexture(
+    [[nodiscard]] std::optional<STextureSnapshot> CaptureTexture(
         const STextureHandle& textureHandle,
         const STextureInspectionOptions& options) const {
         const auto texture = mTextures.find(textureHandle.texture);
@@ -488,13 +488,24 @@ public:
         glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previousTexture));
         glBindBuffer(GL_PIXEL_PACK_BUFFER, static_cast<GLuint>(previousPixelPackBuffer));
 
-        return CalculateTextureStatistics(
+        const auto statistics = CalculateTextureStatistics(
             pixels.data(),
             pixels.size(),
             textureHandle.width,
             textureHandle.height,
             textureHandle.format,
             options);
+        if (!statistics) {
+            return std::nullopt;
+        }
+
+        STextureSnapshot snapshot;
+        snapshot.width = textureHandle.width;
+        snapshot.height = textureHandle.height;
+        snapshot.format = textureHandle.format;
+        snapshot.rgbaPixels = std::move(pixels);
+        snapshot.statistics = *statistics;
+        return snapshot;
     }
 
     SRenderTarget* CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
@@ -674,10 +685,17 @@ const IRenderDebug &COpenGLRenderSystem::GetRenderDebug() const {
     return *this;
 }
 
+std::optional<STextureSnapshot> COpenGLRenderSystem::CaptureTexture(
+    const STextureHandle &texture,
+    const STextureInspectionOptions &options) const {
+    return mImpl->CaptureTexture(texture, options);
+}
+
 std::optional<STextureStatistics> COpenGLRenderSystem::InspectTexture(
     const STextureHandle &texture,
     const STextureInspectionOptions &options) const {
-    return mImpl->InspectTexture(texture, options);
+    const auto snapshot = CaptureTexture(texture, options);
+    return snapshot ? std::optional<STextureStatistics>(snapshot->statistics) : std::nullopt;
 }
 
 bool COpenGLRenderSystem::PrintTextureStatistics(

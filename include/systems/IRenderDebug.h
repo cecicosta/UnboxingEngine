@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace unboxing_engine::systems {
 
@@ -58,15 +59,42 @@ struct STextureStatistics {
 };
 
 struct STextureInspectionOptions {
+    // Affects zero/nonzero classification and comparisons, but not min/max/sum.
     // Values whose absolute magnitude is at most this threshold count as zero.
     double nonZeroEpsilon = 0.0;
+};
+
+struct STextureSnapshot {
+    uint32_t width = 0;
+    uint32_t height = 0;
+    ETextureFormat format = ETextureFormat::RGBA8U;
+    std::vector<float> rgbaPixels;
+    STextureStatistics statistics;
+};
+
+struct STextureDifferenceStatistics {
+    uint32_t width = 0;
+    uint32_t height = 0;
+    double changedEpsilon = 0.0;
+    uint64_t changedPixelCount = 0;
+    double changedPixelPercentage = 0.0;
+    bool hasChangedPixels = false;
+    SPixelCoordinate changedBoundsMinimum;
+    SPixelCoordinate changedBoundsMaximum;
+    STextureStatistics signedDifference;
+    STextureStatistics absoluteDifference;
 };
 
 class IRenderDebug {
 public:
     virtual ~IRenderDebug() = default;
 
-    // Texture readback is synchronous and may stall until pending GPU work completes.
+    // Returns raw interleaved RGBA pixels and their statistics. Texture readback
+    // is synchronous and may stall until pending GPU work completes.
+    [[nodiscard]] virtual std::optional<STextureSnapshot> CaptureTexture(
+        const STextureHandle& texture,
+        const STextureInspectionOptions& options = {}) const = 0;
+
     [[nodiscard]] virtual std::optional<STextureStatistics> InspectTexture(
         const STextureHandle& texture,
         const STextureInspectionOptions& options = {}) const = 0;
@@ -87,6 +115,15 @@ public:
 
 [[nodiscard]] std::string FormatTextureStatistics(
     const STextureStatistics& statistics,
+    const std::string& label = {});
+
+[[nodiscard]] std::optional<STextureDifferenceStatistics> CompareTextureSnapshots(
+    const STextureSnapshot& previous,
+    const STextureSnapshot& current,
+    const STextureInspectionOptions& options = {});
+
+[[nodiscard]] std::string FormatTextureDifferenceStatistics(
+    const STextureDifferenceStatistics& difference,
     const std::string& label = {});
 
 } // namespace unboxing_engine::systems

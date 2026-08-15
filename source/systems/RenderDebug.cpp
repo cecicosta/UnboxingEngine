@@ -241,4 +241,137 @@ std::string FormatTextureStatistics(
     return output.str();
 }
 
+std::optional<STextureDifferenceStatistics> CompareTextureSnapshots(
+    const STextureSnapshot& previous,
+    const STextureSnapshot& current,
+    const STextureInspectionOptions& options) {
+    if (previous.width == 0 || previous.height == 0 ||
+        previous.width != current.width || previous.height != current.height ||
+        previous.format != current.format ||
+        previous.rgbaPixels.size() != current.rgbaPixels.size()) {
+        return std::nullopt;
+    }
+
+    const uint64_t pixelCount = static_cast<uint64_t>(current.width) * current.height;
+    if (pixelCount > std::numeric_limits<size_t>::max() / 4) {
+        return std::nullopt;
+    }
+    const size_t expectedValueCount = static_cast<size_t>(pixelCount * 4);
+    if (current.rgbaPixels.size() != expectedValueCount) {
+        return std::nullopt;
+    }
+
+    const double epsilon = std::max(0.0, options.nonZeroEpsilon);
+    std::vector<float> signedDifference(expectedValueCount);
+    std::vector<float> absoluteDifference(expectedValueCount);
+
+    STextureDifferenceStatistics result;
+    result.width = current.width;
+    result.height = current.height;
+    result.changedEpsilon = epsilon;
+
+    for (uint64_t pixel = 0; pixel < pixelCount; ++pixel) {
+        bool pixelChanged = false;
+        const size_t offset = static_cast<size_t>(pixel * 4);
+        for (size_t channel = 0; channel < 4; ++channel) {
+            const double previousValue = previous.rgbaPixels[offset + channel];
+            const double currentValue = current.rgbaPixels[offset + channel];
+
+            double difference = 0.0;
+            const bool matchingNaN = std::isnan(previousValue) && std::isnan(currentValue);
+            const bool matchingInfinity =
+                std::isinf(previousValue) && std::isinf(currentValue) &&
+                std::signbit(previousValue) == std::signbit(currentValue);
+            if (!matchingNaN && !matchingInfinity) {
+                if (std::isfinite(previousValue) && std::isfinite(currentValue)) {
+                    difference = currentValue - previousValue;
+                    pixelChanged = pixelChanged || std::abs(difference) > epsilon;
+                } else {
+                    difference = std::numeric_limits<double>::quiet_NaN();
+                    pixelChanged = true;
+                }
+            }
+
+            signedDifference[offset + channel] = static_cast<float>(difference);
+            absoluteDifference[offset + channel] = static_cast<float>(std::abs(difference));
+        }
+
+        if (!pixelChanged) {
+            continue;
+        }
+
+        const SPixelCoordinate location{
+            static_cast<uint32_t>(pixel % current.width),
+            static_cast<uint32_t>(pixel / current.width),
+            pixel
+        };
+        ++result.changedPixelCount;
+        if (!result.hasChangedPixels) {
+            result.changedBoundsMinimum = location;
+            result.changedBoundsMaximum = location;
+            result.hasChangedPixels = true;
+        } else {
+            result.changedBoundsMinimum.x = std::min(result.changedBoundsMinimum.x, location.x);
+            result.changedBoundsMinimum.y = std::min(result.changedBoundsMinimum.y, location.y);
+            result.changedBoundsMaximum.x = std::max(result.changedBoundsMaximum.x, location.x);
+            result.changedBoundsMaximum.y = std::max(result.changedBoundsMaximum.y, location.y);
+            result.changedBoundsMinimum.index =
+                static_cast<uint64_t>(result.changedBoundsMinimum.y) * current.width +
+                result.changedBoundsMinimum.x;
+            result.changedBoundsMaximum.index =
+                static_cast<uint64_t>(result.changedBoundsMaximum.y) * current.width +
+                result.changedBoundsMaximum.x;
+        }
+    }
+
+    result.changedPixelPercentage =
+        100.0 * static_cast<double>(result.changedPixelCount) /
+        static_cast<double>(pixelCount);
+    const auto signedStatistics = CalculateTextureStatistics(
+        signedDifference.data(),
+        signedDifference.size(),
+        current.width,
+        current.height,
+        current.format,
+        options);
+    const auto absoluteStatistics = CalculateTextureStatistics(
+        absoluteDifference.data(),
+        absoluteDifference.size(),
+        current.width,
+        current.height,
+        current.format,
+        options);
+    if (!signedStatistics || !absoluteStatistics) {
+        return std::nullopt;
+    }
+    result.signedDifference = *signedStatistics;
+    result.absoluteDifference = *absoluteStatistics;
+    return result;
+}
+
+std::string FormatTextureDifferenceStatistics(
+    const STextureDifferenceStatistics& difference,
+    const std::string& label) {
+    std::ostringstream output;
+    output << std::setprecision(9) << "Texture difference";
+    if (!label.empty()) {
+        output << " '" << label << "'";
+    }
+    output << ": " << difference.width << "x" << difference.height
+           << " changedPixels=" << difference.changedPixelCount
+           << " changedPercent=" << difference.changedPixelPercentage << "%"
+           << " epsilon=" << difference.changedEpsilon;
+    if (difference.hasChangedPixels) {
+        output << " changedBounds=(" << difference.changedBoundsMinimum.x << ","
+               << difference.changedBoundsMinimum.y << ")-("
+               << difference.changedBoundsMaximum.x << ","
+               << difference.changedBoundsMaximum.y << ")";
+    }
+    output << "\n";
+
+    output << FormatTextureStatistics(difference.signedDifference, "signed delta");
+    output << FormatTextureStatistics(difference.absoluteDifference, "absolute delta");
+    return output.str();
+}
+
 } // namespace unboxing_engine::systems

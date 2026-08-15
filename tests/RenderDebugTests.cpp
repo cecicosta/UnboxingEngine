@@ -5,14 +5,39 @@
 #include <cmath>
 #include <limits>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
 
 using unboxing_engine::systems::CalculateTextureStatistics;
+using unboxing_engine::systems::CompareTextureSnapshots;
 using unboxing_engine::systems::ETextureFormat;
+using unboxing_engine::systems::FormatTextureDifferenceStatistics;
 using unboxing_engine::systems::FormatTextureStatistics;
 using unboxing_engine::systems::STextureInspectionOptions;
+using unboxing_engine::systems::STextureSnapshot;
+
+STextureSnapshot MakeSnapshot(
+    const uint32_t width,
+    const uint32_t height,
+    std::vector<float> pixels) {
+    STextureSnapshot snapshot;
+    snapshot.width = width;
+    snapshot.height = height;
+    snapshot.format = ETextureFormat::RGBA32F;
+    snapshot.rgbaPixels = std::move(pixels);
+    const auto statistics = CalculateTextureStatistics(
+        snapshot.rgbaPixels.data(),
+        snapshot.rgbaPixels.size(),
+        width,
+        height,
+        snapshot.format);
+    if (statistics) {
+        snapshot.statistics = *statistics;
+    }
+    return snapshot;
+}
 
 TEST(RenderDebugTest, CalculatesChannelAndVectorStatistics) {
     const std::vector<float> pixels = {
@@ -97,6 +122,53 @@ TEST(RenderDebugTest, FormatsStableMeaningfulOutput) {
     EXPECT_NE(output.find("R: min=1@(0,0)[0]"), std::string::npos);
     EXPECT_NE(output.find("B: min=-2@(0,0)[0]"), std::string::npos);
     EXPECT_NE(output.find("RGB.length:"), std::string::npos);
+}
+
+TEST(RenderDebugTest, ComparesSnapshotsAndTracksChangedRegion) {
+    const auto previous = MakeSnapshot(2, 2, std::vector<float>(16, 0.0f));
+    auto currentPixels = std::vector<float>(16, 0.0f);
+    currentPixels[3] = 1.0f;
+    currentPixels[12] = 2.0f;
+    const auto current = MakeSnapshot(2, 2, std::move(currentPixels));
+
+    const auto difference = CompareTextureSnapshots(previous, current);
+
+    ASSERT_TRUE(difference.has_value());
+    EXPECT_EQ(difference->changedPixelCount, 2u);
+    EXPECT_DOUBLE_EQ(difference->changedPixelPercentage, 50.0);
+    EXPECT_EQ(difference->changedBoundsMinimum.x, 0u);
+    EXPECT_EQ(difference->changedBoundsMinimum.y, 0u);
+    EXPECT_EQ(difference->changedBoundsMaximum.x, 1u);
+    EXPECT_EQ(difference->changedBoundsMaximum.y, 1u);
+    EXPECT_DOUBLE_EQ(difference->signedDifference.channels[0].maximum, 2.0);
+    EXPECT_DOUBLE_EQ(difference->absoluteDifference.channels[3].sum, 1.0);
+}
+
+TEST(RenderDebugTest, TreatsMatchingNonFiniteValuesAsUnchanged) {
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    const float infinity = std::numeric_limits<float>::infinity();
+    const auto previous = MakeSnapshot(1, 1, {nan, infinity, 0.0f, 1.0f});
+    const auto current = MakeSnapshot(1, 1, {nan, infinity, 0.0f, 1.0f});
+
+    const auto difference = CompareTextureSnapshots(previous, current);
+
+    ASSERT_TRUE(difference.has_value());
+    EXPECT_EQ(difference->changedPixelCount, 0u);
+    EXPECT_EQ(difference->signedDifference.channels[0].zeroCount, 1u);
+    EXPECT_EQ(difference->signedDifference.channels[1].zeroCount, 1u);
+}
+
+TEST(RenderDebugTest, FormatsTextureDifferenceSummary) {
+    const auto previous = MakeSnapshot(1, 1, {0.0f, 0.0f, 0.0f, 0.0f});
+    const auto current = MakeSnapshot(1, 1, {0.0f, 0.0f, 0.0f, 1.0f});
+    const auto difference = CompareTextureSnapshots(previous, current);
+    ASSERT_TRUE(difference.has_value());
+
+    const std::string output = FormatTextureDifferenceStatistics(*difference, "iteration");
+
+    EXPECT_NE(output.find("Texture difference 'iteration': 1x1 changedPixels=1"), std::string::npos);
+    EXPECT_NE(output.find("Texture 'signed delta'"), std::string::npos);
+    EXPECT_NE(output.find("Texture 'absolute delta'"), std::string::npos);
 }
 
 } // namespace
