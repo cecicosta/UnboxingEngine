@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "MeshBuffer.h"
 #include "SceneComposite.h"
+#include "systems/IRenderDebug.h"
 
 #include <gtest/gtest.h>
 
@@ -20,7 +21,9 @@ struct SRenderTarget {};
 
 namespace {
 
-class FakeRenderSystem final : public unboxing_engine::systems::IRenderSystem {
+class FakeRenderSystem final
+    : public unboxing_engine::systems::IRenderSystem
+    , public unboxing_engine::systems::IRenderDebug {
 public:
     enum class EAction {
         CreateTexture,
@@ -70,6 +73,23 @@ public:
 
     const unboxing_engine::systems::SShaderHandle *GetTexturePresentationShader() const override {
         return &presentationShader;
+    }
+
+    const unboxing_engine::systems::IRenderDebug &GetRenderDebug() const override {
+        return *this;
+    }
+
+    std::optional<unboxing_engine::systems::STextureStatistics> InspectTexture(
+        const unboxing_engine::systems::STextureHandle &,
+        const unboxing_engine::systems::STextureInspectionOptions &) const override {
+        return std::nullopt;
+    }
+
+    bool PrintTextureStatistics(
+        const unboxing_engine::systems::STextureHandle &,
+        const std::string &,
+        const unboxing_engine::systems::STextureInspectionOptions &) const override {
+        return false;
     }
 
     void SetCamera(const unboxing_engine::Camera &newCamera) override {

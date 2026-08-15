@@ -23,6 +23,7 @@ set(SOURCES
         algorithms/LegacyCollisionAlgorithms.cpp
         algorithms/LegacyOctreeAlgorithms.cpp
         systems/CollisionSystem.cpp
+        systems/RenderDebug.cpp
         #collisionutil.cpp
 )
 set(HEADERS
@@ -56,6 +57,7 @@ set(HEADERS
         ../include/algorithms/LegacyOctreeAlgorithms.h
         ../include/systems/CollisionSystem.h
         ../include/systems/IRenderSystem.h
+        ../include/systems/IRenderDebug.h
         ../include/systems/IInputSystem.h
         #../include/collisionutil.h
         )

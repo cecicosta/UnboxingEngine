@@ -6,6 +6,8 @@
 
 constexpr float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
 
+unboxing_engine::systems::STextureInspectionOptions options {1e-20};
+
 
 using namespace unboxing_engine;
 
@@ -147,6 +149,13 @@ public:
         mEngine.UnregisterSceneElement(*this);
     }
 
+    [[nodiscard]] RenderTextureComponent& GetRenderComponent() const {
+        if (auto render = dynamic_cast<RenderTextureComponent*>(GetComponent<IRenderComponent>())) {
+            return *render;
+        }
+        assert(false);
+    }
+
     void SetMaterial(const SMaterial &material) {
         auto render = GetComponent<IRenderComponent>();
         render->SetMaterial(material);
@@ -196,6 +205,9 @@ public:
         }
         mFirst->SetTexture("u_electron", mSecond->GetTexture());
         mSecond->SetTexture("u_electron", mFirst->GetTexture());
+        mFirst->SetClearRenderTarget(false);
+        mSecond->SetClearRenderTarget(false);
+
     }
 private:
     CCore& mEngine;
@@ -227,7 +239,7 @@ int main(int argc, char *argv[]) {
     float radius = 40;
 
     {
-
+/*
         RenderToTexture nucleus1st(engine,*primitive_utils::Sphere(radius));
         nucleus1st.SetPosition({0, 0, 0});
         nucleus1st.SetShader(customVertexShader, customFragmentShader);
@@ -236,43 +248,50 @@ int main(int argc, char *argv[]) {
         nucleus2nd.SetMaterial(anotherMaterial());
         nucleus2nd.SetTexture("u_texture", nucleus1st.GetTexture());
         nucleus2nd.SetShader(quad_render_vertex_shader, potential_region_fragment_shader);
-
+*/
         RenderToTexture electron1st(engine, *primitive_utils::Sphere(radius/4));
-        electron1st.SetPosition({0, 20, 0});
+        electron1st.SetPosition({0, 0, 0});
         electron1st.SetShader(customVertexShader, customFragmentShader);
 
-        RenderToTexture electron2st(engine, *primitive_utils::Quad());
-        electron2st.SetMaterial(someMaterial());
-        electron2st.SetTexture("u_texture", electron1st.GetTexture());
-        electron2st.SetShader(quad_render_vertex_shader, potential_region_fragment_shader);
+        RenderToTexture electron2nd(engine, *primitive_utils::Quad());
+        electron2nd.SetMaterial(someMaterial());
+        electron2nd.SetTexture("u_texture", electron1st.GetTexture());
+        electron2nd.SetShader(quad_render_vertex_shader, potential_region_fragment_shader);
 
         engine.StepRender();
-        nucleus2nd.SetClearRenderTarget(false);
-        electron2st.SetClearRenderTarget(false);
-        engine.UnregisterSceneElement(nucleus1st);
-        engine.UnregisterSceneElement(nucleus2nd);
+//        nucleus2nd.SetClearRenderTarget(false);
+        electron2nd.SetClearRenderTarget(false);
+//        engine.UnregisterSceneElement(nucleus1st);
+//        engine.UnregisterSceneElement(nucleus2nd);
         engine.UnregisterSceneElement(electron1st);
-        engine.UnregisterSceneElement(electron2st);
+        engine.UnregisterSceneElement(electron2nd);
+
+        engine.GetRenderDebug().PrintTextureStatistics(
+            *electron2nd.GetTexture(),
+            "nucleus potential",
+            options);
 
         RenderToTexture gradient(engine, *primitive_utils::Quad());
-        gradient.SetTexture("u_texture", nucleus2nd.GetTexture());
-        gradient.SetTexture("u_electron", electron2st.GetTexture());
+        gradient.SetTexture("u_electron", electron2nd.GetTexture());
         gradient.SetMaterial(whiteMaterial());
-        gradient.SetClearRenderTarget(false);
         gradient.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
+        engine.StepRender();
+        engine.GetRenderDebug().PrintTextureStatistics(
+         *gradient.GetTexture(),
+         "Gradient",
+         options);
+
         RenderToTexture combine(engine, *primitive_utils::Quad());
-        combine.SetTexture("u_texture", nucleus2nd.GetTexture());
-        combine.SetTexture("u_electron", electron2st.GetTexture());
+        combine.SetTexture("u_electron", gradient.GetTexture());
         combine.SetMaterial(whiteMaterial());
-        combine.SetClearRenderTarget(false);
         combine.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
         RenderTexture final(engine, *primitive_utils::Quad());
         final.SetTexture("u_texture", combine.GetTexture());
-//        final.SetTexture("u_electron", gradient.GetTexture());
         final.SetMaterial(whiteMaterial());
         final.SetShader(signed_texture_debug_vertex_shader_source, multiple_texture_fragment_shader);
+        final.GetRenderComponent().SetRenderColorScale(1e15);
 
         OnMousePressDetector mousePressedDetector(engine, &gradient, &combine);
 

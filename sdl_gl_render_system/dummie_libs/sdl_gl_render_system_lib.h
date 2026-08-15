@@ -1,11 +1,12 @@
 ﻿#pragma once
 
+#include "systems/IRenderDebug.h"
 #include "systems/IRenderSystem.h"
 #include "Camera.h"
 
 namespace unboxing_engine::systems {
 
-class COpenGLRenderSystem : public IRenderSystem {
+class COpenGLRenderSystem : public IRenderSystem, public IRenderDebug {
 public:
     COpenGLRenderSystem(const Camera& camera);
     ~COpenGLRenderSystem() override;
@@ -18,6 +19,7 @@ public:
     [[nodiscard]] const Camera &GetCamera() const override;
     [[nodiscard]] const SShaderHandle *GetDefaultShader() const override;
     [[nodiscard]] const SShaderHandle *GetTexturePresentationShader() const override;
+    [[nodiscard]] const IRenderDebug &GetRenderDebug() const override;
     void SetCamera(const Camera &camera) override;
     void Render(const SRenderContextHandle &) override;
     STextureHandle *CreateTexture(uint32_t, uint32_t, ETextureFormat) override;
@@ -25,6 +27,13 @@ public:
     SRenderTarget *CreateTextureRenderTarget(STextureHandle *, ERenderTargetKind) override;
     void SetRenderTargetClearEnabled(SRenderTarget &renderTarget, bool enabled) override;
     void EraseRenderTargetData(const SRenderTarget &renderTarget) override;
+    [[nodiscard]] std::optional<STextureStatistics> InspectTexture(
+        const STextureHandle &texture,
+        const STextureInspectionOptions &options = {}) const override;
+    bool PrintTextureStatistics(
+        const STextureHandle &texture,
+        const std::string &label = {},
+        const STextureInspectionOptions &options = {}) const override;
 
     void OnPreRender() override;
     void OnPostRender() override;

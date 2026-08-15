@@ -122,6 +122,10 @@ const Camera &CCore::GetCamera() const {
     return *camera;
 }
 
+const systems::IRenderDebug &CCore::GetRenderDebug() const {
+    return mRenderSystem->GetRenderDebug();
+}
+
 void CCore::OnCollisionEvent(const IColliderComponent &c1, const IColliderComponent &c2, const algorithms::SCollisionResult<float, 3> &result) {
     if (auto c1Composite = GetSceneElement(c1.GetSceneComposite()->id); auto listener = dynamic_cast<systems::IIntersectsEvent *>(c1Composite)) {
         listener->OnIntersects();

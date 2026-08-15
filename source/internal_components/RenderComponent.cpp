@@ -75,7 +75,9 @@ void CDefaultMeshRenderComponent::UpdateRenderContext() {
         const CMeshBuffer &meshBuffer = GetMeshBuffer();
         auto renderBufferHandle = mRenderSystem->WriteRenderBufferData(meshBuffer);
         auto shaderHandle = mRenderSystem->GetDefaultShader();
+        float colorScale = mRenderContextHandle ? mRenderContextHandle->colorScale : 1.0f;
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(renderBufferHandle, shaderHandle, *mSceneComposite);
+        mRenderContextHandle->colorScale = colorScale;
         mIsDirty = false;
     }
 }
@@ -125,12 +127,14 @@ void CustomShaderMeshRenderComponent::UpdateRenderContext() {
         if (!mShaderHandle) {
             mShaderHandle = mRenderSystem->GetDefaultShader();
         }
+        float colorScale = mRenderContextHandle->colorScale;
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
                 mRenderContextHandle->renderBufferHandle,
                 mShaderHandle,
                 *mSceneComposite,
                 std::vector<systems::STextureBinding>{},
                 nullptr);
+        mRenderContextHandle->colorScale = colorScale;
     }
 }
 
@@ -179,12 +183,14 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
 void RenderToTextureComponent::UpdateRenderContext() {
     CustomShaderMeshRenderComponent::UpdateRenderContext();
     if (mRenderSystem && mRenderTarget) {
+        float colorScale = mRenderContextHandle->colorScale;
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
                 mRenderContextHandle->renderBufferHandle,
                 mRenderContextHandle->shaderHandle,
                 *mSceneComposite,
                 mTextureSrcBindings,
                 mRenderTarget);
+        mRenderContextHandle->colorScale = colorScale;
     }
 }
 
@@ -271,11 +277,13 @@ void RenderTextureComponent::SetTexture(
 void RenderTextureComponent::UpdateRenderContext() {
     CustomShaderMeshRenderComponent::UpdateRenderContext();
     if (mRenderSystem && !mTextureBindings.empty()) {
+        float colorScale = mRenderContextHandle->colorScale;
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
                 mRenderContextHandle->renderBufferHandle,
                 mRenderContextHandle->shaderHandle,
                 *mSceneComposite,
                 mTextureBindings);
+        mRenderContextHandle->colorScale = colorScale; // TODO: Last time we do these manually. Must make render context update more robust
     }
 }
 

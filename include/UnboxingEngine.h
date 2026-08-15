@@ -8,6 +8,7 @@
 #include "UVector.h"
 #include "EventDispatcher.h"
 #include "systems/CollisionSystem.h"
+#include "systems/IRenderDebug.h"
 #include "systems/IRenderSystem.h"
 #include "systems/IInputSystem.h"
 
@@ -92,6 +93,7 @@ public:
 
     void SetCamera(const Camera &camera);
     [[nodiscard]] const Camera &GetCamera() const;
+    [[nodiscard]] const systems::IRenderDebug &GetRenderDebug() const;
 
     /// <summary>
     /// 

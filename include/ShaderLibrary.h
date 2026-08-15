@@ -61,9 +61,14 @@ out vec4 o_color;
 void main() {
     vec4 texture1 = texture(u_texture, v_uv);
     vec4 texture2 = texture(u_electron, v_uv);
-    float volumetricOpacityValue = (texture1.a + texture2.a) * u_visualization_scale;
+    float value = (texture1.a + texture2.a) * u_visualization_scale;
 
-    o_color = v_color * vec4(texture1.rgb + texture2.rgb, volumetricOpacityValue);
+    vec3 signColor = value >= 0.0
+        ? vec3(1.0, 0.0, 0.0)
+        : vec3(0.0, 0.0, 1.0);
+
+    float opacity = clamp(abs(value), 0.0, 1.0);
+    o_color = vec4(signColor, opacity);
 }
 )";
 
@@ -100,25 +105,42 @@ void main() {
     down  = texture(u_electron, v_uv - vec2(0.0, texel.y)).a;
     up    = texture(u_electron, v_uv + vec2(0.0, texel.y)).a;
 
+    float upLeft =
+        texture(u_electron, v_uv + vec2(-texel.x, texel.y)).a;
+
+    float upRight =
+        texture(u_electron, v_uv + vec2(texel.x, texel.y)).a;
+
+    float downLeft =
+        texture(u_electron, v_uv + vec2(-texel.x, -texel.y)).a;
+
+    float downRight =
+        texture(u_electron, v_uv + vec2(texel.x, -texel.y)).a;
+
     vec2 electronGradient = vec2(
         (right - left) / (2.0 * texel.x),
         (up - down) / (2.0 * texel.y)
     );
 
+    float center = electronTex.a;
 
-    vec4 sampleNValue = texture(u_texture, v_uv);
-    vec4 sampleNDx = dFdx(sampleNValue);
-    vec4 sampleNDy = dFdy(sampleNValue);
-    vec2 gradientN = vec2(sampleNDx.a, sampleNDy.a);
+    float axial =
+        left + right + up + down;
 
-    vec4 sampleEValue = texture(u_electron, v_uv);
-    vec4 sampleEDx = dFdx(sampleEValue);
-    vec4 sampleEDy = dFdy(sampleEValue);
-    vec2 gradientE = vec2(sampleEDx.a, sampleEDy.a); // electron has negative charge
+    float diagonal =
+        upLeft + upRight + downLeft + downRight;
 
-    float projENIntensity = dot(gradientE, gradientN);
+    float laplacian =
+        (
+            4.0 * axial +
+            diagonal -
+            20.0 * center
+        ) / 6.0;
 
-    float finalSample = sampleEValue.a;
+    float diffusionStep = 0.01;
+
+    float finalSample =
+        center + diffusionStep * laplacian;
 
     o_color = vec4(v_color.rgb, finalSample);
 }
@@ -269,14 +291,14 @@ void main() {
     float r_min_pm = r_min*pm;
 
     // By integrating the Coulomb's potential expression for point on the line-cross-section, we obtain the following expression
-    float V = 2 * k * asinh(radius_pm/r_min_pm);
+    float V = 2 * k * 1/r_min_pm; //asinh(radius_pm/r_min_pm);
 
     // No normalize the potential decay to values between 0-1, we need a maximum potential sum contribution.
     // Using Bohr-radius as the radius reference for a maximum potential
-    float V_max = 2 * k * asinh(radius_pm/pm); // In practice r is an effective infinite, in comparison to a0,
+    float V_max = 2 * k * 1/pm; //asinh(radius_pm/pm); // In practice r is an effective infinite, in comparison to a0,
 
-    float normalizedDecay = V/V_max;
+    float normalizedDecay = V;///V_max;
 
-    o_color = vec4(vec3(v_color.r, v_color.g, v_color.b), volumetric_opacity*normalizedDecay);
+    o_color = vec4(vec3(v_color.r, v_color.g, v_color.b), normalizedDecay);
 }
 )";

@@ -13,6 +13,14 @@ void COpenGLRenderSystem::EraseRenderBufferData(const SRenderBufferHandle &rende
 const Camera &COpenGLRenderSystem::GetCamera() const { return *mCamera; }
 const SShaderHandle *COpenGLRenderSystem::GetDefaultShader() const { return nullptr; }
 const SShaderHandle *COpenGLRenderSystem::GetTexturePresentationShader() const { return nullptr; }
+const IRenderDebug &COpenGLRenderSystem::GetRenderDebug() const { return *this; }
+std::optional<STextureStatistics> COpenGLRenderSystem::InspectTexture(
+    const STextureHandle &,
+    const STextureInspectionOptions &) const { return std::nullopt; }
+bool COpenGLRenderSystem::PrintTextureStatistics(
+    const STextureHandle &,
+    const std::string &,
+    const STextureInspectionOptions &) const { return false; }
 void COpenGLRenderSystem::SetCamera(const Camera &camera) { mCamera = &camera; }
 void COpenGLRenderSystem::Render(const SRenderContextHandle &) {};
 STextureHandle *COpenGLRenderSystem::CreateTexture(uint32_t, uint32_t, ETextureFormat) { return nullptr; }

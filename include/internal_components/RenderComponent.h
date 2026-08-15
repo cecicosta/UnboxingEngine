@@ -28,6 +28,12 @@ public:
         mIsDirty = true;
     }
 
+    void SetRenderColorScale(const float scale) {
+        if (mRenderContextHandle) {
+            mRenderContextHandle->colorScale = scale;
+        }
+    }
+
     const CSceneComposite *GetSceneComposite() const override { return mSceneComposite; }
     void OnAttached(CSceneComposite &sceneComposite) override { mSceneComposite = &sceneComposite; }
     void OnDetached() override { mSceneComposite = nullptr; };

@@ -22,6 +22,7 @@ struct SShaderHandle;
 struct SRenderBufferHandle;
 struct STextureHandle;
 struct SRenderTarget;
+class IRenderDebug;
 
 enum class ETextureFormat {
     RGBA32F,
@@ -52,6 +53,7 @@ struct SRenderContextHandle {
     std::vector<STextureBinding> textureBindings;
     const SRenderTarget* renderTarget;
     ERenderTargetKind renderTargetKind;
+    float colorScale = 1.0f;
 };
 
 class IRenderSystem: public UListener<core_events::IPreRenderListener, core_events::IPostRenderListener> {
@@ -66,6 +68,7 @@ public:
     [[nodiscard]] virtual const Camera &GetCamera() const = 0;
     [[nodiscard]] virtual const SShaderHandle *GetDefaultShader() const = 0;
     [[nodiscard]] virtual const SShaderHandle *GetTexturePresentationShader() const = 0;
+    [[nodiscard]] virtual const IRenderDebug &GetRenderDebug() const = 0;
     virtual void SetCamera(const Camera& camera) = 0;
     virtual void Render(const SRenderContextHandle &renderContextHandle) = 0;
     virtual STextureHandle *CreateTexture(uint32_t width, uint32_t height, ETextureFormat format) = 0;

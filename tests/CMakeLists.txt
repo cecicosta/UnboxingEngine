@@ -25,6 +25,7 @@ add_executable(
         main.cpp
         ComponentSystemTests.cpp
         EventSystemTests.cpp
+        RenderDebugTests.cpp
         RenderComponentTests.cpp)
 
 target_link_libraries(

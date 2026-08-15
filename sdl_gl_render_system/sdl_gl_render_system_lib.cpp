@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -366,7 +367,7 @@ public:
 
         const GLint visualizationScaleUniform = glGetUniformLocation(program, "u_visualization_scale");
         if (visualizationScaleUniform >= 0) {
-            glUniform1f(visualizationScaleUniform, 1.0f);
+            glUniform1f(visualizationScaleUniform, renderContextHandle.colorScale);
         }
 
         glBindVertexArray(renderContextHandle.renderBufferHandle->vao);
@@ -458,6 +459,42 @@ public:
             glDeleteTextures(1, &texture->second->texture);
         }
         mTextures.erase(texture);
+    }
+
+    [[nodiscard]] std::optional<STextureStatistics> InspectTexture(
+        const STextureHandle& textureHandle,
+        const STextureInspectionOptions& options) const {
+        const auto texture = mTextures.find(textureHandle.texture);
+        if (texture == mTextures.end() || texture->second.get() != &textureHandle ||
+            textureHandle.width == 0 || textureHandle.height == 0) {
+            return std::nullopt;
+        }
+
+        const size_t width = textureHandle.width;
+        const size_t height = textureHandle.height;
+        if (height > std::numeric_limits<size_t>::max() / width / 4) {
+            return std::nullopt;
+        }
+
+        std::vector<float> pixels(width * height * 4);
+        GLint previousTexture = 0;
+        GLint previousPixelPackBuffer = 0;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &previousTexture);
+        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &previousPixelPackBuffer);
+
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        glBindTexture(GL_TEXTURE_2D, textureHandle.texture);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, pixels.data());
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previousTexture));
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, static_cast<GLuint>(previousPixelPackBuffer));
+
+        return CalculateTextureStatistics(
+            pixels.data(),
+            pixels.size(),
+            textureHandle.width,
+            textureHandle.height,
+            textureHandle.format,
+            options);
     }
 
     SRenderTarget* CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
@@ -631,6 +668,34 @@ const SShaderHandle *COpenGLRenderSystem::GetDefaultShader() const {
 
 const SShaderHandle *COpenGLRenderSystem::GetTexturePresentationShader() const {
     return mImpl->GetTexturePresentationShader();
+}
+
+const IRenderDebug &COpenGLRenderSystem::GetRenderDebug() const {
+    return *this;
+}
+
+std::optional<STextureStatistics> COpenGLRenderSystem::InspectTexture(
+    const STextureHandle &texture,
+    const STextureInspectionOptions &options) const {
+    return mImpl->InspectTexture(texture, options);
+}
+
+bool COpenGLRenderSystem::PrintTextureStatistics(
+    const STextureHandle &texture,
+    const std::string &label,
+    const STextureInspectionOptions &options) const {
+    const auto statistics = InspectTexture(texture, options);
+    if (!statistics) {
+        std::cout << "Texture inspection failed";
+        if (!label.empty()) {
+            std::cout << " for '" << label << "'";
+        }
+        std::cout << ".\n";
+        return false;
+    }
+
+    std::cout << FormatTextureStatistics(*statistics, label);
+    return true;
 }
 
 void COpenGLRenderSystem::Render(const SRenderContextHandle &renderContextHandle) {
