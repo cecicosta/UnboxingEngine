@@ -87,6 +87,7 @@ public:
 
     void SetSrcTexture(systems::STextureHandle* texture);
     void SetSrcTexture(const std::string& uniformName, systems::STextureHandle* texture);
+    void SetRenderTargetClearEnabled(bool enabled);
     [[nodiscard]] systems::STextureHandle* GetDstTexture() const;
 
 private:
@@ -96,6 +97,7 @@ private:
     std::vector<systems::STextureBinding> mTextureSrcBindings;
     systems::STextureHandle *mTexturedstHandle = nullptr;
     systems::SRenderTarget * mRenderTarget = nullptr;
+    bool mRenderTargetClearEnabled = true;
 };
 
 class RenderTextureComponent : public CustomShaderMeshRenderComponent {

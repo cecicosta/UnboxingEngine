@@ -2,6 +2,7 @@
 
 #include "MeshPrimitivesUtils.h"
 #include "SceneComposite.h"
+#include "ShaderLibrary.h"
 #include "UnboxingEngine.h"
 #include "internal_components/RenderComponent.h"
 
@@ -161,68 +162,6 @@ public:
 private:
     CMeshBuffer mMesh;
 };
-
-
-
-static const char *customVertexShader = R"(
-#version 150 core
-
-in vec3 i_position;
-uniform mat4 u_model_matrix;
-uniform mat4 u_view_matrix;
-uniform mat4 u_projection_matrix;
-uniform vec4 color;
-
-out vec3 vWorldPosition;
-out vec3 vViewPosition;
-out vec3 vLocalPosition;
-out vec4 v_color;
-out float vRadius;
-void main()
-{
-    vec4 worldPosition = u_model_matrix * vec4(i_position, 1.0);
-    vec4 viewPosition = u_view_matrix * worldPosition;
-
-    vLocalPosition = i_position;
-    vWorldPosition = worldPosition.xyz;
-    vViewPosition = viewPosition.xyz;
-    v_color = color;
-
-    vRadius = length(i_position);
-    gl_Position = u_projection_matrix * viewPosition;
-}
-)";
-
-static const char *customFragmentShader = R"(
-#version 150 core
-
-in vec3 vWorldPosition;
-in vec3 vViewPosition;
-in vec3 vLocalPosition;
-in vec4 v_color;
-in float vRadius;
-
-uniform vec3 u_camera_world_position;
-uniform float u_camera_far;
-
-out vec4 FragColor;
-
-void main()
-{
-    float maximumDistance = max(u_camera_far, 0.000001);
-    vec3 ray = u_camera_world_position - vWorldPosition;
-    float distanceFromCamera = length(ray);
-
-    float signValue = gl_FrontFacing ? -1.0 : 1.0;
-
-    FragColor = vec4(
-        signValue * ray,
-        signValue * distanceFromCamera * vRadius //Encodes the radius value r*(dNear - dFar)
-    );
-}
-)";
-
-
 
 class CustomShaderComposite : public CSceneComposite {
 public:

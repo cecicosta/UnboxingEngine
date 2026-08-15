@@ -107,6 +107,14 @@ public:
         return createRenderTargetResult ? &renderTarget : nullptr;
     }
 
+    void SetRenderTargetClearEnabled(
+        unboxing_engine::systems::SRenderTarget &target,
+        const bool enabled) override {
+        clearTarget = &target;
+        renderTargetClearEnabled = enabled;
+        ++setRenderTargetClearEnabledCount;
+    }
+
     void EraseRenderTargetData(
         const unboxing_engine::systems::SRenderTarget &handle) override {
         erasedRenderTargets.push_back(&handle);
@@ -136,6 +144,9 @@ public:
         unboxing_engine::systems::ERenderTargetKind::DefaultFramebuffer;
     unsigned int writeRenderBufferCount = 0;
     mutable unsigned int compileShaderCount = 0;
+    unboxing_engine::systems::SRenderTarget *clearTarget = nullptr;
+    bool renderTargetClearEnabled = true;
+    unsigned int setRenderTargetClearEnabledCount = 0;
     std::vector<EAction> actions;
     std::vector<const unboxing_engine::systems::SRenderContextHandle *> renderContexts;
     std::vector<const unboxing_engine::systems::SRenderBufferHandle *> erasedBuffers;
@@ -178,6 +189,27 @@ TEST(RenderToTextureComponentTest, CreatesTargetBeforeRendering) {
     ASSERT_EQ(renderSystem.renderContexts.size(), 1u);
     EXPECT_EQ(renderSystem.renderContexts[0]->renderTarget, &renderSystem.renderTarget);
     EXPECT_TRUE(renderSystem.renderContexts[0]->textureBindings.empty());
+}
+
+TEST(RenderToTextureComponentTest, ConfiguresTargetClearingBeforeAndAfterInitialization) {
+    FakeRenderSystem renderSystem;
+    unboxing_engine::CSceneComposite scene;
+    auto mesh = MakeTestMesh();
+    auto component = std::make_unique<unboxing_engine::RenderToTextureComponent>(mesh);
+    auto *componentPtr = component.get();
+    scene.AddComponent<unboxing_engine::IRenderComponent>(std::move(component));
+
+    componentPtr->SetRenderTargetClearEnabled(false);
+    componentPtr->OnInitialize(renderSystem);
+
+    EXPECT_EQ(renderSystem.clearTarget, &renderSystem.renderTarget);
+    EXPECT_FALSE(renderSystem.renderTargetClearEnabled);
+    EXPECT_EQ(renderSystem.setRenderTargetClearEnabledCount, 1u);
+
+    componentPtr->SetRenderTargetClearEnabled(true);
+
+    EXPECT_TRUE(renderSystem.renderTargetClearEnabled);
+    EXPECT_EQ(renderSystem.setRenderTargetClearEnabledCount, 2u);
 }
 
 TEST(RenderTextureComponentTest, RendersAssignedTextures) {

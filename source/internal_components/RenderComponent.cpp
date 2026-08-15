@@ -90,19 +90,14 @@ CustomShaderMeshRenderComponent::~CustomShaderMeshRenderComponent() {
 
 void CustomShaderMeshRenderComponent::SetVertexShader(const char *shader) {
     mVertexShader = shader;
+    mIsDirty = true;
 }
 
 void CustomShaderMeshRenderComponent::SetFragmentShader(const char *shader) {
     mFragmentShader = shader;
+    mIsDirty = true;
 }
 void CustomShaderMeshRenderComponent::OnInitialize(systems::IRenderSystem &renderSystem) {
-    if (!mVertexShader.empty() && !mFragmentShader.empty()) {
-        mShaderHandle = renderSystem.CompileShader(mVertexShader.c_str(), mFragmentShader.c_str());
-        mOwnsShaderHandle = mShaderHandle != nullptr;
-    }
-    if (!mShaderHandle) {
-        mShaderHandle = renderSystem.GetDefaultShader();
-    }
     CDefaultMeshRenderComponent::OnInitialize(renderSystem);
 }
 
@@ -117,7 +112,19 @@ void CustomShaderMeshRenderComponent::ReleaseRenderContext() {
 
 void CustomShaderMeshRenderComponent::UpdateRenderContext() {
     CDefaultMeshRenderComponent::UpdateRenderContext();
-    if (mRenderContextHandle && mShaderHandle) {
+    if (mRenderSystem) {
+        if (mOwnsShaderHandle && mShaderHandle) {
+            mRenderSystem->EraseShaderData(*mShaderHandle);
+            mShaderHandle = nullptr;
+            mOwnsShaderHandle = false;
+        }
+        if (!mVertexShader.empty() && !mFragmentShader.empty()) {
+            mShaderHandle = mRenderSystem->CompileShader(mVertexShader.c_str(), mFragmentShader.c_str());
+            mOwnsShaderHandle = mShaderHandle != nullptr;
+        }
+        if (!mShaderHandle) {
+            mShaderHandle = mRenderSystem->GetDefaultShader();
+        }
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
                 mRenderContextHandle->renderBufferHandle,
                 mShaderHandle,
@@ -153,6 +160,9 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
     if (!mRenderTarget) {
         return;
     }
+    renderSystem.SetRenderTargetClearEnabled(
+        *mRenderTarget,
+        mRenderTargetClearEnabled);
 
     CustomShaderMeshRenderComponent::OnInitialize(renderSystem);
 
@@ -168,7 +178,7 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
 
 void RenderToTextureComponent::UpdateRenderContext() {
     CustomShaderMeshRenderComponent::UpdateRenderContext();
-    if (mRenderTarget && mRenderContextHandle) {
+    if (mRenderSystem && mRenderTarget) {
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
                 mRenderContextHandle->renderBufferHandle,
                 mRenderContextHandle->shaderHandle,
@@ -180,6 +190,7 @@ void RenderToTextureComponent::UpdateRenderContext() {
 
 void RenderToTextureComponent::OnRender() {
     if (mIsDirty) {
+        // TODO: Just calling EraseRenderBufferData no longer means a clear state for the object.
         if(mRenderSystem && mRenderContextHandle && mRenderContextHandle->renderBufferHandle) {
             mRenderSystem->EraseRenderBufferData(*mRenderContextHandle->renderBufferHandle);
         }
@@ -226,6 +237,13 @@ void RenderToTextureComponent::SetSrcTexture(
     mIsDirty = true;
 }
 
+void RenderToTextureComponent::SetRenderTargetClearEnabled(const bool enabled) {
+    mRenderTargetClearEnabled = enabled;
+    if (mRenderSystem && mRenderTarget) {
+        mRenderSystem->SetRenderTargetClearEnabled(*mRenderTarget, enabled);
+    }
+}
+
 systems::STextureHandle *RenderToTextureComponent::GetDstTexture() const {
     return mTexturedstHandle;
 }
@@ -252,7 +270,7 @@ void RenderTextureComponent::SetTexture(
 
 void RenderTextureComponent::UpdateRenderContext() {
     CustomShaderMeshRenderComponent::UpdateRenderContext();
-    if (mRenderContextHandle) {
+    if (mRenderSystem && !mTextureBindings.empty()) {
         mRenderContextHandle = std::make_unique<systems::SRenderContextHandle>(
                 mRenderContextHandle->renderBufferHandle,
                 mRenderContextHandle->shaderHandle,

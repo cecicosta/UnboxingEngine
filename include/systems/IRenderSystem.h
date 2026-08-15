@@ -71,6 +71,7 @@ public:
     virtual STextureHandle *CreateTexture(uint32_t width, uint32_t height, ETextureFormat format) = 0;
     virtual void EraseTextureData(const STextureHandle &textureHandle) = 0;
     virtual SRenderTarget *CreateTextureRenderTarget(STextureHandle *textureHandle, ERenderTargetKind renderTargetKind) = 0;
+    virtual void SetRenderTargetClearEnabled(SRenderTarget &renderTarget, bool enabled) = 0;
     virtual void EraseRenderTargetData(const SRenderTarget &renderTarget) = 0;
 };
 

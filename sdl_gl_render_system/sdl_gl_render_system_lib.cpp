@@ -69,6 +69,7 @@ struct SRenderTarget {
     std::uint32_t height = 0;
     STextureHandle *textureHandle = nullptr;
     ERenderTargetKind renderTargetKind;
+    bool clearEnabled = true;
 };
 
 
@@ -382,6 +383,10 @@ public:
     void OnPreRender() {
         for (const auto &entry : mRenderTarget) {
             const auto &renderTarget = *entry.second;
+            if (!renderTarget.clearEnabled) {
+                continue;
+            }
+
             glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
             glViewport(0, 0, static_cast<GLint>(renderTarget.width), static_cast<GLint>(renderTarget.height));
 
@@ -474,6 +479,10 @@ public:
         glDrawBuffers(1, drawBuffers);
 
         const GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (framebufferStatus == GL_FRAMEBUFFER_COMPLETE) {
+            const GLfloat initialColor[] = {0.0f, 0.0f, 0.0f, 0.0f};
+            glClearBufferfv(GL_COLOR, 0, initialColor);
+        }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
@@ -484,6 +493,15 @@ public:
 
         mRenderTarget.emplace(renderTarget.framebuffer, std::make_unique<SRenderTarget>(renderTarget));
         return mRenderTarget.at(renderTarget.framebuffer).get();
+    }
+
+    void SetRenderTargetClearEnabled(SRenderTarget& renderTarget, const bool enabled) {
+        const auto target = mRenderTarget.find(renderTarget.framebuffer);
+        if (target == mRenderTarget.end() || target->second.get() != &renderTarget) {
+            return;
+        }
+
+        target->second->clearEnabled = enabled;
     }
 
     void EraseRenderTargetData(const SRenderTarget& renderTarget) {
@@ -629,6 +647,10 @@ void COpenGLRenderSystem::EraseTextureData(const STextureHandle &textureHandle) 
 
 SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
     return mImpl->CreateTextureRenderTarget(textureHandle, renderTargetKind);
+}
+
+void COpenGLRenderSystem::SetRenderTargetClearEnabled(SRenderTarget &renderTarget, const bool enabled) {
+    mImpl->SetRenderTargetClearEnabled(renderTarget, enabled);
 }
 
 void COpenGLRenderSystem::EraseRenderTargetData(const SRenderTarget &renderTarget) {

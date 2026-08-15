@@ -49,6 +49,141 @@ void main() {
 )";
 
 
+static const char *multiple_texture_fragment_shader = R"(
+#version 150 core
+
+uniform sampler2D u_texture;
+uniform sampler2D u_electron;
+uniform float u_visualization_scale;
+in vec4 v_color;
+in vec2 v_uv;
+out vec4 o_color;
+void main() {
+    vec4 texture1 = texture(u_texture, v_uv);
+    vec4 texture2 = texture(u_electron, v_uv);
+    float volumetricOpacityValue = (texture1.a + texture2.a) * u_visualization_scale;
+
+    o_color = v_color * vec4(texture1.rgb + texture2.rgb, volumetricOpacityValue);
+}
+)";
+
+static const char *combined_gradient_fragment_shader = R"(
+#version 150 core
+
+uniform sampler2D u_texture;
+uniform sampler2D u_electron;
+uniform float u_visualization_scale;
+in vec4 v_color;
+in vec2 v_uv;
+out vec4 o_color;
+void main() {
+    vec4 electronTex = texture(u_electron, v_uv);
+
+
+   vec2 texel = 1.0 / vec2(textureSize(u_texture, 0));
+
+    float left  = texture(u_texture, v_uv - vec2(texel.x, 0.0)).a;
+    float right = texture(u_texture, v_uv + vec2(texel.x, 0.0)).a;
+    float down  = texture(u_texture, v_uv - vec2(0.0, texel.y)).a;
+    float up    = texture(u_texture, v_uv + vec2(0.0, texel.y)).a;
+
+    vec2 nucleusGradient = vec2(
+        (right - left) / (2.0 * texel.x),
+        (up - down) / (2.0 * texel.y)
+    );
+
+
+    texel = 1.0 / vec2(textureSize(u_electron, 0));
+
+    left  = texture(u_electron, v_uv - vec2(texel.x, 0.0)).a;
+    right = texture(u_electron, v_uv + vec2(texel.x, 0.0)).a;
+    down  = texture(u_electron, v_uv - vec2(0.0, texel.y)).a;
+    up    = texture(u_electron, v_uv + vec2(0.0, texel.y)).a;
+
+    vec2 electronGradient = vec2(
+        (right - left) / (2.0 * texel.x),
+        (up - down) / (2.0 * texel.y)
+    );
+
+
+    vec4 sampleNValue = texture(u_texture, v_uv);
+    vec4 sampleNDx = dFdx(sampleNValue);
+    vec4 sampleNDy = dFdy(sampleNValue);
+    vec2 gradientN = vec2(sampleNDx.a, sampleNDy.a);
+
+    vec4 sampleEValue = texture(u_electron, v_uv);
+    vec4 sampleEDx = dFdx(sampleEValue);
+    vec4 sampleEDy = dFdy(sampleEValue);
+    vec2 gradientE = vec2(sampleEDx.a, sampleEDy.a); // electron has negative charge
+
+    float projENIntensity = dot(gradientE, gradientN);
+
+    float finalSample = sampleEValue.a;
+
+    o_color = vec4(v_color.rgb, finalSample);
+}
+)";
+
+static const char *customVertexShader = R"(
+#version 150 core
+
+in vec3 i_position;
+uniform mat4 u_model_matrix;
+uniform mat4 u_view_matrix;
+uniform mat4 u_projection_matrix;
+uniform vec4 color;
+
+out vec3 vWorldPosition;
+out vec3 vViewPosition;
+out vec3 vLocalPosition;
+out vec4 v_color;
+out float vRadius;
+void main()
+{
+    vec4 worldPosition = u_model_matrix * vec4(i_position, 1.0);
+    vec4 viewPosition = u_view_matrix * worldPosition;
+
+    vLocalPosition = i_position;
+    vWorldPosition = worldPosition.xyz;
+    vViewPosition = viewPosition.xyz;
+    v_color = color;
+
+    vRadius = length(i_position);
+    gl_Position = u_projection_matrix * viewPosition;
+}
+)";
+
+static const char *customFragmentShader = R"(
+#version 150 core
+
+in vec3 vWorldPosition;
+in vec3 vViewPosition;
+in vec3 vLocalPosition;
+in vec4 v_color;
+in float vRadius;
+
+uniform vec3 u_camera_world_position;
+uniform float u_camera_far;
+
+out vec4 FragColor;
+
+void main()
+{
+    float maximumDistance = max(u_camera_far, 0.000001);
+    vec3 ray = u_camera_world_position - vWorldPosition;
+    float distanceFromCamera = length(ray);
+
+    float signValue = gl_FrontFacing ? -1.0 : 1.0;
+
+    FragColor = vec4(
+        signValue * ray,
+        signValue * distanceFromCamera * vRadius //Encodes the radius value r*(dNear - dFar)
+    );
+}
+)";
+
+
+
 static const char *quad_render_vertex_shader = R"(
 #version 150 core
 
@@ -142,6 +277,6 @@ void main() {
 
     float normalizedDecay = V/V_max;
 
-    o_color = vec4(vec3(v_color.r*normalizedDecay, v_color.g, v_color.b*(1-normalizedDecay)), volumetric_opacity);
+    o_color = vec4(vec3(v_color.r, v_color.g, v_color.b), volumetric_opacity*normalizedDecay);
 }
 )";

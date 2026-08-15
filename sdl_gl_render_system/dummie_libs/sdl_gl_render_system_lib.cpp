@@ -18,6 +18,7 @@ void COpenGLRenderSystem::Render(const SRenderContextHandle &) {};
 STextureHandle *COpenGLRenderSystem::CreateTexture(uint32_t, uint32_t, ETextureFormat) { return nullptr; }
 void COpenGLRenderSystem::EraseTextureData(const STextureHandle &) {}
 SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(STextureHandle *, ERenderTargetKind) { return nullptr; }
+void COpenGLRenderSystem::SetRenderTargetClearEnabled(SRenderTarget &, bool) {}
 void COpenGLRenderSystem::EraseRenderTargetData(const SRenderTarget &) {}
 
 void COpenGLRenderSystem::OnPreRender() {}

@@ -62,6 +62,7 @@ private:
     CCore& mEngine;
 };
 
+
 class SimpleTextureComposite : public CSceneComposite {
     public:
     SimpleTextureComposite() {
@@ -77,22 +78,38 @@ class SimpleTextureComposite : public CSceneComposite {
     }
 };
 
-class RenderToTextureComposite0 : public CSceneComposite {
+class RenderToTexture : public CSceneComposite {
 public:
-    explicit RenderToTextureComposite0(const CMeshBuffer& mesh) : mMesh(mesh) {
+    explicit RenderToTexture(CCore& engine, const CMeshBuffer& mesh) : mEngine(engine), mMesh(mesh) {
         auto render = std::make_unique<RenderToTextureComponent>(mMesh);
         render->SetMaterial(yellowMaterial());
         render->SetPolygonMode(EPolygonMode::Fill);
-
-        render->SetVertexShader(customVertexShader);
-        render->SetFragmentShader(customFragmentShader);
-
         AddComponent<IRenderComponent>(std::move(render));
+        mEngine.RegisterSceneElement(*this);
+    }
+
+    ~RenderToTexture() override {
+        mEngine.UnregisterSceneElement(*this);
     }
 
     void SetMaterial(const SMaterial &material) {
         auto render = GetComponent<IRenderComponent>();
         render->SetMaterial(material);
+    }
+
+    void SetShader (const char* vertex, const char* fragment) {
+        if (auto render = dynamic_cast<RenderToTextureComponent*>(GetComponent<IRenderComponent>())) {
+            render->SetVertexShader(vertex);
+            render->SetFragmentShader(fragment);
+        } else {
+            assert(false);
+        }
+    }
+
+    void SetTexture(const std::string& name, systems::STextureHandle* texture) {
+        if (const auto render = GetComponent<IRenderComponent>()) {
+            dynamic_cast<RenderToTextureComponent*>(render)->SetSrcTexture(name, texture);
+        }
     }
 
     [[nodiscard]] systems::STextureHandle* GetTexture() const {
@@ -101,26 +118,47 @@ public:
         }
         return nullptr;
     }
+
+
+    void SetClearRenderTarget (bool clear) {
+        if (auto render = dynamic_cast<RenderToTextureComponent*>(GetComponent<IRenderComponent>())) {
+            render->SetRenderTargetClearEnabled(clear);
+        } else {
+            assert(false);
+        }
+    }
 private:
+    CCore& mEngine;
     CMeshBuffer mMesh;
 };
 
-class RenderToTextureComposite1 : public CSceneComposite {
+
+class RenderTexture : public CSceneComposite {
 public:
-    explicit RenderToTextureComposite1(const CMeshBuffer& mesh) : mMesh(mesh) {
+    explicit RenderTexture(CCore& engine, const CMeshBuffer& mesh) : mEngine(engine), mMesh(mesh) {
         auto render = std::make_unique<RenderTextureComponent>();
         render->SetMaterial(yellowMaterial());
         render->SetPolygonMode(EPolygonMode::Fill);
-
-        render->SetVertexShader(quad_render_vertex_shader);
-        render->SetFragmentShader(potential_region_fragment_shader);
-
         AddComponent<IRenderComponent>(std::move(render));
+        mEngine.RegisterSceneElement(*this);
+    }
+
+    ~RenderTexture() override {
+        mEngine.UnregisterSceneElement(*this);
     }
 
     void SetMaterial(const SMaterial &material) {
         auto render = GetComponent<IRenderComponent>();
         render->SetMaterial(material);
+    }
+
+    void SetShader (const char* vertex, const char* fragment) {
+        if (auto render = dynamic_cast<RenderTextureComponent*>(GetComponent<IRenderComponent>())) {
+            render->SetVertexShader(vertex);
+            render->SetFragmentShader(fragment);
+        } else {
+            assert(false);
+        }
     }
 
     [[nodiscard]] systems::STextureHandle* GetTexture() const {
@@ -130,17 +168,40 @@ public:
         return nullptr;
     }
 
-    void SetTexture(systems::STextureHandle* texture) {
+    void SetTexture(const std::string& name, systems::STextureHandle* texture) {
         if (const auto render = GetComponent<IRenderComponent>()) {
-            dynamic_cast<RenderTextureComponent*>(render)->SetTexture(texture);
+            dynamic_cast<RenderTextureComponent*>(render)->SetTexture(name, texture);
         }
     }
 
+
 private:
+    CCore& mEngine;
     CMeshBuffer mMesh;
 };
 
 
+class OnMousePressDetector : public CSceneComposite, public UListener<core_events::IMouseInputEvent> {
+public:
+    OnMousePressDetector(CCore& engine, RenderToTexture* first, RenderToTexture* second ) : mFirst(first), mSecond(second), mEngine(engine){
+        mEngine.RegisterSceneElement(*this);
+    }
+    ~OnMousePressDetector() override {
+        mEngine.UnregisterSceneElement(*this);
+    }
+
+    void OnMouseInputtEvent(const core_events::SCursor &cursor) override {
+        if (!cursor.isButtonPressed) {
+            return;
+        }
+        mFirst->SetTexture("u_electron", mSecond->GetTexture());
+        mSecond->SetTexture("u_electron", mFirst->GetTexture());
+    }
+private:
+    CCore& mEngine;
+    RenderToTexture* mFirst;
+    RenderToTexture* mSecond;
+};
 
 int main(int argc, char *argv[]) {
     unboxing_engine::CCore engine(640, 480, 32);
@@ -164,25 +225,59 @@ int main(int argc, char *argv[]) {
     }
 
     float radius = 40;
-    CMouseTrackingSphere trackingCircle(engine, radius);
-    trackingCircle.SetPosition({0, 0, 0});
-    trackingCircle.SetMaterial(anotherMaterial());
-//    engine.RegisterSceneElement(trackingCircle);
 
-    RenderToTextureComposite0 nucleus1st(*primitive_utils::Sphere(radius));
-    nucleus1st.SetPosition({0, 0, 0});
-    nucleus1st.SetMaterial(anotherMaterial());
-    engine.RegisterSceneElement(nucleus1st);
+    {
 
-    RenderToTextureComposite1 nucleus2nd(*primitive_utils::Quad());
-    nucleus2nd.SetTexture(nucleus1st.GetTexture());
-    nucleus2nd.SetMaterial(anotherMaterial());
-    engine.RegisterSceneElement(nucleus2nd);
+        RenderToTexture nucleus1st(engine,*primitive_utils::Sphere(radius));
+        nucleus1st.SetPosition({0, 0, 0});
+        nucleus1st.SetShader(customVertexShader, customFragmentShader);
 
-    engine.Run();
+        RenderToTexture nucleus2nd(engine, *primitive_utils::Quad());
+        nucleus2nd.SetMaterial(anotherMaterial());
+        nucleus2nd.SetTexture("u_texture", nucleus1st.GetTexture());
+        nucleus2nd.SetShader(quad_render_vertex_shader, potential_region_fragment_shader);
 
-    engine.UnregisterSceneElement(nucleus1st);
-    engine.UnregisterSceneElement(nucleus2nd);
+        RenderToTexture electron1st(engine, *primitive_utils::Sphere(radius/4));
+        electron1st.SetPosition({0, 20, 0});
+        electron1st.SetShader(customVertexShader, customFragmentShader);
+
+        RenderToTexture electron2st(engine, *primitive_utils::Quad());
+        electron2st.SetMaterial(someMaterial());
+        electron2st.SetTexture("u_texture", electron1st.GetTexture());
+        electron2st.SetShader(quad_render_vertex_shader, potential_region_fragment_shader);
+
+        engine.StepRender();
+        nucleus2nd.SetClearRenderTarget(false);
+        electron2st.SetClearRenderTarget(false);
+        engine.UnregisterSceneElement(nucleus1st);
+        engine.UnregisterSceneElement(nucleus2nd);
+        engine.UnregisterSceneElement(electron1st);
+        engine.UnregisterSceneElement(electron2st);
+
+        RenderToTexture gradient(engine, *primitive_utils::Quad());
+        gradient.SetTexture("u_texture", nucleus2nd.GetTexture());
+        gradient.SetTexture("u_electron", electron2st.GetTexture());
+        gradient.SetMaterial(whiteMaterial());
+        gradient.SetClearRenderTarget(false);
+        gradient.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
+
+        RenderToTexture combine(engine, *primitive_utils::Quad());
+        combine.SetTexture("u_texture", nucleus2nd.GetTexture());
+        combine.SetTexture("u_electron", electron2st.GetTexture());
+        combine.SetMaterial(whiteMaterial());
+        combine.SetClearRenderTarget(false);
+        combine.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
+
+        RenderTexture final(engine, *primitive_utils::Quad());
+        final.SetTexture("u_texture", combine.GetTexture());
+//        final.SetTexture("u_electron", gradient.GetTexture());
+        final.SetMaterial(whiteMaterial());
+        final.SetShader(signed_texture_debug_vertex_shader_source, multiple_texture_fragment_shader);
+
+        OnMousePressDetector mousePressedDetector(engine, &gradient, &combine);
+
+        engine.Run();
+    }
     engine.Release();
     return 0;
 }

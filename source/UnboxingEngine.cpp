@@ -141,6 +141,17 @@ void unboxing_engine::CCore::OnKeyboardInputtEvent(const core_events::SKeyboard 
         quit = true;
     }
 }
+void CCore::StepRender() {
+    OnInput();
+
+    for (auto &&listener: GetListeners<core_events::IUpdateListener>()) {
+        listener->OnUpdate();
+    }
+
+    //WritePendingRenderData();
+
+    Render();
+}
 
 void CCore::RegisterSceneElement(CSceneComposite &sceneComposite) {
     const auto existing = std::find(
@@ -190,9 +201,6 @@ void CCore::UnregisterSceneElement(const CSceneComposite &sceneComposite) {
         });
 
     if (it != mRenderQueue.end()) {
-        if(auto renderComponent = (*it)->GetComponent<IRenderComponent>()) {
-            renderComponent->ReleaseRenderContext();
-        }
         mRenderQueue.erase(it);
     }
     

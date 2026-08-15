@@ -23,6 +23,7 @@ public:
     STextureHandle *CreateTexture(uint32_t, uint32_t, ETextureFormat) override;
     void EraseTextureData(const STextureHandle &textureHandle) override;
     SRenderTarget *CreateTextureRenderTarget(STextureHandle *, ERenderTargetKind) override;
+    void SetRenderTargetClearEnabled(SRenderTarget &renderTarget, bool enabled) override;
     void EraseRenderTargetData(const SRenderTarget &renderTarget) override;
 
     void OnPreRender() override;
