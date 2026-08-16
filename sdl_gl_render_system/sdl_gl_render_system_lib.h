@@ -24,8 +24,9 @@ public:
 
     STextureHandle *CreateTexture(uint32_t width, uint32_t height, ETextureFormat format) override;
     void EraseTextureData(const STextureHandle &textureHandle) override;
-    SRenderTarget *CreateTextureRenderTarget(STextureHandle *textureHandle, ERenderTargetKind renderTargetKind) override;
+    SRenderTarget *CreateTextureRenderTarget(STextureHandle *textureHandle, ERenderTargetBlendMode blendMode) override;
     void SetRenderTargetClearEnabled(SRenderTarget &renderTarget, bool enabled) override;
+    void SetRenderTargetBlendMode(SRenderTarget &renderTarget, ERenderTargetBlendMode blendMode) override;
     void EraseRenderTargetData(const SRenderTarget &renderTarget) override;
 
     [[nodiscard]] std::optional<STextureSnapshot> CaptureTexture(

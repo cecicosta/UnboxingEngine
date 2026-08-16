@@ -126,10 +126,10 @@ public:
 
     unboxing_engine::systems::SRenderTarget *CreateTextureRenderTarget(
         unboxing_engine::systems::STextureHandle *textureHandle,
-        unboxing_engine::systems::ERenderTargetKind kind) override {
+        unboxing_engine::systems::ERenderTargetBlendMode blendMode) override {
         actions.push_back(EAction::CreateRenderTarget);
         targetTexture = textureHandle;
-        targetKind = kind;
+        targetBlendMode = blendMode;
         return createRenderTargetResult ? &renderTarget : nullptr;
     }
 
@@ -139,6 +139,14 @@ public:
         clearTarget = &target;
         renderTargetClearEnabled = enabled;
         ++setRenderTargetClearEnabledCount;
+    }
+
+    void SetRenderTargetBlendMode(
+        unboxing_engine::systems::SRenderTarget &target,
+        const unboxing_engine::systems::ERenderTargetBlendMode blendMode) override {
+        blendTarget = &target;
+        targetBlendMode = blendMode;
+        ++setRenderTargetBlendModeCount;
     }
 
     void EraseRenderTargetData(
@@ -166,13 +174,15 @@ public:
     unboxing_engine::systems::ETextureFormat textureFormat =
         unboxing_engine::systems::ETextureFormat::RGBA8U;
     unboxing_engine::systems::STextureHandle *targetTexture = nullptr;
-    unboxing_engine::systems::ERenderTargetKind targetKind =
-        unboxing_engine::systems::ERenderTargetKind::DefaultFramebuffer;
+    unboxing_engine::systems::ERenderTargetBlendMode targetBlendMode =
+        unboxing_engine::systems::ERenderTargetBlendMode::Overwrite;
     unsigned int writeRenderBufferCount = 0;
     mutable unsigned int compileShaderCount = 0;
     unboxing_engine::systems::SRenderTarget *clearTarget = nullptr;
     bool renderTargetClearEnabled = true;
     unsigned int setRenderTargetClearEnabledCount = 0;
+    unboxing_engine::systems::SRenderTarget *blendTarget = nullptr;
+    unsigned int setRenderTargetBlendModeCount = 0;
     std::vector<EAction> actions;
     std::vector<const unboxing_engine::systems::SRenderContextHandle *> renderContexts;
     std::vector<const unboxing_engine::systems::SRenderBufferHandle *> erasedBuffers;
@@ -206,8 +216,8 @@ TEST(RenderToTextureComponentTest, CreatesTargetBeforeRendering) {
     ASSERT_EQ(renderSystem.textureHeight, 32u);
     EXPECT_EQ(renderSystem.textureFormat, unboxing_engine::systems::ETextureFormat::RGBA32F);
     EXPECT_EQ(renderSystem.targetTexture, &renderSystem.texture);
-    EXPECT_EQ(renderSystem.targetKind,
-              unboxing_engine::systems::ERenderTargetKind::FloatingPointAccumulation);
+    EXPECT_EQ(renderSystem.targetBlendMode,
+              unboxing_engine::systems::ERenderTargetBlendMode::Additive);
     ASSERT_EQ(renderSystem.renderContexts.size(), 0u);
 
     componentPtr->OnRender();
@@ -236,6 +246,31 @@ TEST(RenderToTextureComponentTest, ConfiguresTargetClearingBeforeAndAfterInitial
 
     EXPECT_TRUE(renderSystem.renderTargetClearEnabled);
     EXPECT_EQ(renderSystem.setRenderTargetClearEnabledCount, 2u);
+}
+
+TEST(RenderToTextureComponentTest, ConfiguresBlendModeBeforeAndAfterInitialization) {
+    FakeRenderSystem renderSystem;
+    unboxing_engine::CSceneComposite scene;
+    auto mesh = MakeTestMesh();
+    auto component = std::make_unique<unboxing_engine::RenderToTextureComponent>(mesh);
+    auto *componentPtr = component.get();
+    scene.AddComponent<unboxing_engine::IRenderComponent>(std::move(component));
+
+    componentPtr->SetRenderTargetBlendMode(
+        unboxing_engine::systems::ERenderTargetBlendMode::Overwrite);
+    componentPtr->OnInitialize(renderSystem);
+
+    EXPECT_EQ(renderSystem.targetBlendMode,
+              unboxing_engine::systems::ERenderTargetBlendMode::Overwrite);
+    EXPECT_EQ(renderSystem.setRenderTargetBlendModeCount, 0u);
+
+    componentPtr->SetRenderTargetBlendMode(
+        unboxing_engine::systems::ERenderTargetBlendMode::Alpha);
+
+    EXPECT_EQ(renderSystem.blendTarget, &renderSystem.renderTarget);
+    EXPECT_EQ(renderSystem.targetBlendMode,
+              unboxing_engine::systems::ERenderTargetBlendMode::Alpha);
+    EXPECT_EQ(renderSystem.setRenderTargetBlendModeCount, 1u);
 }
 
 TEST(RenderTextureComponentTest, RendersAssignedTextures) {

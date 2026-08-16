@@ -69,7 +69,7 @@ struct SRenderTarget {
     std::uint32_t width = 0;
     std::uint32_t height = 0;
     STextureHandle *textureHandle = nullptr;
-    ERenderTargetKind renderTargetKind;
+    ERenderTargetBlendMode blendMode = ERenderTargetBlendMode::Overwrite;
     bool clearEnabled = true;
 };
 
@@ -135,7 +135,10 @@ public:
         mSignedTextureDebugShader = CompileShader(signed_texture_debug_vertex_shader_source, signed_texture_debug_fragment_shader_source);
         CreateView(mCamera.mWidth, mCamera.mHeight);
 
-        SRenderTarget renderTarget{0, 0, mCamera.mWidth, mCamera.mHeight, nullptr, ERenderTargetKind::DefaultFramebuffer};
+        SRenderTarget renderTarget;
+        renderTarget.width = mCamera.mWidth;
+        renderTarget.height = mCamera.mHeight;
+        renderTarget.blendMode = ERenderTargetBlendMode::Alpha;
         mRenderTarget.emplace(0, std::make_unique<SRenderTarget>(renderTarget));
         return true;
     }
@@ -508,7 +511,9 @@ public:
         return snapshot;
     }
 
-    SRenderTarget* CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
+    SRenderTarget* CreateTextureRenderTarget(
+        STextureHandle *textureHandle,
+        const ERenderTargetBlendMode blendMode) {
         if (!textureHandle || textureHandle->texture == 0) {
             return nullptr;
         }
@@ -517,7 +522,7 @@ public:
         renderTarget.textureHandle = textureHandle;
         renderTarget.width = textureHandle->width;
         renderTarget.height = textureHandle->height;
-        renderTarget.renderTargetKind = renderTargetKind;
+        renderTarget.blendMode = blendMode;
 
         glGenFramebuffers(1, &renderTarget.framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
@@ -552,6 +557,17 @@ public:
         target->second->clearEnabled = enabled;
     }
 
+    void SetRenderTargetBlendMode(
+        SRenderTarget& renderTarget,
+        const ERenderTargetBlendMode blendMode) {
+        const auto target = mRenderTarget.find(renderTarget.framebuffer);
+        if (target == mRenderTarget.end() || target->second.get() != &renderTarget) {
+            return;
+        }
+
+        target->second->blendMode = blendMode;
+    }
+
     void EraseRenderTargetData(const SRenderTarget& renderTarget) {
         if (renderTarget.framebuffer == 0) {
             return;
@@ -573,16 +589,20 @@ public:
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
         glDisable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glBlendEquation(GL_FUNC_ADD);
-
-        switch (renderTarget.renderTargetKind) {
-            case ERenderTargetKind::FloatingPointAccumulation:
+        switch (renderTarget.blendMode) {
+            case ERenderTargetBlendMode::Overwrite:
+                glDisable(GL_BLEND);
+            break;
+            case ERenderTargetBlendMode::Additive:
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
                 glBlendFunc(GL_ONE, GL_ONE);
             break;
-            case ERenderTargetKind::DefaultFramebuffer:
-            default:
+            case ERenderTargetBlendMode::Alpha:
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
         }
     }
 
@@ -728,12 +748,20 @@ void COpenGLRenderSystem::EraseTextureData(const STextureHandle &textureHandle) 
     mImpl->EraseTextureData(textureHandle);
 }
 
-SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(STextureHandle *textureHandle, const ERenderTargetKind renderTargetKind) {
-    return mImpl->CreateTextureRenderTarget(textureHandle, renderTargetKind);
+SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(
+    STextureHandle *textureHandle,
+    const ERenderTargetBlendMode blendMode) {
+    return mImpl->CreateTextureRenderTarget(textureHandle, blendMode);
 }
 
 void COpenGLRenderSystem::SetRenderTargetClearEnabled(SRenderTarget &renderTarget, const bool enabled) {
     mImpl->SetRenderTargetClearEnabled(renderTarget, enabled);
+}
+
+void COpenGLRenderSystem::SetRenderTargetBlendMode(
+    SRenderTarget &renderTarget,
+    const ERenderTargetBlendMode blendMode) {
+    mImpl->SetRenderTargetBlendMode(renderTarget, blendMode);
 }
 
 void COpenGLRenderSystem::EraseRenderTargetData(const SRenderTarget &renderTarget) {

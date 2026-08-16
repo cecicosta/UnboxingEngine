@@ -160,7 +160,7 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
 
     mRenderTarget = renderSystem.CreateTextureRenderTarget(
         mTexturedstHandle,
-        systems::ERenderTargetKind::FloatingPointAccumulation);
+        mRenderTargetBlendMode);
     if (!mRenderTarget) {
         return;
     }
@@ -247,6 +247,14 @@ void RenderToTextureComponent::SetRenderTargetClearEnabled(const bool enabled) {
     mRenderTargetClearEnabled = enabled;
     if (mRenderSystem && mRenderTarget) {
         mRenderSystem->SetRenderTargetClearEnabled(*mRenderTarget, enabled);
+    }
+}
+
+void RenderToTextureComponent::SetRenderTargetBlendMode(
+    const systems::ERenderTargetBlendMode blendMode) {
+    mRenderTargetBlendMode = blendMode;
+    if (mRenderSystem && mRenderTarget) {
+        mRenderSystem->SetRenderTargetBlendMode(*mRenderTarget, blendMode);
     }
 }
 

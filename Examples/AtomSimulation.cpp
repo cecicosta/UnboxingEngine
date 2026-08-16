@@ -129,6 +129,14 @@ public:
             assert(false);
         }
     }
+
+    void SetRenderTargetBlendMode(systems::ERenderTargetBlendMode blendMode) {
+        if (auto render = dynamic_cast<RenderToTextureComponent*>(GetComponent<IRenderComponent>())) {
+            render->SetRenderTargetBlendMode(blendMode);
+        } else {
+            assert(false);
+        }
+    }
 private:
     CCore& mEngine;
     CMeshBuffer mMesh;
@@ -272,6 +280,7 @@ int main(int argc, char *argv[]) {
             options);
 
         RenderToTexture gradient(engine, *primitive_utils::Quad());
+        gradient.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
         gradient.SetTexture("u_electron", electron2nd.GetTexture());
         gradient.SetMaterial(whiteMaterial());
         gradient.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
@@ -283,6 +292,7 @@ int main(int argc, char *argv[]) {
          options);
 
         RenderToTexture combine(engine, *primitive_utils::Quad());
+        combine.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
         combine.SetTexture("u_electron", gradient.GetTexture());
         combine.SetMaterial(whiteMaterial());
         combine.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);

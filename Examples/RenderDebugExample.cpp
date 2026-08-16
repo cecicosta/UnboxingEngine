@@ -41,6 +41,7 @@ public:
         auto render = std::make_unique<RenderToTextureComponent>(*mMesh);
         render->SetMaterial(FieldMaterial());
         render->SetPolygonMode(EPolygonMode::Fill);
+        render->SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
         render->SetVertexShader(signed_texture_debug_vertex_shader_source);
         render->SetFragmentShader(fieldFragmentShader);
         mRender = render.get();
@@ -112,7 +113,6 @@ int main() {
                 }
             }
         }
-
         engine.UnregisterSceneElement(fieldTarget);
     }
 

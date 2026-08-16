@@ -29,9 +29,10 @@ enum class ETextureFormat {
     RGBA8U,
 };
 
-enum class ERenderTargetKind {
-    DefaultFramebuffer,
-    FloatingPointAccumulation
+enum class ERenderTargetBlendMode {
+    Overwrite,
+    Additive,
+    Alpha
 };
 
 struct STextureBinding {
@@ -40,20 +41,18 @@ struct STextureBinding {
 };
 
 struct SRenderContextHandle {
-    SRenderContextHandle(const SRenderBufferHandle* _renderBufferHandle, const SShaderHandle* _shaderHandle, const CSceneComposite& _sceneComposite, std::vector<STextureBinding> _textureBindings = {}, const SRenderTarget* _renderTarget = nullptr, ERenderTargetKind _renderTargetKind = ERenderTargetKind::DefaultFramebuffer)
+    SRenderContextHandle(const SRenderBufferHandle* _renderBufferHandle, const SShaderHandle* _shaderHandle, const CSceneComposite& _sceneComposite, std::vector<STextureBinding> _textureBindings = {}, const SRenderTarget* _renderTarget = nullptr)
     : renderBufferHandle(_renderBufferHandle)
     , shaderHandle(_shaderHandle)
     , sceneComposite(_sceneComposite)
     , textureBindings(std::move(_textureBindings))
-    , renderTarget(_renderTarget)
-    , renderTargetKind(_renderTargetKind) {}
+    , renderTarget(_renderTarget) {}
     const SRenderBufferHandle *renderBufferHandle;
     const SShaderHandle *shaderHandle;
     const CSceneComposite &sceneComposite;
     std::vector<STextureBinding> textureBindings;
     const SRenderTarget* renderTarget;
-    ERenderTargetKind renderTargetKind;
-    float colorScale = 1.0f;
+    float colorScale = 1.0f; // TODO: Embed this parameter into the shader handle. Follow the model of SetRenderTargetBlendMode. Perhaps for Shader handle, a method that would allow to add generic parameters to the shader.
 };
 
 class IRenderSystem: public UListener<core_events::IPreRenderListener, core_events::IPostRenderListener> {
@@ -73,8 +72,9 @@ public:
     virtual void Render(const SRenderContextHandle &renderContextHandle) = 0;
     virtual STextureHandle *CreateTexture(uint32_t width, uint32_t height, ETextureFormat format) = 0;
     virtual void EraseTextureData(const STextureHandle &textureHandle) = 0;
-    virtual SRenderTarget *CreateTextureRenderTarget(STextureHandle *textureHandle, ERenderTargetKind renderTargetKind) = 0;
+    virtual SRenderTarget *CreateTextureRenderTarget(STextureHandle *textureHandle, ERenderTargetBlendMode blendMode) = 0;
     virtual void SetRenderTargetClearEnabled(SRenderTarget &renderTarget, bool enabled) = 0;
+    virtual void SetRenderTargetBlendMode(SRenderTarget &renderTarget, ERenderTargetBlendMode blendMode) = 0;
     virtual void EraseRenderTargetData(const SRenderTarget &renderTarget) = 0;
 };
 

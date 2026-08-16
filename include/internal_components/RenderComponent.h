@@ -94,6 +94,7 @@ public:
     void SetSrcTexture(systems::STextureHandle* texture);
     void SetSrcTexture(const std::string& uniformName, systems::STextureHandle* texture);
     void SetRenderTargetClearEnabled(bool enabled);
+    void SetRenderTargetBlendMode(systems::ERenderTargetBlendMode blendMode);
     [[nodiscard]] systems::STextureHandle* GetDstTexture() const;
 
 private:
@@ -104,6 +105,8 @@ private:
     systems::STextureHandle *mTexturedstHandle = nullptr;
     systems::SRenderTarget * mRenderTarget = nullptr;
     bool mRenderTargetClearEnabled = true;
+    systems::ERenderTargetBlendMode mRenderTargetBlendMode =
+        systems::ERenderTargetBlendMode::Additive;
 };
 
 class RenderTextureComponent : public CustomShaderMeshRenderComponent {

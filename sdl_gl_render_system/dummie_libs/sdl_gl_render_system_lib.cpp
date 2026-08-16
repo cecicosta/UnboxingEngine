@@ -28,8 +28,9 @@ void COpenGLRenderSystem::SetCamera(const Camera &camera) { mCamera = &camera; }
 void COpenGLRenderSystem::Render(const SRenderContextHandle &) {};
 STextureHandle *COpenGLRenderSystem::CreateTexture(uint32_t, uint32_t, ETextureFormat) { return nullptr; }
 void COpenGLRenderSystem::EraseTextureData(const STextureHandle &) {}
-SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(STextureHandle *, ERenderTargetKind) { return nullptr; }
+SRenderTarget *COpenGLRenderSystem::CreateTextureRenderTarget(STextureHandle *, ERenderTargetBlendMode) { return nullptr; }
 void COpenGLRenderSystem::SetRenderTargetClearEnabled(SRenderTarget &, bool) {}
+void COpenGLRenderSystem::SetRenderTargetBlendMode(SRenderTarget &, ERenderTargetBlendMode) {}
 void COpenGLRenderSystem::EraseRenderTargetData(const SRenderTarget &) {}
 
 void COpenGLRenderSystem::OnPreRender() {}
