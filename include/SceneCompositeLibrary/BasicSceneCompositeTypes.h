@@ -159,7 +159,7 @@ public:
     explicit CSimpleMeshWireFrame(const CMeshBuffer &mesh)
         : mMesh(mesh) {
         auto render = std::make_unique<CDefaultMeshRenderComponent>(mMesh);
-        render->SetMaterial(yellowMaterial());
+        render->SetMaterial(whiteMaterial());
         render->SetPolygonMode(EPolygonMode::Line);
         AddComponent<IRenderComponent>(std::move(render));
     }
@@ -178,7 +178,7 @@ public:
     explicit CustomShaderComposite(const CMeshBuffer &mesh)
         : mMesh(mesh) {
         auto render = std::make_unique<RenderToTextureComponent>(mMesh);
-        render->SetMaterial(yellowMaterial());
+        render->SetMaterial(whiteMaterial());
         render->SetPolygonMode(EPolygonMode::Fill);
 
         render->SetVertexShader(customVertexShader);

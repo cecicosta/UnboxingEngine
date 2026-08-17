@@ -64,8 +64,8 @@ void main() {
     float value = (texture2.a) * u_visualization_scale;
 
     vec3 signColor = value >= 0.0
-        ? vec3(1.0, 0.0, 0.0)
-        : vec3(0.0, 0.0, 1.0);
+        ? v_color.rgb
+        : vec3(1.0, 1.0, 1.0) - v_color.rgb;
 
     float opacity = clamp(abs(value), 0.0, 1.0);
     o_color = vec4(signColor, opacity);

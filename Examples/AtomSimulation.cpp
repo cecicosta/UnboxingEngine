@@ -84,7 +84,6 @@ class RenderToTexture : public CSceneComposite {
 public:
     explicit RenderToTexture(CCore& engine, const CMeshBuffer& mesh) : mEngine(engine), mMesh(mesh) {
         auto render = std::make_unique<RenderToTextureComponent>(mMesh);
-        render->SetMaterial(yellowMaterial());
         render->SetPolygonMode(EPolygonMode::Fill);
         AddComponent<IRenderComponent>(std::move(render));
         mEngine.RegisterSceneElement(*this);
@@ -249,7 +248,6 @@ int main(int argc, char *argv[]) {
         electron1st.SetShader(customVertexShader, customFragmentShader);
 
         RenderToTexture electron2nd(engine, *primitive_utils::Quad());
-        electron2nd.SetMaterial(otherMaterial());
         electron2nd.SetTexture("u_texture", electron1st.GetTexture());
         electron2nd.SetShader(quad_render_vertex_shader, potential_region_fragment_shader);
 
@@ -260,23 +258,21 @@ int main(int argc, char *argv[]) {
         ping.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
         ping.SetTexture("u_texture", nucleus2nd.GetTexture());
         ping.SetTexture("u_electron", electron2nd.GetTexture());
-        ping.SetMaterial(whiteMaterial());
         ping.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
         RenderToTexture pong(engine, *primitive_utils::Quad());
         pong.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
         pong.SetTexture("u_texture", nucleus2nd.GetTexture());
         pong.SetTexture("u_electron", ping.GetTexture());
-        pong.SetMaterial(whiteMaterial());
         pong.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
         OnMousePressDetector onClickStartPingPongTextureFeedback(engine, &ping, &pong);
 
         RenderTexture final(engine, *primitive_utils::Quad());
         final.SetTexture("u_electron", pong.GetTexture());
-        final.SetMaterial(whiteMaterial());
+        final.SetMaterial(redMaterial());
         final.SetShader(signed_texture_debug_vertex_shader_source, multiple_texture_fragment_shader);
-        final.GetRenderComponent().SetRenderColorScale(1.5e15);
+        final.GetRenderComponent().SetRenderColorScale(1e16);
 
         RenderTexture nucleus(engine, *primitive_utils::Quad());
         nucleus.SetTexture("u_texture", nucleus2nd.GetTexture());
