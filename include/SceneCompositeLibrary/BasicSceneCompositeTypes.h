@@ -7,6 +7,16 @@
 #include "internal_components/RenderComponent.h"
 
 namespace unboxing_engine {
+inline SMaterial invisibleMaterial() {
+    SMaterial material{};
+    material.materialDif[0] = 0;
+    material.materialDif[1] = 0;
+    material.materialDif[2] = 0;
+    material.materialDif[3] = 0;
+    material.enable = true;
+    return material;
+}
+
 inline SMaterial yellowMaterial() {
     SMaterial material{};
     material.materialDif[0] = 1;

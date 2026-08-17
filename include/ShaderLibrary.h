@@ -61,7 +61,7 @@ out vec4 o_color;
 void main() {
     vec4 texture1 = texture(u_texture, v_uv);
     vec4 texture2 = texture(u_electron, v_uv);
-    float value = (texture1.a + texture2.a) * u_visualization_scale;
+    float value = (texture2.a) * u_visualization_scale;
 
     vec3 signColor = value >= 0.0
         ? vec3(1.0, 0.0, 0.0)
@@ -82,6 +82,7 @@ in vec4 v_color;
 in vec2 v_uv;
 out vec4 o_color;
 void main() {
+    vec4 nucleusTex = texture(u_texture, v_uv);
     vec4 electronTex = texture(u_electron, v_uv);
 
 
@@ -92,10 +93,39 @@ void main() {
     float down  = texture(u_texture, v_uv - vec2(0.0, texel.y)).a;
     float up    = texture(u_texture, v_uv + vec2(0.0, texel.y)).a;
 
+    float upLeft =
+        texture(u_texture, v_uv + vec2(-texel.x, texel.y)).a;
+
+    float upRight =
+        texture(u_texture, v_uv + vec2(texel.x, texel.y)).a;
+
+    float downLeft =
+        texture(u_texture, v_uv + vec2(-texel.x, -texel.y)).a;
+
+    float downRight =
+        texture(u_texture, v_uv + vec2(texel.x, -texel.y)).a;
+
     vec2 nucleusGradient = vec2(
         (right - left) / (2.0 * texel.x),
         (up - down) / (2.0 * texel.y)
     );
+
+    float nCenter = nucleusTex.a;
+
+    float nAxial =
+        left + right + up + down;
+
+    float nDiagonal =
+        upLeft + upRight + downLeft + downRight;
+
+    float nLaplacian =
+        (
+            4.0 * nAxial +
+            nDiagonal -
+            20.0 * nCenter
+        ) / 6.0;
+
+
 
 
     texel = 1.0 / vec2(textureSize(u_electron, 0));
@@ -105,16 +135,16 @@ void main() {
     down  = texture(u_electron, v_uv - vec2(0.0, texel.y)).a;
     up    = texture(u_electron, v_uv + vec2(0.0, texel.y)).a;
 
-    float upLeft =
+    upLeft =
         texture(u_electron, v_uv + vec2(-texel.x, texel.y)).a;
 
-    float upRight =
+    upRight =
         texture(u_electron, v_uv + vec2(texel.x, texel.y)).a;
 
-    float downLeft =
+    downLeft =
         texture(u_electron, v_uv + vec2(-texel.x, -texel.y)).a;
 
-    float downRight =
+    downRight =
         texture(u_electron, v_uv + vec2(texel.x, -texel.y)).a;
 
     vec2 electronGradient = vec2(
@@ -137,12 +167,12 @@ void main() {
             20.0 * center
         ) / 6.0;
 
-    float diffusionStep = 0.01;
+    float diffusionStep = 0.3;
 
     float finalSample =
-        center + diffusionStep * laplacian;
+        center + diffusionStep * (laplacian - nLaplacian);
 
-    o_color = vec4(v_color.rgb, finalSample);
+    o_color = vec4(electronTex.rgb, finalSample);
 }
 )";
 
