@@ -1,1 +1,186 @@
-sdfsdfsdfsdfsdf
+UnboxingEngine Noncommercial and No-AI-Training License 1.0
+
+Copyright (c) 2022-2026 Cecilia Costa
+
+Required Notice: UnboxingEngine by Cecilia Costa
+
+1. Acceptance
+
+By exercising any permission granted under these terms, you agree to these
+terms as conditions of the licenses granted to you.
+
+2. Copyright License
+
+Subject to these terms, the Licensor grants you a worldwide, royalty-free,
+non-exclusive, non-transferable copyright license to use, reproduce, modify,
+and create derivative works of the Software solely for Permitted Purposes.
+
+3. Distribution
+
+You may distribute the Software, including modified versions and derivative
+works, solely for Permitted Purposes and only if you:
+
+a. provide every recipient with a complete copy of these terms;
+
+b. retain all copyright, attribution, and Required Notice lines included with
+   the Software;
+
+c. identify significant modifications and the date they were made;
+
+d. provide reasonably prominent credit to "UnboxingEngine by Cecilia Costa"
+   in accompanying documentation, credits, or an equivalent location customary
+   for the form in which you distribute the Software; and
+
+e. do not state or imply that the Licensor endorses you or your modifications.
+
+Recipients receive their permissions directly from the Licensor under these
+terms. You may not impose terms that purport to replace, remove, or conflict
+with these terms for the Software or any part of it.
+
+4. Permitted Purposes
+
+A Permitted Purpose is a Noncommercial Purpose that does not involve any
+Prohibited AI Use.
+
+A Noncommercial Purpose is a use that is not primarily intended for commercial
+advantage or monetary compensation and is not a Commercial Use described in
+section 5.
+
+Use by an individual for personal study, education, research, experiment,
+testing, hobby projects, or private entertainment is a Noncommercial Purpose
+when it has no intended or reasonably anticipated commercial application.
+
+Use by a charitable organization, educational institution, public research
+organization, public safety or health organization, environmental protection
+organization, or government institution is a Noncommercial Purpose when the
+use is not primarily intended for commercial advantage or monetary
+compensation.
+
+5. Commercial Use
+
+No Commercial Use is licensed under these terms. Commercial Use includes,
+without limitation:
+
+a. use by or for a for-profit business in its operations, products, or
+   services;
+
+b. use to provide a paid product, service, consultancy, support offering, or
+   hosted functionality;
+
+c. sale, paid licensing, or other distribution for monetary compensation; and
+
+d. use intended to produce commercial advantage, revenue, or compensation,
+   whether directly or indirectly.
+
+Commercial Use requires a separate written agreement with the Licensor. The
+Licensor may grant commercial rights under different terms at the Licensor's
+sole discretion.
+
+6. No AI Training
+
+No Prohibited AI Use is licensed under these terms, whether commercial or
+noncommercial.
+
+Prohibited AI Use means using the Software, or any source code, object code,
+documentation, comments, modifications, or derivative works of the Software:
+
+a. as training, fine-tuning, validation, testing, or evaluation data for an
+   artificial-intelligence or machine-learning model or system;
+
+b. in a dataset, corpus, benchmark, embedding collection, or similar resource
+   created or used for any purpose listed in paragraph 6(a); or
+
+c. to develop, calibrate, optimize, or improve the weights, parameters,
+   behavior, or code-generation capabilities of an artificial-intelligence or
+   machine-learning model or system.
+
+Any Prohibited AI Use requires separate prior written permission from the
+Licensor. This section does not prohibit running the Software as a tool in a
+workflow merely because that workflow also uses artificial intelligence,
+provided that the Software itself is not used for a purpose described above.
+
+7. Attribution Does Not Create Additional Permission
+
+Giving credit does not authorize Commercial Use or Prohibited AI Use. Those
+uses always require a separate written agreement or permission from the
+Licensor.
+
+8. Patent License
+
+Subject to these terms, the Licensor grants you a worldwide, royalty-free,
+non-exclusive patent license under patent claims the Licensor can license and
+that are necessarily infringed by your Permitted Purpose use of the Software.
+If you or your organization make a written claim that the Software infringes a
+patent, this patent license ends immediately for you and your organization.
+
+9. Third-Party Materials
+
+These terms apply only to portions of the repository and distributions for
+which the Licensor owns or controls the necessary rights. Third-party software,
+including material under the `third_party/` directory and any material carrying
+its own license notice, remains governed by its respective license. These terms
+do not replace or restrict those third-party licenses.
+
+10. Fair Use and Statutory Rights
+
+These terms do not limit any use that applicable law permits without a license,
+including applicable fair-use, fair-dealing, exhaustion, or similar rights.
+
+11. No Trademark License
+
+These terms do not grant permission to use the Licensor's names, trademarks, or
+logos except as necessary to provide the attribution required by section 3.
+
+12. Compliance and Termination
+
+Your licenses under these terms end automatically if you violate them. For a
+first violation, your licenses may be reinstated if you receive written notice,
+come into full compliance within 30 days, and take reasonable steps to remedy
+the violation. Reinstatement does not prevent the Licensor from seeking relief
+for the period of violation. A deliberate Prohibited AI Use or Commercial Use
+is not automatically eligible for reinstatement.
+
+13. No Warranty
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE SOFTWARE IS PROVIDED "AS IS" AND
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
+NON-INFRINGEMENT.
+
+14. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR WILL NOT BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR OTHER
+DAMAGES ARISING FROM THE SOFTWARE OR THESE TERMS, UNDER ANY LEGAL THEORY, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+15. Severability
+
+If any provision of these terms is held unenforceable, it will be enforced to
+the maximum extent permitted, and the remaining provisions will remain in
+effect.
+
+16. No Other Rights
+
+No rights are granted except those expressly stated in these terms. The
+Licensor may offer the Software to others under different terms.
+
+17. Definitions
+
+"Licensor" means Cecilia Costa and any other copyright holder who expressly
+offers their contribution under these terms.
+
+"Software" means the original UnboxingEngine source code, object code,
+documentation, and other materials made available by the Licensor under these
+terms, including modified versions and derivative works to the extent they
+contain or are based on that material.
+
+"You" means the individual or legal entity exercising permissions under these
+terms.
+
+"Your organization" means any legal entity, sole proprietorship, or other
+organization that you work for, as well as entities that control, are controlled
+by, or are under common control with it.
+
+"Use" means any act that would otherwise require permission under copyright or
+patent law.

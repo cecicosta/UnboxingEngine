@@ -1,1 +1,268 @@
-asdadasdasdasd
+# UnboxingEngine
+
+UnboxingEngine is an experimental C++17 scene and component engine for graphics,
+collision, and computational rendering experiments. It combines an SDL2/OpenGL
+renderer with scene transforms, reusable mesh primitives, event-driven input,
+collision components, custom GLSL shaders, and floating-point render-to-texture
+workflows.
+
+The project is primarily a research and learning codebase. Its examples cover
+interactive collision visualization, octree traversal, voxelization, radiosity,
+custom shader passes, and iterative texture-based field calculations.
+
+## Features
+
+- Scene graph transforms through `CSceneNode` and `CSceneComposite`.
+- Component-based rendering, collision, input, and update behavior.
+- Deterministic rendering in scene-element registration order.
+- SDL2 window/input integration and an OpenGL 3.2 core-profile renderer.
+- GLSL 150 custom vertex and fragment shaders.
+- Built-in cube, quad, sphere, torus, line, and other mesh helpers.
+- Perspective, orthographic, and screen-ray camera operations.
+- Named multiple-texture shader inputs.
+- `RGBA32F` off-screen render targets.
+- Overwrite, additive, and alpha render-target blend modes.
+- Configurable per-target clearing for accumulation and iterative calculations.
+- GPU texture statistics, snapshots, and render-step comparisons.
+- Primitive, mesh, 2D component, ray, and octree collision algorithms.
+
+## Requirements
+
+- CMake 3.21 or newer.
+- A C++17 compiler.
+- A desktop OpenGL implementation supporting the 3.2 core profile.
+- Git submodules initialized for SDL2, GoogleTest, and the other vendored
+  dependencies.
+
+Initialize dependencies after cloning an existing checkout:
+
+```bash
+git submodule update --init --recursive
+```
+
+Alternatively, clone with `--recurse-submodules`.
+
+## Build
+
+Configure and build the engine and examples:
+
+```bash
+cmake -S . -B build
+cmake --build build -j
+```
+
+Build a specific example when iterating on one feature:
+
+```bash
+cmake --build build --target coctree_torus_minimal
+./build/Examples/coctree_torus_minimal
+```
+
+On multi-configuration generators, build with a configuration such as
+`--config Debug`; the executable is normally placed in a matching subdirectory
+such as `build/Examples/Debug/`.
+
+## Minimal Scene
+
+The engine owns its systems while scene objects own their components and mesh
+data. Register objects after `Start()`, and destroy their render resources before
+`Release()`:
+
+```cpp
+#include "MeshPrimitivesUtils.h"
+#include "SceneCompositeLibrary/BasicSceneCompositeTypes.h"
+#include "UnboxingEngine.h"
+
+using namespace unboxing_engine;
+
+int main() {
+    CCore engine(1000, 700, 32);
+
+    Camera camera(1000, 700, 60.0f, 0.1f, 1000.0f);
+    camera.SetPosition({0.0f, 0.0f, 8.0f});
+    engine.SetCamera(camera);
+    engine.Start();
+
+    if (engine.IsRunning()) {
+        auto mesh = primitive_utils::Sphere(2.0f);
+        CSimpleMeshWireFrame sphere(*mesh);
+        sphere.SetMaterial(redMaterial());
+
+        engine.RegisterSceneElement(sphere);
+        engine.Run();
+        engine.UnregisterSceneElement(sphere);
+    }
+
+    engine.Release();
+    return 0;
+}
+```
+
+`Run()` processes input, update listeners, collision work, and rendering until
+the application exits. `StepRender()` performs one controlled frame and is
+useful for tests and texture diagnostics.
+
+## Architecture
+
+| Area | Main types | Responsibility |
+| --- | --- | --- |
+| Engine lifecycle | `CCore` | Owns systems, registers scene elements, and drives frame processing. |
+| Scene graph | `CSceneNode`, `CSceneComposite` | Stores local/world transforms and attached components. |
+| Events | `CEventDispatcher`, `UListener` | Connects input, update, collision, and lifecycle callbacks. |
+| Rendering | `IRenderSystem`, `IRenderComponent` | Defines backend-independent render resources and component behavior. |
+| OpenGL backend | `COpenGLRenderSystem` | Manages SDL, shaders, buffers, textures, framebuffers, and draw calls. |
+| Collision | `CollisionSystem`, collider components | Evaluates registered colliders and dispatches intersection events. |
+| Geometry | `CMeshBuffer`, `primitive_utils` | Stores indexed meshes and creates common primitives. |
+| Diagnostics | `IRenderDebug` | Reads textures and calculates channel and frame-difference statistics. |
+
+Scene elements render in `RegisterSceneElement()` order. This is significant for
+multi-pass rendering: register producer passes before consumers that sample
+their destination textures.
+
+## Rendering And Shaders
+
+The current backend requests OpenGL 3.2 core, so custom shaders use GLSL 150
+core. The renderer supplies a uniform when the shader declares its expected
+name:
+
+- `u_model_matrix`
+- `u_view_matrix`
+- `u_projection_matrix`
+- `u_camera_world_position`
+- `u_camera_far`
+- `color`
+- `u_visualization_scale`
+
+Texture samplers are bound by the names passed to `SetSrcTexture()` or
+`SetTexture()`.
+
+Rendering components serve distinct roles:
+
+- `CDefaultMeshRenderComponent` renders geometry with the default shader.
+- `CustomShaderMeshRenderComponent` owns custom vertex and fragment shaders.
+- `RenderToTextureComponent` renders into an `RGBA32F` texture.
+- `RenderTextureComponent` samples one or more existing textures for a later
+  pass or final presentation.
+
+### Render-Target Behavior
+
+`RenderToTextureComponent` exposes two independent settings:
+
+```cpp
+component.SetRenderTargetClearEnabled(false);
+component.SetRenderTargetBlendMode(
+    systems::ERenderTargetBlendMode::Overwrite);
+```
+
+Use the blend modes according to the calculation:
+
+| Mode | OpenGL behavior | Typical use |
+| --- | --- | --- |
+| `Overwrite` | Blending disabled | Full-screen simulation and ping-pong updates. |
+| `Additive` | `source + destination` | Multiple geometry contributions accumulated in one target. |
+| `Alpha` | Conventional source-alpha blending | Compositing visual layers. |
+
+`RenderToTextureComponent` defaults to additive blending for compatibility with
+the volume-accumulation path. Iterative shaders that already return the complete
+next state should select `Overwrite`. Disabling clearing preserves pixels not
+written by the pass; it does not by itself change blending.
+
+Do not sample a texture while rendering into that same texture. Iterative
+algorithms should use separate source and destination textures and swap or
+cross-bind them between steps.
+
+## Render Debugging
+
+The render-debug API can inspect `RGBA32F` and `RGBA8U` textures and report:
+
+- Per-channel minimum, maximum, sum, average, and nonzero average.
+- Positive, negative, zero, finite, NaN, and infinity counts.
+- Pixel locations and bounds for extrema and nonzero regions.
+- Raw RGBA snapshots.
+- Signed and absolute differences between render steps.
+- Changed-pixel percentage and bounds.
+
+Run the complete example:
+
+```bash
+cmake --build build --target render_debug_example
+./build/Examples/render_debug_example
+```
+
+See [Render Debugging](documentation/RenderDebug.md) for API examples, epsilon
+semantics, pixel addressing, and an iterative-field diagnostic workflow.
+
+Texture readback is synchronous and may stall for pending GPU work. It is meant
+for diagnostics rather than continuous release-frame instrumentation.
+
+## Examples
+
+| Target | Purpose |
+| --- | --- |
+| `2d_collision_vectors` | Interactive segment and box collision visualization. |
+| `circle_triangle_collision` | Circle/sphere and triangle collision experiment. |
+| `coctree_torus_minimal` | Minimal torus render with `COctree` construction. |
+| `octree_ray_picking_lab` | Screen-ray picking with octree traversal visualization. |
+| `bresenham_voxelization_port` | Legacy mesh ray sweep and voxel filling port. |
+| `radiosity_port` | Patch radiosity and rasterized hemisphere form-factor experiment. |
+| `atom_simulation` | Multi-pass floating-point texture and field-shader experiment. |
+| `render_debug_example` | Texture statistics and consecutive-snapshot comparison. |
+
+The detailed build commands, controls, self-tests, and algorithm notes are in
+the [examples guide](Examples/README).
+
+## Tests
+
+Tests are optional at configure time:
+
+```bash
+cmake -S . -B build -DUNBOXING_ENGINE_BUILD_TESTS=ON
+cmake --build build --target \
+  unboxing_engine_tests \
+  unboxing_engine_legacy_collision_algorithm_tests \
+  unboxing_engine_collision_algorithm_tests \
+  unboxing_engine_coctree_tests \
+  unboxing_engine_mesh_primitive_tests
+ctest --test-dir build --output-on-failure
+```
+
+The separate `unboxing_engine_minimal_unit_tests` target contains older test
+code and is not part of the registered CTest suite.
+
+## Project Layout
+
+```text
+include/                 Public engine headers
+source/                  Core, component, collision, and debug implementations
+sdl_gl_render_system/    SDL2/OpenGL render and input backend
+Examples/                Maintained examples and experimental drafts
+tests/                   GoogleTest targets
+documentation/           Focused subsystem documentation
+Legacy/                  Historical source retained for reference
+third_party/             Vendored libraries and Git submodules
+```
+
+## Current Scope
+
+The engine is under active experimental development rather than a stable SDK.
+APIs can change as rendering and simulation workflows are generalized. In
+particular:
+
+- The root build currently selects the SDL/OpenGL backend directly.
+- Render-target dimensions are taken from the camera when the component is
+  initialized; existing textures are not automatically resized later.
+- Render resources must be released before their owning render system is
+  destroyed.
+- Registration order is the current pass-order mechanism; there is no render
+  graph or dependency scheduler.
+
+## License
+
+Original UnboxingEngine code is available under the
+[UnboxingEngine Noncommercial and No-AI-Training License 1.0](LICENSE.TXT).
+Noncommercial use, modification, and redistribution are allowed with retained
+attribution and change notices. Commercial use and use of the software for AI
+or machine-learning training require separate written permission.
+
+This is a source-available license, not an OSI-approved open-source license.
+Third-party dependencies remain governed by their own licenses.
