@@ -93,6 +93,13 @@ public:
         mEngine.UnregisterSceneElement(*this);
     }
 
+    [[nodiscard]] RenderToTextureComponent& GetRenderComponent() const {
+        if (auto render = dynamic_cast<RenderToTextureComponent*>(GetComponent<IRenderComponent>())) {
+            return *render;
+        }
+        assert(false);
+    }
+
     void SetMaterial(const SMaterial &material) {
         auto render = GetComponent<IRenderComponent>();
         render->SetMaterial(material);
@@ -234,6 +241,10 @@ int main(int argc, char *argv[]) {
 
     {
 
+
+        /**
+         * ATOMIC NUCLEUS
+         */
         RenderToTexture nucleus1st(engine,*primitive_utils::Sphere(radius));
         nucleus1st.SetPosition({0, 0, 0});
         nucleus1st.SetShader(customVertexShader, customFragmentShader);
@@ -243,6 +254,9 @@ int main(int argc, char *argv[]) {
         nucleus2nd.SetTexture("u_texture", nucleus1st.GetTexture());
         nucleus2nd.SetShader(quad_render_vertex_shader, potential_region_fragment_shader);
 
+        /**
+         * ELECTRON
+         */
         RenderToTexture electron1st(engine, *primitive_utils::Sphere(radius/4));
         electron1st.SetPosition({0, 20, 0});
         electron1st.SetShader(customVertexShader, customFragmentShader);
@@ -251,34 +265,70 @@ int main(int argc, char *argv[]) {
         electron2nd.SetTexture("u_texture", electron1st.GetTexture());
         electron2nd.SetShader(quad_render_vertex_shader, potential_region_fragment_shader);
 
+        /**
+         * PING-PONG FIELD FLOW
+         */
+
         // The following creates a ping-pong texture feedback loop for update the electron field.
         // Both objects use overwrite blend to replace the fragment values at each iteration by the new calculated
         // value from the change rate of the local gradient.
         RenderToTexture ping(engine, *primitive_utils::Quad());
         ping.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
-        ping.SetTexture("u_texture", nucleus2nd.GetTexture());
         ping.SetTexture("u_electron", electron2nd.GetTexture());
         ping.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
+        RenderToTexture pingN(engine, *primitive_utils::Quad());
+        pingN.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
+        pingN.SetTexture("u_texture", ping.GetTexture());
+        pingN.SetTexture("u_electron", nucleus2nd.GetTexture());
+        pingN.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
+
+        ping.SetTexture("u_texture", pingN.GetTexture());
+
         RenderToTexture pong(engine, *primitive_utils::Quad());
         pong.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
-        pong.SetTexture("u_texture", nucleus2nd.GetTexture());
         pong.SetTexture("u_electron", ping.GetTexture());
         pong.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
-        OnMousePressDetector onClickStartPingPongTextureFeedback(engine, &ping, &pong);
+        RenderToTexture pongN(engine, *primitive_utils::Quad());
+        pongN.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
+        pongN.SetTexture("u_texture", ping.GetTexture());
+        pongN.SetTexture("u_electron", pingN.GetTexture());
+        pongN.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
-        RenderTexture final(engine, *primitive_utils::Quad());
-        final.SetTexture("u_electron", pong.GetTexture());
-        final.SetMaterial(redMaterial());
-        final.SetShader(signed_texture_debug_vertex_shader_source, multiple_texture_fragment_shader);
-        final.GetRenderComponent().SetRenderColorScale(1e16);
+        pong.SetTexture("u_texture", pongN.GetTexture());
+
+        OnMousePressDetector onClickStartPingPongTextureFeedback(engine, &ping, &pong);
+        OnMousePressDetector onClickStartPingPongTextureFeedbackN(engine, &pingN, &pongN);
+
+        RenderToTexture flow(engine, *primitive_utils::Quad());
+        flow.SetTexture("u_electron", pong.GetTexture());
+        flow.SetMaterial(blueMaterial());
+        flow.SetShader(signed_texture_debug_vertex_shader_source, vizualize_flow_fragment_shader);
+        flow.GetRenderComponent().SetRenderColorScale(1e16);
+
+        RenderTexture electron(engine, *primitive_utils::Quad());
+        electron.SetTexture("u_electron", pong.GetTexture());
+        electron.SetScale(Vector3f(20, 20, 20));
+        electron.SetPosition(Vector3f(-20, 0, 0));
+        electron.SetMaterial(redMaterial());
+        electron.SetShader(vizualize_texture_fragment, multiple_texture_fragment_shader);
+        electron.GetRenderComponent().SetRenderColorScale(1.5e15);
 
         RenderTexture nucleus(engine, *primitive_utils::Quad());
-        nucleus.SetTexture("u_texture", nucleus2nd.GetTexture());
+        nucleus.SetTexture("u_texture", pongN.GetTexture());
+        nucleus.SetScale(Vector3f(20, 20, 20));
+        nucleus.SetPosition(Vector3f(-20, 0, 0));
         nucleus.SetMaterial(whiteMaterial());
-        nucleus.SetShader(signed_texture_debug_vertex_shader_source, signed_texture_debug_fragment_shader_source);
-        nucleus.GetRenderComponent().SetRenderColorScale(1.1e15);
+        nucleus.SetShader(vizualize_texture_fragment, signed_texture_debug_fragment_shader_source);
+        nucleus.GetRenderComponent().SetRenderColorScale(1.5e15);
+
+        RenderTexture rightSide(engine, *primitive_utils::Quad());
+        rightSide.SetTexture("u_texture", flow.GetTexture());
+        rightSide.SetScale(Vector3f(20, 20, 20));
+        rightSide.SetPosition(Vector3f(20, 0, 0));
+        rightSide.SetMaterial(whiteMaterial());
+        rightSide.SetShader(vizualize_texture_fragment, signed_texture_debug_fragment_shader_source);
 
         engine.Run();
     }
