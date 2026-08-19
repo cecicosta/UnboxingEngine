@@ -274,32 +274,17 @@ int main(int argc, char *argv[]) {
         // value from the change rate of the local gradient.
         RenderToTexture ping(engine, *primitive_utils::Quad());
         ping.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
+        ping.SetTexture("u_texture", nucleus2nd.GetTexture());
         ping.SetTexture("u_electron", electron2nd.GetTexture());
         ping.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
-        RenderToTexture pingN(engine, *primitive_utils::Quad());
-        pingN.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
-        pingN.SetTexture("u_texture", ping.GetTexture());
-        pingN.SetTexture("u_electron", nucleus2nd.GetTexture());
-        pingN.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
-
-        ping.SetTexture("u_texture", pingN.GetTexture());
-
         RenderToTexture pong(engine, *primitive_utils::Quad());
         pong.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
+        pong.SetTexture("u_texture", nucleus2nd.GetTexture());
         pong.SetTexture("u_electron", ping.GetTexture());
         pong.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
 
-        RenderToTexture pongN(engine, *primitive_utils::Quad());
-        pongN.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
-        pongN.SetTexture("u_texture", ping.GetTexture());
-        pongN.SetTexture("u_electron", pingN.GetTexture());
-        pongN.SetShader(signed_texture_debug_vertex_shader_source, combined_gradient_fragment_shader);
-
-        pong.SetTexture("u_texture", pongN.GetTexture());
-
         OnMousePressDetector onClickStartPingPongTextureFeedback(engine, &ping, &pong);
-        OnMousePressDetector onClickStartPingPongTextureFeedbackN(engine, &pingN, &pongN);
 
         RenderToTexture flow(engine, *primitive_utils::Quad());
         flow.SetTexture("u_electron", pong.GetTexture());
@@ -316,7 +301,7 @@ int main(int argc, char *argv[]) {
         electron.GetRenderComponent().SetRenderColorScale(1.5e15);
 
         RenderTexture nucleus(engine, *primitive_utils::Quad());
-        nucleus.SetTexture("u_texture", pongN.GetTexture());
+        nucleus.SetTexture("u_texture", nucleus2nd.GetTexture());
         nucleus.SetScale(Vector3f(20, 20, 20));
         nucleus.SetPosition(Vector3f(-20, 0, 0));
         nucleus.SetMaterial(whiteMaterial());

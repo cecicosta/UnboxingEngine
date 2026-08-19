@@ -186,7 +186,7 @@ void main() {
             20.0 * center
         ) / 6.0;
 
-    float diffusionStep = 0.1;
+    float diffusionStep = 0.3;
 
     float finalSample =
         center + diffusionStep * (laplacian - nLaplacian);
