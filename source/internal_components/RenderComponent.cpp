@@ -142,6 +142,12 @@ RenderToTextureComponent::RenderToTextureComponent(const CMeshBuffer &meshBuffer
 : CustomShaderMeshRenderComponent(meshBuffer)
 , mQuadMesh(primitive_utils::Quad()){
 }
+RenderToTextureComponent::RenderToTextureComponent(const CMeshBuffer &meshBuffer, const uint32_t width, const uint32_t height)
+: CustomShaderMeshRenderComponent(meshBuffer)
+, mQuadMesh(primitive_utils::Quad())
+, mCanvasWidth(width)
+, mCanvasHeight(height) {
+}
 
 RenderToTextureComponent::~RenderToTextureComponent() {
     ReleaseRenderContext();
@@ -151,8 +157,8 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
     mRenderSystem = &renderSystem;
 
     mTexturedstHandle = renderSystem.CreateTexture(
-        renderSystem.GetCamera().mWidth,
-        renderSystem.GetCamera().mHeight,
+        mCanvasWidth == 0 ? renderSystem.GetCamera().mWidth : mCanvasWidth,
+        mCanvasHeight == 0 ? renderSystem.GetCamera().mHeight : mCanvasHeight,
         systems::ETextureFormat::RGBA32F);
     if (!mTexturedstHandle) {
         return;

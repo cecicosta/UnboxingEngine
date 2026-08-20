@@ -61,11 +61,11 @@ out vec4 o_color;
 void main() {
     vec4 texture1 = texture(u_texture, v_uv);
     vec4 texture2 = texture(u_electron, v_uv);
-    float value = (texture2.a) * u_visualization_scale;
+    float value = (texture1.a) * u_visualization_scale;
 
     vec3 signColor = value >= 0.0
-        ? v_color.rgb
-        : vec3(1.0, 1.0, 1.0) - v_color.rgb;
+        ? texture1.rgb
+        : vec3(1.0, 1.0, 1.0) - texture1.rgb;
 
     float opacity = clamp(abs(value), 0.0, 1.0);
     o_color = vec4(signColor, opacity);
@@ -79,6 +79,7 @@ static const char *bake_textures_2_fragment_shader = R"(
 uniform sampler2D u_tex_first;
 uniform sampler2D u_tex_second;
 uniform float u_visualization_scale;
+
 in vec4 v_color;
 in vec2 v_uv;
 out vec4 o_color;
@@ -87,7 +88,7 @@ void main() {
     vec4 first = texture(u_tex_first, v_uv);
     vec4 second = texture(u_tex_second, v_uv);
 
-    o_color = (first + second) * u_visualization_scale
+    o_color = (first - second) * u_visualization_scale;
 }
 )";
 
@@ -105,93 +106,46 @@ void main() {
     vec4 electronTex = texture(u_electron, v_uv);
 
 
-   vec2 texel = 1.0 / vec2(textureSize(u_texture, 0));
+    vec2 texel = 1.0 / vec2(textureSize(u_electron, 0));
 
-    float left  = texture(u_texture, v_uv - vec2(texel.x, 0.0)).a;
-    float right = texture(u_texture, v_uv + vec2(texel.x, 0.0)).a;
-    float down  = texture(u_texture, v_uv - vec2(0.0, texel.y)).a;
-    float up    = texture(u_texture, v_uv + vec2(0.0, texel.y)).a;
+    vec4 left  = texture(u_electron, v_uv - vec2(texel.x, 0.0));
+    vec4 right = texture(u_electron, v_uv + vec2(texel.x, 0.0));
+    vec4 down  = texture(u_electron, v_uv - vec2(0.0, texel.y));
+    vec4 up    = texture(u_electron, v_uv + vec2(0.0, texel.y));
 
-    float upLeft =
-        texture(u_texture, v_uv + vec2(-texel.x, texel.y)).a;
+    vec4 upLeft =
+        texture(u_electron, v_uv + vec2(-texel.x, texel.y));
 
-    float upRight =
-        texture(u_texture, v_uv + vec2(texel.x, texel.y)).a;
+    vec4 upRight =
+        texture(u_electron, v_uv + vec2(texel.x, texel.y));
 
-    float downLeft =
-        texture(u_texture, v_uv + vec2(-texel.x, -texel.y)).a;
+    vec4 downLeft =
+        texture(u_electron, v_uv + vec2(-texel.x, -texel.y));
 
-    float downRight =
-        texture(u_texture, v_uv + vec2(texel.x, -texel.y)).a;
+    vec4 downRight =
+        texture(u_electron, v_uv + vec2(texel.x, -texel.y));
 
-    vec2 nucleusGradient = vec2(
-        (right - left) / (2.0 * texel.x),
-        (up - down) / (2.0 * texel.y)
-    );
+    vec4 center = electronTex;
 
-    float nCenter = nucleusTex.a;
-
-    float nAxial =
+    vec4 axial =
         left + right + up + down;
 
-    float nDiagonal =
+    vec4 diagonal =
         upLeft + upRight + downLeft + downRight;
 
-    float nLaplacian =
-        (
-            4.0 * nAxial +
-            nDiagonal -
-            20.0 * nCenter
-        ) / 6.0;
-
-
-
-
-    texel = 1.0 / vec2(textureSize(u_electron, 0));
-
-    left  = texture(u_electron, v_uv - vec2(texel.x, 0.0)).a;
-    right = texture(u_electron, v_uv + vec2(texel.x, 0.0)).a;
-    down  = texture(u_electron, v_uv - vec2(0.0, texel.y)).a;
-    up    = texture(u_electron, v_uv + vec2(0.0, texel.y)).a;
-
-    upLeft =
-        texture(u_electron, v_uv + vec2(-texel.x, texel.y)).a;
-
-    upRight =
-        texture(u_electron, v_uv + vec2(texel.x, texel.y)).a;
-
-    downLeft =
-        texture(u_electron, v_uv + vec2(-texel.x, -texel.y)).a;
-
-    downRight =
-        texture(u_electron, v_uv + vec2(texel.x, -texel.y)).a;
-
-    vec2 electronGradient = vec2(
-        (right - left) / (2.0 * texel.x),
-        (up - down) / (2.0 * texel.y)
-    );
-
-    float center = electronTex.a;
-
-    float axial =
-        left + right + up + down;
-
-    float diagonal =
-        upLeft + upRight + downLeft + downRight;
-
-    float laplacian =
+    vec4 laplacian =
         (
             4.0 * axial +
             diagonal -
             20.0 * center
         ) / 6.0;
 
-    float diffusionStep = 0.3;
+    vec4 diffusionStep = vec4(1, 1, 1, 1) * 0.01;
 
-    float finalSample =
-        center + diffusionStep * (laplacian - nLaplacian);
+    vec4 finalSample =
+        center + diffusionStep * (laplacian) / (center.r*1e15);
 
-    o_color = vec4(electronTex.rgb, finalSample);
+    o_color = vec4(finalSample);
 }
 )";
 
@@ -311,7 +265,7 @@ void main() {
 
     float diffusionStep = 0.3;
 
-    float finalSample = (laplacian - nLaplacian);
+    float finalSample = (laplacian);
 
     if(finalSample < 0) {
         discard;
@@ -477,6 +431,6 @@ void main() {
 
     float normalizedDecay = V;///V_max;
 
-    o_color = vec4(vec3(v_color.r, v_color.g, v_color.b), normalizedDecay);
+    o_color = vec4(vec3(1/(r_min_pm*r_min_pm), v_color.g, v_color.b), normalizedDecay);
 }
 )";

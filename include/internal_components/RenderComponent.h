@@ -84,6 +84,7 @@ protected:
 class RenderToTextureComponent : public CustomShaderMeshRenderComponent {
 public:
     RenderToTextureComponent(const CMeshBuffer &meshBuffer);
+    RenderToTextureComponent(const CMeshBuffer &meshBuffer, const uint32_t width, const uint32_t height);
     ~RenderToTextureComponent() override;
 
     void UpdateRenderContext() override;
@@ -107,6 +108,8 @@ private:
     bool mRenderTargetClearEnabled = true;
     systems::ERenderTargetBlendMode mRenderTargetBlendMode =
         systems::ERenderTargetBlendMode::Additive;
+    uint32_t mCanvasWidth = 0;
+    uint32_t mCanvasHeight = 0;
 };
 
 class RenderTextureComponent : public CustomShaderMeshRenderComponent {
