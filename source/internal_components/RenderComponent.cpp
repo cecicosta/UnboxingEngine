@@ -139,15 +139,7 @@ void CustomShaderMeshRenderComponent::UpdateRenderContext() {
 }
 
 RenderToTextureComponent::RenderToTextureComponent(const CMeshBuffer &meshBuffer)
-: CustomShaderMeshRenderComponent(meshBuffer)
-, mQuadMesh(primitive_utils::Quad()){
-}
-RenderToTextureComponent::RenderToTextureComponent(const CMeshBuffer &meshBuffer, const uint32_t width, const uint32_t height)
-: CustomShaderMeshRenderComponent(meshBuffer)
-, mQuadMesh(primitive_utils::Quad())
-, mCanvasWidth(width)
-, mCanvasHeight(height) {
-}
+: CustomShaderMeshRenderComponent(meshBuffer) {}
 
 RenderToTextureComponent::~RenderToTextureComponent() {
     ReleaseRenderContext();
@@ -157,8 +149,8 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
     mRenderSystem = &renderSystem;
 
     mTexturedstHandle = renderSystem.CreateTexture(
-        mCanvasWidth == 0 ? renderSystem.GetCamera().mWidth : mCanvasWidth,
-        mCanvasHeight == 0 ? renderSystem.GetCamera().mHeight : mCanvasHeight,
+        renderSystem.GetCamera().mWidth,
+        renderSystem.GetCamera().mHeight,
         systems::ETextureFormat::RGBA32F);
     if (!mTexturedstHandle) {
         return;
@@ -175,15 +167,6 @@ void RenderToTextureComponent::OnInitialize(systems::IRenderSystem &renderSystem
         mRenderTargetClearEnabled);
 
     CustomShaderMeshRenderComponent::OnInitialize(renderSystem);
-
-    auto renderBufferHandle = mRenderSystem->WriteRenderBufferData(*mQuadMesh);
-    mQuadShaderHandle = mRenderSystem->CompileShader(quad_render_vertex_shader, potential_region_fragment_shader);
-
-    mQuadRenderContext = std::make_unique<systems::SRenderContextHandle>(
-            renderBufferHandle,
-            mQuadShaderHandle,
-            *mSceneComposite,
-            std::vector<systems::STextureBinding>{{"u_texture", mTexturedstHandle}});
 }
 
 void RenderToTextureComponent::UpdateRenderContext() {
@@ -209,22 +192,13 @@ void RenderToTextureComponent::OnRender() {
         UpdateRenderContext();
     }
 
-    if(mRenderSystem && mRenderContextHandle && mQuadRenderContext) {
+    if(mRenderSystem && mRenderContextHandle) {
         mRenderSystem->Render(*mRenderContextHandle);
-        //mRenderSystem->Render(*mQuadRenderContext);
     }
 }
 
 void RenderToTextureComponent::ReleaseRenderContext() {
     auto* renderSystem = mRenderSystem;
-    if (mRenderSystem && mQuadRenderContext && mQuadRenderContext->renderBufferHandle) {
-        mRenderSystem->EraseRenderBufferData(*mQuadRenderContext->renderBufferHandle);
-    }
-    mQuadRenderContext.reset();
-    if (mRenderSystem && mQuadShaderHandle) {
-        mRenderSystem->EraseShaderData(*mQuadShaderHandle);
-    }
-    mQuadShaderHandle = nullptr;
 
     CustomShaderMeshRenderComponent::ReleaseRenderContext();
 

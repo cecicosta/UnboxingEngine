@@ -181,9 +181,6 @@ public:
         render->SetMaterial(whiteMaterial());
         render->SetPolygonMode(EPolygonMode::Fill);
 
-        render->SetVertexShader(customVertexShader);
-        render->SetFragmentShader(customFragmentShader);
-
         AddComponent<IRenderComponent>(std::move(render));
     }
 

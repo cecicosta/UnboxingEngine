@@ -84,7 +84,6 @@ protected:
 class RenderToTextureComponent : public CustomShaderMeshRenderComponent {
 public:
     RenderToTextureComponent(const CMeshBuffer &meshBuffer);
-    RenderToTextureComponent(const CMeshBuffer &meshBuffer, const uint32_t width, const uint32_t height);
     ~RenderToTextureComponent() override;
 
     void UpdateRenderContext() override;
@@ -99,17 +98,12 @@ public:
     [[nodiscard]] systems::STextureHandle* GetDstTexture() const;
 
 private:
-    std::unique_ptr<CMeshBuffer> mQuadMesh;
-    std::unique_ptr<systems::SRenderContextHandle> mQuadRenderContext;
-    const systems::SShaderHandle *mQuadShaderHandle = nullptr;
     std::vector<systems::STextureBinding> mTextureSrcBindings;
     systems::STextureHandle *mTexturedstHandle = nullptr;
     systems::SRenderTarget * mRenderTarget = nullptr;
     bool mRenderTargetClearEnabled = true;
     systems::ERenderTargetBlendMode mRenderTargetBlendMode =
         systems::ERenderTargetBlendMode::Additive;
-    uint32_t mCanvasWidth = 0;
-    uint32_t mCanvasHeight = 0;
 };
 
 class RenderTextureComponent : public CustomShaderMeshRenderComponent {
