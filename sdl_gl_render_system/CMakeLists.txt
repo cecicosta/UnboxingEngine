@@ -24,11 +24,13 @@ if(${BUILD_WITH_EXTERNAL_LIBS})
 
     include_directories(
             ../include
-            ../third_party/SDL
             ../third_party/glew-2.1.0/include)
 
     set(BUILD_SHARED_LIBS FALSE CACHE BOOL "" FORCE)
     set(HAVE_GCC_WERROR_DECLARATION_AFTER_STATEMENT OFF CACHE INTERNAL "" FORCE)
+    foreach(SDL2_SUBSYSTEM SDL_AUDIO SDL_JOYSTICK SDL_HAPTIC SDL_HIDAPI)
+        set(${SDL2_SUBSYSTEM} ON CACHE BOOL "" FORCE)
+    endforeach()
     if (APPLE)
         set(SDL_SYSTEM_ICONV ON CACHE BOOL "Use iconv() from system-installed libraries" FORCE)
     endif ()
