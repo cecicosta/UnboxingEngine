@@ -24,18 +24,25 @@ if(${BUILD_WITH_EXTERNAL_LIBS})
 
     include_directories(
             ../include
-            ../third_party/SDL/include
             ../third_party/glew-2.1.0/include)
+
+    set(BUILD_SHARED_LIBS FALSE CACHE BOOL "" FORCE)
+    set(HAVE_GCC_WERROR_DECLARATION_AFTER_STATEMENT OFF CACHE INTERNAL "" FORCE)
+    foreach(SDL2_SUBSYSTEM SDL_AUDIO SDL_JOYSTICK SDL_HAPTIC SDL_HIDAPI)
+        set(${SDL2_SUBSYSTEM} ON CACHE BOOL "" FORCE)
+    endforeach()
+    if (APPLE)
+        set(SDL_SYSTEM_ICONV ON CACHE BOOL "Use iconv() from system-installed libraries" FORCE)
+    endif ()
+
+    add_subdirectory(../third_party/glew-2.1.0/build/cmake ${CMAKE_BINARY_DIR}/glew-2.1.0/)
+    add_subdirectory(../third_party/SDL ${CMAKE_BINARY_DIR}/SDL/)
 
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
     add_library(sdl_gl_render_system_lib STATIC "sdl_gl_render_system_lib.cpp" "sdl_gl_render_system_lib.h" "sdl_input_system_lib.h" "sdl_input_system_lib.cpp")
     target_link_libraries(sdl_gl_render_system_lib PUBLIC SDL2main glew_s SDL2-static unboxing_engine_src_lib)
 
     target_sources(sdl_gl_render_system_lib PUBLIC ../source)
-    set(BUILD_SHARED_LIBS FALSE CACHE BOOL "" FORCE)
-    set(HAVE_GCC_WERROR_DECLARATION_AFTER_STATEMENT OFF CACHE INTERNAL "" FORCE)
-    add_subdirectory(../third_party/glew-2.1.0/build/cmake ${CMAKE_BINARY_DIR}/glew-2.1.0/)
-    add_subdirectory(../third_party/SDL ${CMAKE_BINARY_DIR}/SDL/)
 
     if (WIN32)
         #Copy OpenGL wrapper dll after building
