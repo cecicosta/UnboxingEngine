@@ -32,7 +32,7 @@ public:
     unsigned nfaces = 0;
     unsigned nmaterials = 0;
     
-    [[nodiscard]] std::unique_ptr<float*> &&GetVertexDataArray() const;
+    [[nodiscard]] std::unique_ptr<float*> GetVertexDataArray() const;
 
     CMeshBuffer() = default;
     CMeshBuffer(size_t numberOfVertices) {
