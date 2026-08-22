@@ -221,9 +221,6 @@ void main() {
 }
 )";
 
-
-
-
 static const char *transform_vertex = R"(
 #version 150 core
 
@@ -254,7 +251,7 @@ void main()
 )";
 
 
-static const char *quad_render_vertex_shader = R"(
+static const char *quad_render_vertex = R"(
 #version 150 core
 
 uniform vec4 color;

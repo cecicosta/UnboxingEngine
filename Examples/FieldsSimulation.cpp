@@ -1,9 +1,9 @@
 #pragma once
+#include "FieldsSimulationShaders.h"
 #include "SceneCompositeLibrary/BasicSceneCompositeTypes.h"
 #include "ShaderLibrary.h"
 #include "UnboxingEngine.h"
 #include "algorithms/CollisionPrimitives.h"
-#include "AtomSimulationShaders.h"
 
 constexpr float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
 
@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
         RenderToTexture nucleus2nd(engine, *primitive_utils::Quad());
         nucleus2nd.SetMaterial(whiteMaterial());
         nucleus2nd.SetTexture("u_texture", nucleus1st.GetTexture());
-        nucleus2nd.SetShader(quad_render_vertex_shader, field_tex_render_frag);
+        nucleus2nd.SetShader(quad_render_vertex, nucleus_field_tex_render_frag);
 
         /************
          * ELECTRON *
@@ -263,7 +263,13 @@ int main(int argc, char *argv[]) {
         RenderToTexture electron2nd(engine, *primitive_utils::Quad());
         electron2nd.SetTexture("u_texture", electron1st.GetTexture());
         electron2nd.SetMaterial(whiteMaterial());
-        electron2nd.SetShader(quad_render_vertex_shader, field_tex_render_frag);
+        electron2nd.SetShader(quad_render_vertex, nucleus_field_tex_render_frag);
+
+        engine.StepRender();
+
+        const auto* texture = electron2nd.GetTexture();
+        const auto& debug = engine.GetRenderDebug();
+        debug.PrintTextureStatistics(*texture, "field scale 1", options);
 
 
         /**
@@ -278,38 +284,39 @@ int main(int argc, char *argv[]) {
         ping.SetTexture("u_texture", nucleus2nd.GetTexture());
         ping.SetTexture("u_electron", electron2nd.GetTexture());
         ping.SetMaterial(redMaterial());
-        ping.SetShader(quad_render_vertex_shader, combine_fields_tex_frag);
+        ping.SetShader(quad_render_vertex, fields_divergence_frag);
 
         RenderToTexture pong(engine, *primitive_utils::Quad());
         pong.SetRenderTargetBlendMode(systems::ERenderTargetBlendMode::Overwrite);
         pong.SetTexture("u_texture", nucleus2nd.GetTexture());
         pong.SetTexture("u_electron", ping.GetTexture());
         pong.SetMaterial(redMaterial());
-        pong.SetShader(quad_render_vertex_shader, combine_fields_tex_frag);
+        pong.SetShader(quad_render_vertex, fields_divergence_frag);
 
         OnMousePressDetector onClickStartPingPongTextureFeedback(engine, &ping, &pong);
 
         RenderToTexture flow(engine, *primitive_utils::Quad());
         flow.SetTexture("u_electron", pong.GetTexture());
         flow.SetMaterial(blueMaterial());
-        flow.SetShader(quad_render_vertex_shader, vizualize_flow_fragment_shader);
+        flow.SetShader(quad_render_vertex, vizualize_flow_fragment_shader);
         flow.GetRenderComponent().SetRenderColorScale(1e16);
 
-        RenderTexture electron(engine, *primitive_utils::Quad());
-        electron.SetTexture("u_texture", pong.GetTexture());
-        electron.SetScale(Vector3f(20, 20, 20));
-        electron.SetPosition(Vector3f(-20, 0, 0));
-        electron.SetMaterial(whiteMaterial());
-        electron.SetShader(vizualize_texture_fragment, signed_texture_debug_fragment_shader_source);
-        electron.GetRenderComponent().SetRenderColorScale(1.5e15);
-
+/*
         RenderTexture nucleus(engine, *primitive_utils::Quad());
         nucleus.SetTexture("u_texture", nucleus2nd.GetTexture());
         nucleus.SetScale(Vector3f(20, 20, 20));
         nucleus.SetPosition(Vector3f(-20, 0, 0));
         nucleus.SetMaterial(whiteMaterial());
         nucleus.SetShader(vizualize_texture_fragment, signed_texture_debug_fragment_shader_source);
-        nucleus.GetRenderComponent().SetRenderColorScale(1.5e15);
+        //nucleus.GetRenderComponent().SetRenderColorScale(1.5e15);
+*/
+        RenderTexture electron(engine, *primitive_utils::Quad());
+        electron.SetTexture("u_texture", electron2nd.GetTexture());
+        electron.SetScale(Vector3f(20, 20, 20));
+        electron.SetPosition(Vector3f(-20, 0, 0));
+        electron.SetMaterial(whiteMaterial());
+        electron.SetShader(vizualize_texture_fragment, r_as_alpha);
+        //electron.GetRenderComponent().SetRenderColorScale(1.5e15);
 
         RenderTexture rightSide(engine, *primitive_utils::Quad());
         rightSide.SetTexture("u_texture", flow.GetTexture());
