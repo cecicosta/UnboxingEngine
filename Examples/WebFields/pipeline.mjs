@@ -157,8 +157,9 @@ export class FieldsPipeline {
     }
 
     setFlowReference(reference) {
+        if (reference === this.reference) return;
         this.reference = reference;
-        this.updateFlow();
+        if (this.current) this.updateFlow();
     }
 
     updateFlow() {

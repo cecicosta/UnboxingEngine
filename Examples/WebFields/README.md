@@ -14,8 +14,10 @@ reseeds the fields. **Step** performs one feedback pass;
 **Run** performs two passes at a time, and **Reset** restores the seeded state.
 
 **Flow reference** defaults to **Native wiring**, where both flow inputs read
-the feedback texture as in the original sample. Select **Nucleus** to compare
-the feedback field with the nucleus instead. No noise is added in either mode.
+the feedback texture as in the original sample. The two inputs cancel in the
+flow comparison, so the Flow panel is uniform even while the Potential panel
+continues to evolve. Select **Nucleus** to compare two different fields.
+No noise is added in either mode.
 
 At **128 × 128** shader resolution, the field may take about **40,000 feedback
 steps** to settle into the pattern shown in the

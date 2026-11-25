@@ -1,5 +1,5 @@
 import { WebGLRenderer } from 'three';
-import { FieldsPipeline } from './pipeline.mjs';
+import { FieldsPipeline } from './pipeline.mjs?v=2';
 
 const byId = id => document.getElementById(id);
 const controls = ['resolution', 'flow-reference', 'run', 'step', 'reset'];
@@ -96,17 +96,25 @@ function start() {
         }
     }
 
+    function syncSettings() {
+        pipeline.setFlowReference(reference.value);
+        const size = Number(resolution.value);
+        if (size !== pipeline.resolution) pipeline.setResolution(size);
+    }
+
     for (const option of [...resolution.options]) {
         if (Number(option.value) > pipeline.maxResolution) option.remove();
     }
     if (!resolution.options.length) throw new Error('No supported render-target sizes.');
     if (!resolution.value) resolution.selectedIndex = resolution.options.length - 1;
-    pipeline.setResolution(Number(resolution.value));
+    syncSettings();
     resize();
     new ResizeObserver(resize).observe(viewport);
 
-    resolution.addEventListener('change', update(() => pipeline.setResolution(Number(resolution.value))));
-    reference.addEventListener('change', update(() => pipeline.setFlowReference(reference.value)));
+    const applySettings = update(syncSettings);
+    resolution.addEventListener('change', applySettings);
+    reference.addEventListener('change', applySettings);
+    window.addEventListener('pageshow', applySettings);
     byId('step').addEventListener('click', update(() => pipeline.advance()));
     byId('reset').addEventListener('click', update(() => {
         running = false;
