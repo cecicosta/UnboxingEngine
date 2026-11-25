@@ -306,9 +306,9 @@ SRay3D makeRayFromScreen(const Camera &camera, int screenX, int screenY) {
     const float ndcX = 2.0f * pixelX / static_cast<float>(std::max(1u, camera.mWidth)) - 1.0f;
     const float ndcY = 1.0f - 2.0f * pixelY / static_cast<float>(std::max(1u, camera.mHeight));
 
-    const Matrix4f inverseProjection = camera.mTransformation.Inverse();
-    const Vector3f nearPoint = transformPoint(inverseProjection, ndcX, ndcY, -1.0f);
-    const Vector3f farPoint = transformPoint(inverseProjection, ndcX, ndcY, 1.0f);
+    const Matrix4f clipToWorld = (camera.GetProjectionMatrix() * camera.GetViewMatrix()).Inverse();
+    const Vector3f nearPoint = transformPoint(clipToWorld, ndcX, ndcY, -1.0f);
+    const Vector3f farPoint = transformPoint(clipToWorld, ndcX, ndcY, 1.0f);
     const Vector3f direction = farPoint - nearPoint;
 
     if (direction.Length() <= kEpsilon) {
@@ -318,7 +318,8 @@ SRay3D makeRayFromScreen(const Camera &camera, int screenX, int screenY) {
 }
 
 void screenPointForWorld(const Camera &camera, const Vector3f &worldPoint, int &screenX, int &screenY) {
-    const Vector3f clipPoint = transformPoint(camera.mTransformation, worldPoint.x, worldPoint.y, worldPoint.z);
+    const Matrix4f worldToClip = camera.GetProjectionMatrix() * camera.GetViewMatrix();
+    const Vector3f clipPoint = transformPoint(worldToClip, worldPoint.x, worldPoint.y, worldPoint.z);
     const int maxX = static_cast<int>(std::max(1u, camera.mWidth)) - 1;
     const int maxY = static_cast<int>(std::max(1u, camera.mHeight)) - 1;
     screenX = static_cast<int>(std::lround((clipPoint.x + 1.0f) * 0.5f * static_cast<float>(camera.mWidth)));
