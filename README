@@ -11,11 +11,13 @@ interactive collision visualization, octree traversal, voxelization, radiosity,
 custom shader passes, and iterative texture-based field calculations.
 
 Try the [Octree Ray Picking Lab](https://cecicosta.github.io/UnboxingEngine/),
-[Radiosity Lab](https://cecicosta.github.io/UnboxingEngine/radiosity/), or
-[Voxelization Lab](https://cecicosta.github.io/UnboxingEngine/voxelization/) in your browser.
-See the [WebAssembly build instructions](Examples/WebOctree/README.md).
-The [Fields Simulation browser sample](Examples/WebFields/README.md) also runs
-the native field shaders with a configurable render-target resolution.
+[Radiosity Lab](https://cecicosta.github.io/UnboxingEngine/radiosity/),
+[Voxelization Lab](https://cecicosta.github.io/UnboxingEngine/voxelization/), or
+[Fields Simulation](https://cecicosta.github.io/UnboxingEngine/fields/) in your browser.
+Fields Simulation runs the native GLSL feedback passes, with resolution presets
+from 64 × 64 to 1024 × 1024 and a default of 128 × 128 with Native wiring.
+See the [Fields Simulation guide](Examples/WebFields/README.md) and the
+[shared web build instructions](Examples/WebOctree/README.md).
 
 ## Features
 

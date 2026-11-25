@@ -43,7 +43,7 @@ export class FieldsPipeline {
         this.scene = new THREE.Scene();
         this.camera = new THREE.Camera();
         this.targets = [];
-        this.reference = 'nucleus';
+        this.reference = 'native';
         this.steps = 0;
 
         const scanCamera = new THREE.PerspectiveCamera(60, 1, 1, cameraFar);
@@ -98,7 +98,7 @@ export class FieldsPipeline {
     }
 
     setResolution(size) {
-        if (!Number.isInteger(size) || size < 128 || size > Math.min(1024, this.maxResolution)) {
+        if (!Number.isInteger(size) || size < 64 || size > Math.min(1024, this.maxResolution)) {
             throw new Error('Unsupported shader resolution: ' + size);
         }
         if (this.resolution !== size) {

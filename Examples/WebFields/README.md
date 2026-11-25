@@ -1,18 +1,21 @@
 # Fields Simulation (Web)
 
+[Open the interactive Fields Simulation](https://cecicosta.github.io/UnboxingEngine/fields/).
+
 The browser example uses the restored native FieldsSimulation GLSL for the
 volumetric scan, potential, feedback, and display passes. The web build
 extracts those shaders from the current C++ headers and adapts them for
 GLSL ES 3.0. It does not replace the solver with a JavaScript approximation.
 
-**Shader resolution** sets the width and height of every off-screen
-RGBA32F render target, not the CSS size of the panels. Changing it rebuilds
-the textures and reseeds the fields. **Step** performs one feedback pass;
+**Shader resolution** defaults to **128 × 128**, with presets from **64 × 64**
+through **1024 × 1024**. It sets the size of every off-screen RGBA32F render
+target, not the size of the panels. Changing it rebuilds the textures and
+reseeds the fields. **Step** performs one feedback pass;
 **Run** performs two passes at a time, and **Reset** restores the seeded state.
 
-**Flow reference** defaults to comparing the feedback field with the nucleus.
-**Native wiring** reproduces the original sample's sampler setup, where both
-flow inputs read the feedback texture. No noise is added in either mode.
+**Flow reference** defaults to **Native wiring**, where both flow inputs read
+the feedback texture as in the original sample. Select **Nucleus** to compare
+the feedback field with the nucleus instead. No noise is added in either mode.
 
 At **128 × 128** shader resolution, the field may take about **40,000 feedback
 steps** to settle into the pattern shown in the
