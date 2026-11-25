@@ -1,4 +1,4 @@
-name: Publish Octree Ray Picking Lab
+name: Publish Interactive Samples
 
 on:
   push:
@@ -6,6 +6,9 @@ on:
     paths:
       - '.github/workflows/octree-pages.yml'
       - 'Examples/WebOctree/**'
+      - 'Examples/WebRadiosity/**'
+      - 'Examples/Radiosity*.cpp'
+      - 'Examples/Radiosity*.h'
       - 'LICENSE.TXT'
       - 'include/**'
       - 'source/**'

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#14191c">
+    <title>Radiosity Lab | UnboxingEngine</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='6' width='20' height='20' rx='3' fill='none' stroke='%238ee4d6' stroke-width='4'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="./radiosity.css">
+    <script type="importmap">
+        {"imports":{"three":"../vendor/three.module.js"}}
+    </script>
+    <script type="module" src="./lab.mjs"></script>
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <a class="project" href="https://github.com/cecicosta/UnboxingEngine">UnboxingEngine</a>
+            <h1>Radiosity Lab</h1>
+        </div>
+        <nav class="sample-nav" aria-label="Interactive samples">
+            <a href="../">Octree picking</a>
+            <a href="./" aria-current="page">Radiosity</a>
+        </nav>
+    </header>
+    <main class="workspace">
+        <section id="viewport" class="viewport" aria-label="Interactive Cornell box">
+            <canvas id="scene" aria-label="Cornell box and torus with computed radiosity"></canvas>
+            <p id="loader" class="loader" role="status">Loading solver&hellip;</p>
+            <div class="view-label">Cornell box</div>
+        </section>
+        <aside class="inspector">
+            <form id="settings">
+                <section aria-labelledby="walls-heading">
+                    <h2 id="walls-heading">Wall reflectance</h2>
+                    <div class="colors">
+                        <label for="left">Left wall</label><input type="color" id="left" value="#e57161">
+                        <label for="back">Back wall</label><input type="color" id="back" value="#d7d7d4">
+                        <label for="right">Right wall</label><input type="color" id="right" value="#6cd77c">
+                    </div>
+                </section>
+                <section aria-labelledby="scene-heading">
+                    <h2 id="scene-heading">Scene</h2>
+                    <div class="param">
+                        <label for="torus-scale">Torus size</label><output id="size-value" for="torus-scale">1.00&times;</output>
+                        <input type="range" id="torus-scale" min="0.5" max="1.8" step="0.05" value="1">
+                    </div>
+                    <div class="param">
+                        <label for="light">Light intensity</label><output id="light-value" for="light">3.0</output>
+                        <input type="range" id="light" min="0" max="5" step="0.1" value="3">
+                    </div>
+                    <label class="option"><input type="checkbox" id="exterior"> Show exterior faces</label>
+                </section>
+                <div class="actions">
+                    <button type="reset" id="reset">Reset settings</button>
+                    <button type="button" id="reset-view">Reset view</button>
+                </div>
+            </form>
+            <section aria-labelledby="solver-heading">
+                <div class="section-title">
+                    <h2 id="solver-heading">Solver</h2>
+                    <output id="state" aria-live="polite">Loading</output>
+                </div>
+                <dl class="metrics">
+                    <div><dt>Patches</dt><dd id="patches">&ndash;</dd></div>
+                    <div><dt>Form factors</dt><dd id="factors">&ndash;</dd></div>
+                    <div><dt>Iterations</dt><dd id="iterations">&ndash;</dd></div>
+                    <div><dt>Solve time</dt><dd id="elapsed">&ndash;</dd></div>
+                </dl>
+            </section>
+            <footer><a href="../LICENSE.TXT">UnboxingEngine by Cecilia Costa</a></footer>
+        </aside>
+    </main>
+</body>
+</html>

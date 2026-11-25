@@ -20,14 +20,15 @@ npm test
 npm run serve
 ```
 
-Open [localhost:4173](http://127.0.0.1:4173). The output is self-contained in
+Open [the octree lab](http://127.0.0.1:4173/) or the
+[radiosity lab](http://127.0.0.1:4173/radiosity/). The output is self-contained in
 `dist/`; it must be served over HTTP rather than opened from disk. The build
 does not require SDL, GLEW, or any Git submodules.
 
 ## GitHub Pages
 
 Set **Settings > Pages > Build and deployment > Source** to **GitHub Actions**.
-The **Publish Octree Ray Picking Lab** workflow builds and tests the module,
+The **Publish Interactive Samples** workflow builds and tests both modules,
 then publishes `dist/` on relevant pushes to `OpenGLRenderSystem` or `main`.
 Allow the chosen branch in the `github-pages` environment if it has deployment
 branch restrictions. Generated files are uploaded as a Pages artifact, not

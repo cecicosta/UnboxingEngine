@@ -204,6 +204,9 @@ Run one render pass without entering the main loop:
 
 ## Radiosity Port
 
+[Try the interactive Radiosity Lab](https://cecicosta.github.io/UnboxingEngine/radiosity/)
+or see the [WebAssembly sample instructions](WebRadiosity/README.md).
+
 Target: `radiosity_port`
 
 Source files:

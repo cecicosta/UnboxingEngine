@@ -20,7 +20,7 @@ target_link_libraries(octree_ray_picking_lab unboxing_engine)
 add_executable(coctree_torus_minimal COctreeTorusMinimal.cpp ../source/COctree.cpp)
 target_link_libraries(coctree_torus_minimal unboxing_engine)
 
-add_executable(radiosity_port RadiosityPort.cpp RadiosityCornellBox.cpp)
+add_executable(radiosity_port RadiosityPort.cpp RadiosityCornellBox.cpp RadiositySolver.cpp)
 target_link_libraries(radiosity_port unboxing_engine)
 
 add_executable(circle_triangle_collision CircleTriangleCollision.cpp)

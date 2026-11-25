@@ -10,8 +10,9 @@ The project is primarily a research and learning codebase. Its examples cover
 interactive collision visualization, octree traversal, voxelization, radiosity,
 custom shader passes, and iterative texture-based field calculations.
 
-Try the [Octree Ray Picking Lab in your browser](https://cecicosta.github.io/UnboxingEngine/),
-or see the [WebAssembly build instructions](Examples/WebOctree/README.md).
+Try the [Octree Ray Picking Lab](https://cecicosta.github.io/UnboxingEngine/) or
+[Radiosity Lab](https://cecicosta.github.io/UnboxingEngine/radiosity/) in your browser.
+See the [WebAssembly build instructions](Examples/WebOctree/README.md).
 
 ## Features
 
