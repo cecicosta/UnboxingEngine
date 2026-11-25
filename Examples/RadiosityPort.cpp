@@ -647,7 +647,7 @@ bool runSelfTest() {
     return ok;
 }
 
-void runVisualExample(bool enterMainLoop) {
+bool runVisualExample(bool enterMainLoop) {
     std::vector<SRadiosityPatch> solvedScene = makeCornellBoxScenePorted();
     SRadiositySummary summary = calculateFormFactorScenePorted(solvedScene);
     gaussSeidelRadiosityPorted(solvedScene, summary);
@@ -664,6 +664,10 @@ void runVisualExample(bool enterMainLoop) {
     camera.SetOrthographicIsometric(10.5f, 7.0f, 22.0f, Vector3f(0.0f, 0.0f, 1.4f), -45.0f, 33.0f);
     engine.SetCamera(camera);
     engine.Start();
+    if (!engine.IsRunning()) {
+        engine.Release();
+        return false;
+    }
 
     CRotatingSceneGroup radiosityGroup;
     radiosityGroup.SetPosition(Vector3f(0.0f, 0.0f, 0.0f));
@@ -685,11 +689,7 @@ void runVisualExample(bool enterMainLoop) {
     if (enterMainLoop) {
         engine.Run();
     } else {
-        for (const auto &sceneObject : sceneObjects) {
-            if (auto render = sceneObject->GetComponent<IRenderComponent>()) {
-                render->OnRender();
-            }
-        }
+        engine.StepRender();
     }
 
     for (auto it = sceneObjects.rbegin(); it != sceneObjects.rend(); ++it) {
@@ -698,6 +698,7 @@ void runVisualExample(bool enterMainLoop) {
     sceneObjects.clear();
     engine.UnregisterEventListener(radiosityGroup);
     engine.Release();
+    return true;
 }
 
 }  // namespace
@@ -713,8 +714,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         if (arg == "--render-smoke-test") {
-            runVisualExample(false);
-            return 0;
+            return runVisualExample(false) ? 0 : 1;
         }
         if (arg == "--help") {
             std::cout << "Usage: " << argv[0] << " [--self-test] [--render-smoke-test]\n";
@@ -726,6 +726,5 @@ int main(int argc, char *argv[]) {
         return 2;
     }
 
-    runVisualExample(true);
-    return 0;
+    return runVisualExample(true) ? 0 : 1;
 }

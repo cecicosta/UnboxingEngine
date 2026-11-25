@@ -395,6 +395,7 @@ public:
             glViewport(0, 0, static_cast<GLint>(renderTarget.width), static_cast<GLint>(renderTarget.height));
 
             if (renderTarget.framebuffer == 0) {
+                glDepthMask(GL_TRUE);
                 glClearColor(0.02f, 0.025f, 0.035f, 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             } else {
@@ -408,7 +409,6 @@ public:
         glViewport(0, 0, static_cast<GLint>(defaultTarget.width), static_cast<GLint>(defaultTarget.height));
     }
     void OnPostRender() {
-        glDepthMask(GL_TRUE);
         SDL_GL_SwapWindow(mWindow);
         SDL_Delay(1);
     }
@@ -586,8 +586,15 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebuffer);
         glViewport(0, 0, static_cast<GLint>(renderTarget.width), static_cast<GLint>(renderTarget.height));
 
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
+        if (renderTarget.framebuffer == 0) {
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LEQUAL);
+            glDepthMask(GL_TRUE);
+        } else {
+            // Texture targets have no depth attachment and accumulate in draw order.
+            glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_FALSE);
+        }
         glDisable(GL_CULL_FACE);
         switch (renderTarget.blendMode) {
             case ERenderTargetBlendMode::Overwrite:
