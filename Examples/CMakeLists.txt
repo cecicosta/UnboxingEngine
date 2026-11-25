@@ -28,6 +28,8 @@ target_link_libraries(circle_triangle_collision unboxing_engine)
 
 add_executable(fields_simulation FieldsSimulation.cpp)
 target_link_libraries(fields_simulation unboxing_engine)
+# The shared quad shader was renamed after this sample's original revision.
+target_compile_definitions(fields_simulation PRIVATE quad_render_vertex_shader=quad_render_vertex)
 
 add_executable(render_debug_example RenderDebugExample.cpp)
 target_link_libraries(render_debug_example unboxing_engine)

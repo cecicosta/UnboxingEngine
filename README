@@ -210,7 +210,7 @@ for diagnostics rather than continuous release-frame instrumentation.
 | `octree_ray_picking_lab` | Screen-ray picking with octree traversal visualization. |
 | `bresenham_voxelization_port` | Legacy mesh ray sweep and voxel filling port. |
 | `radiosity_port` | Patch radiosity and rasterized hemisphere form-factor experiment. |
-| `atom_simulation` | Multi-pass floating-point texture and field-shader experiment. |
+| `fields_simulation` | Multi-pass floating-point texture and field-shader experiment. |
 | `render_debug_example` | Texture statistics and consecutive-snapshot comparison. |
 
 The detailed build commands, controls, self-tests, and algorithm notes are in
