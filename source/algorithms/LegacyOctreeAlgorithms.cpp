@@ -141,18 +141,25 @@ void createOctreePorted(
     }
 }
 
-void collectRayCandidates(const SMeshOctreeNode &node, const SRay3D &ray, std::vector<unsigned int> &candidateTriangles) {
+void collectRayCandidates(
+    const SMeshOctreeNode &node,
+    const SRay3D &ray,
+    std::vector<unsigned int> &candidateTriangles,
+    std::vector<const SMeshOctreeNode *> *visitedNodes) {
     if (!rayWithBoundingBoxPorted(node.box, ray)) {
         return;
     }
 
+    if (visitedNodes) {
+        visitedNodes->push_back(&node);
+    }
     for (unsigned int triangleIndex : node.triangleIndices) {
         candidateTriangles.push_back(triangleIndex);
     }
 
     for (const auto &child : node.children) {
         if (child) {
-            collectRayCandidates(*child, ray, candidateTriangles);
+            collectRayCandidates(*child, ray, candidateTriangles, visitedNodes);
         }
     }
 }
@@ -209,7 +216,7 @@ std::vector<unsigned int> queryMeshOctreeRayPorted(
 
     std::vector<unsigned int> candidateTriangles;
     if (octree.root) {
-        collectRayCandidates(*octree.root, ray, candidateTriangles);
+        collectRayCandidates(*octree.root, ray, candidateTriangles, nullptr);
     }
     return candidateTriangles;
 }
@@ -230,10 +237,17 @@ std::vector<STriangleHit3D> rayWithMeshOctreePorted(
     const SMeshOctree &octree,
     const SRay3D &ray,
     bool firstIntersection,
-    std::size_t *candidateTriangleCount) {
+    std::size_t *candidateTriangleCount,
+    std::vector<const SMeshOctreeNode *> *visitedNodes) {
 
     std::vector<STriangleHit3D> hits;
-    const auto candidateTriangles = queryMeshOctreeRayPorted(octree, ray);
+    std::vector<unsigned int> candidateTriangles;
+    if (visitedNodes) {
+        visitedNodes->clear();
+    }
+    if (octree.root) {
+        collectRayCandidates(*octree.root, ray, candidateTriangles, visitedNodes);
+    }
     if (candidateTriangleCount != nullptr) {
         *candidateTriangleCount += candidateTriangles.size();
     }

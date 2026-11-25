@@ -42,6 +42,7 @@ std::vector<STriangleHit3D> rayWithMeshOctreePorted(
     const SMeshOctree &octree,
     const SRay3D &ray,
     bool firstIntersection = false,
-    std::size_t *candidateTriangleCount = nullptr);
+    std::size_t *candidateTriangleCount = nullptr,
+    std::vector<const SMeshOctreeNode *> *visitedNodes = nullptr);
 
 } // namespace unboxing_engine::algorithms

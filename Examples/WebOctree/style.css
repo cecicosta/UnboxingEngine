@@ -1,0 +1,169 @@
+:root {
+    color-scheme: dark;
+    font: 16px/1.45 system-ui, sans-serif;
+    color: #ecf1f0;
+    background: #14191c;
+    --muted: #a2adb0;
+    --border: #303a3d;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 78px;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.project, .runtime {
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+.project { text-decoration: none; }
+.project:hover { color: #7be9da; }
+.runtime { white-space: nowrap; }
+h1 { margin: 0.12rem 0 0; font-size: 1.375rem; line-height: 1.2; }
+h2 { margin: 0; font-size: 1rem; }
+
+.workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 310px);
+    min-height: calc(100svh - 78px);
+}
+
+.viewport {
+    position: relative;
+    min-width: 0;
+    min-height: 400px;
+    background: #10171a;
+}
+
+canvas {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.view-label {
+    position: absolute;
+    inset: auto auto 1rem 1.25rem;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    pointer-events: none;
+}
+
+.loader {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(85%, 26rem);
+    margin: 0;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.inspector { border-left: 1px solid var(--border); }
+.inspector section, .actions {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border);
+}
+.inspector footer { padding: 0.85rem 1.25rem; font-size: 0.8125rem; }
+.inspector footer a { color: var(--muted); }
+.inspector footer a:hover { color: #8ee4d6; }
+
+.section-title, .metrics div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: baseline;
+}
+
+output { color: var(--muted); font-size: 0.875rem; }
+output[data-kind="hit"] { color: #ff856e; }
+.metrics { margin: 1rem 0 0; }
+.metrics div { padding: 0.38rem 0; }
+.metrics dt { color: var(--muted); font-size: 0.875rem; }
+.metrics dd {
+    margin: 0;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.875rem;
+}
+
+.views, .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+.views { margin-top: 0.85rem; }
+
+button {
+    border: 1px solid #425054;
+    border-radius: 5px;
+    background: #1d272a;
+    color: inherit;
+    min-height: 40px;
+    padding: 0.35rem 0.4rem;
+    font: 600 0.875rem/1.2 system-ui, sans-serif;
+    cursor: pointer;
+}
+
+button:hover:not(:disabled) { background: #303d41; }
+button.primary { color: #102422; background: #8ee4d6; border-color: #8ee4d6; }
+button.primary:hover:not(:disabled) { background: #b2f3e9; }
+button:disabled { opacity: 0.48; cursor: default; }
+:focus-visible { outline: 2px solid #8ee4d6; outline-offset: 3px; }
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    margin-top: 0.55rem;
+    font-size: 0.875rem;
+}
+.option input {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    accent-color: #8ee4d6;
+}
+.legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem 0.55rem;
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    color: var(--muted);
+    font-size: 0.8125rem;
+}
+.legend li { display: flex; align-items: center; gap: 0.45rem; }
+.key { width: 12px; height: 2px; flex: 0 0 12px; }
+.key.torus { background: #69dbca; }
+.key.ray { background: #f9dc83; }
+.key.visited { background: #9bafff; }
+.key.candidate { background: #f0a24b; }
+.key.hit { background: #ff785c; }
+
+@media (max-width: 720px) {
+    .topbar { padding-inline: 1rem; }
+    .workspace { grid-template-columns: minmax(0, 1fr); }
+    .viewport { min-height: clamp(310px, 53svh, 580px); }
+    .inspector { border-left: 0; border-top: 1px solid var(--border); }
+    .inspector section, .actions { padding-inline: 1rem; }
+}
+
+@media (max-width: 390px) {
+    .runtime { display: none; }
+}

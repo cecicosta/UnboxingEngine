@@ -156,6 +156,9 @@ Run:
 
 ## Octree Ray Picking Lab
 
+[Play in your browser](https://cecicosta.github.io/UnboxingEngine/) or see the
+[WebAssembly build instructions](WebOctree/README.md).
+
 Target: `octree_ray_picking_lab`
 
 Source file:
