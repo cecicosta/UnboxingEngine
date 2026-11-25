@@ -147,6 +147,21 @@ button:disabled { opacity: 0.48; cursor: default; }
     margin: 0;
     accent-color: #8ee4d6;
 }
+.param {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.7rem;
+    margin-top: 0.8rem;
+    font-size: 0.875rem;
+}
+.param input {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 0.35rem 0;
+    accent-color: #8ee4d6;
+}
+.param output { font-variant-numeric: tabular-nums; }
 .legend {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

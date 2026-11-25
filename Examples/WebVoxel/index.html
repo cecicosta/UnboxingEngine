@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#14191c">
+    <title>Voxelization Lab | UnboxingEngine</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%238ee4d6' d='M4 4h11v11H4zM17 4h11v11H17zM4 17h11v11H4z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="./voxel.css">
+    <script type="importmap">
+        {"imports":{"three":"../vendor/three.module.js"}}
+    </script>
+    <script type="module" src="./lab.mjs"></script>
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <a class="project" href="https://github.com/cecicosta/UnboxingEngine">UnboxingEngine</a>
+            <h1>Voxelization Lab</h1>
+        </div>
+        <nav class="sample-nav" aria-label="Interactive samples">
+            <a href="../">Octree</a>
+            <a href="../radiosity/">Radiosity</a>
+            <a href="./" aria-current="page">Voxelization</a>
+        </nav>
+    </header>
+    <main class="workspace">
+        <section id="viewport" class="viewport" aria-label="Interactive voxel grid">
+            <canvas id="scene" aria-label="Source mesh, occupied cells, and selected vertical scan ray"></canvas>
+            <p id="loader" class="loader" role="status">Loading WebAssembly&hellip;</p>
+            <div class="view-label">Bresenham sweep &middot; +Z</div>
+        </section>
+        <aside class="inspector">
+            <section aria-labelledby="grid-heading">
+                <h2 id="grid-heading">Voxel grid</h2>
+                <div class="mesh-selector">
+                    <label for="shape">Source mesh</label>
+                    <select id="shape"><option value="0">Torus</option><option value="1">Sphere</option><option value="2">Cube</option></select>
+                </div>
+                <div class="param">
+                    <label for="resolution">Sweep resolution</label><output id="resolution-value" for="resolution">28&times;28</output>
+                    <input type="range" id="resolution" min="12" max="44" step="2" value="28">
+                </div>
+                <div class="param">
+                    <label for="layer">Highest visible Z layer</label><output id="layer-value" for="layer">All</output>
+                    <input type="range" id="layer" min="0" max="0" value="0" disabled>
+                </div>
+            </section>
+            <section aria-labelledby="view-heading">
+                <h2 id="view-heading">View</h2>
+                <fieldset class="mode" aria-labelledby="view-heading">
+                    <label><input type="radio" name="mode" value="voxels" checked><span>Voxels</span></label>
+                    <label><input type="radio" name="mode" value="mesh"><span>Mesh</span></label>
+                    <label><input type="radio" name="mode" value="overlay"><span>Overlay</span></label>
+                </fieldset>
+                <label class="option"><input id="ray-visible" type="checkbox" checked> Show scan ray</label>
+                <ul class="legend" aria-label="Scene legend">
+                    <li><span class="key torus"></span>Occupied cell</li>
+                    <li><span class="key visited"></span>Source mesh</li>
+                    <li><span class="key ray"></span>Scan ray</li>
+                </ul>
+            </section>
+            <section aria-labelledby="results-heading">
+                <div class="section-title">
+                    <h2 id="results-heading">Sweep results</h2>
+                    <output id="status" aria-live="polite">Loading</output>
+                </div>
+                <dl class="metrics">
+                    <div><dt>Rays cast</dt><dd id="rays">&ndash;</dd></div>
+                    <div><dt>Mesh intersections</dt><dd id="intersections">&ndash;</dd></div>
+                    <div><dt>Occupied cells</dt><dd id="occupied">&ndash;</dd></div>
+                    <div><dt>Selected column</dt><dd id="column">&ndash;</dd></div>
+                    <div><dt>Column intersections</dt><dd id="column-hits">&ndash;</dd></div>
+                </dl>
+            </section>
+            <div class="actions">
+                <button type="button" id="reset-layer">Show all layers</button>
+                <button type="button" id="reset-view">Reset view</button>
+            </div>
+            <footer><a href="../LICENSE.TXT">UnboxingEngine by Cecilia Costa</a></footer>
+        </aside>
+    </main>
+</body>
+</html>

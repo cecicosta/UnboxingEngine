@@ -2,7 +2,7 @@
 set -eu
 cd "$(dirname "$0")"
 
-mkdir -p dist/vendor dist/radiosity
+mkdir -p dist/vendor dist/radiosity dist/voxelization
 "${EMXX:-em++}" -std=c++17 -O2 -I ../../include \
     OctreeBindings.cpp ../../source/BoundingBox.cpp ../../source/UVector.cpp \
     ../../source/algorithms/LegacyCollisionAlgorithms.cpp \
@@ -16,9 +16,17 @@ mkdir -p dist/vendor dist/radiosity
     -lembind -sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=worker,node \
     -sALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=262144 -o dist/radiosity/solver.mjs
 
+"${EMXX:-em++}" -std=c++17 -O2 -I ../../include -I .. \
+    ../WebVoxel/VoxelBindings.cpp ../BresenhamVoxelization.cpp \
+    ../../source/BoundingBox.cpp ../../source/UVector.cpp \
+    -lembind -sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=worker,node \
+    -sALLOW_MEMORY_GROWTH=1 -o dist/voxelization/solver.mjs
+
 cp index.html lab.mjs style.css dist/
 cp ../WebRadiosity/index.html ../WebRadiosity/lab.mjs ../WebRadiosity/worker.mjs \
     ../WebRadiosity/radiosity.css dist/radiosity/
+cp ../WebVoxel/index.html ../WebVoxel/lab.mjs ../WebVoxel/worker.mjs \
+    ../WebVoxel/voxel.css dist/voxelization/
 cp ../../LICENSE.TXT dist/
 cp node_modules/three/build/three.module.js node_modules/three/build/three.core.js \
     node_modules/three/examples/jsm/controls/OrbitControls.js dist/vendor/

@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "sh build.sh",
-    "test": "node --test test.mjs ../WebRadiosity/test.mjs",
+    "test": "node --test test.mjs ../WebRadiosity/test.mjs ../WebVoxel/test.mjs",
     "serve": "python3 -m http.server --bind 127.0.0.1 --directory dist 4173"
   },
   "dependencies": {

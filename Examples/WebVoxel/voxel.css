@@ -1,0 +1,52 @@
+canvas { cursor: crosshair; }
+
+.mesh-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.8rem;
+    font-size: 0.875rem;
+}
+.mesh-selector select {
+    min-width: 106px;
+    min-height: 36px;
+    padding: 0.25rem 0.45rem;
+    border: 1px solid #425054;
+    border-radius: 5px;
+    background: #1d272a;
+    color: inherit;
+    font: inherit;
+}
+.mode {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    margin: 0.85rem 0 0;
+    padding: 0;
+    border: 0;
+}
+.mode label { position: relative; cursor: pointer; }
+.mode input {
+    position: absolute;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+.mode span {
+    display: grid;
+    min-height: 40px;
+    place-items: center;
+    border-radius: 5px;
+    border: 1px solid #425054;
+    background: #1d272a;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+.mode input:hover + span { background: #303d41; }
+.mode input:checked + span { background: #8ee4d6; color: #102422; border-color: #8ee4d6; }
+.mode input:focus-visible + span { outline: 2px solid #8ee4d6; outline-offset: 2px; }
+#status[data-kind="ready"] { color: #8ee4d6; }
+#status[data-kind="error"] { color: #ff856e; }

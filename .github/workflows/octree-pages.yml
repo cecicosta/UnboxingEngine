@@ -7,6 +7,8 @@ on:
       - '.github/workflows/octree-pages.yml'
       - 'Examples/WebOctree/**'
       - 'Examples/WebRadiosity/**'
+      - 'Examples/WebVoxel/**'
+      - 'Examples/BresenhamVoxelization*'
       - 'Examples/Radiosity*.cpp'
       - 'Examples/Radiosity*.h'
       - 'LICENSE.TXT'

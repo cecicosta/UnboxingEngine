@@ -1,7 +1,7 @@
 canvas { cursor: grab; }
 canvas:active { cursor: grabbing; }
 
-.colors, .param {
+.colors {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
@@ -19,12 +19,5 @@ canvas:active { cursor: grabbing; }
     background: #1d272a;
     cursor: pointer;
 }
-.param input {
-    grid-column: 1 / -1;
-    width: 100%;
-    margin: 0.35rem 0;
-    accent-color: #8ee4d6;
-}
-.param output { font-variant-numeric: tabular-nums; }
 #state[data-kind="ready"] { color: #8ee4d6; }
 #state[data-kind="error"] { color: #ff856e; }

@@ -78,6 +78,9 @@ This example is visual and interactive. It currently has no `--self-test` mode.
 
 ## Bresenham Voxelization Port
 
+[Try the interactive Voxelization Lab](https://cecicosta.github.io/UnboxingEngine/voxelization/)
+or see the [WebAssembly sample instructions](WebVoxel/README.md).
+
 Target: `bresenham_voxelization_port`
 
 Source file:
