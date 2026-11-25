@@ -1,7 +1,7 @@
 #pragma once
 
 
-static auto volumetric_scanning_frag = R"(
+static const char *volumetric_scanning_frag = R"(
 #version 150 core
 
 in vec3 vWorldPosition;
@@ -60,12 +60,6 @@ float PI = 3.141592;
 // Elementary charge
 float e = 1.602e-19; // [C]
 
-// Electron mass
-float m = 9.10938188e-31;
-
-// Nucleus mass
-float M = 1.00783 * 1.660539e-27;
-
 // Permittivity of free space
 float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
 
@@ -120,282 +114,8 @@ void main() {
 )";
 
 
-static auto nucleus_field_tex_render_frag = R"(
-#version 150 core
 
-uniform sampler2D u_texture;
-uniform float u_visualization_scale;
-uniform float u_camera_far;
-
-in vec4 v_color;
-in vec2 v_uv;
-
-out vec4 o_color;
-
-// 1 picometer value in meters
-float pm = 1e-12; //[m]
-
-// Pi
-float PI = 3.141592;
-
-// Elementary charge
-float e = 1.602e-19; // [C]
-
-// Nucleus Charge
-float Q = e;
-
-// Electron mass
-float m = 9.10938188e-31;
-
-// Nucleus mass
-float M = 1.00783 * 1.660539e-27;
-
-// Permittivity of free space
-float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
-
-// Atomic unit of length
-float a0 = 5.29177210544e-11; //[m] Borh radius (4\pi*\empsilon_0*\hbar^2) / (e^2 * m_e);
-
-// Gravitational constant
-float g = 6.6743e-11; //[m^3/(kg.s^2)]
-
-void main() {
-    float maximumDistance = max(u_camera_far, 0.000001);
-
-    vec4 accumulated = texture(u_texture, v_uv);
-    // accumulated.rgb is the line-cross-section of the potential region obtained by the volumetric calculation fragment-shader pass
-    float thickness = length(accumulated.rgb);
-    float volumetric_opacity = (thickness/maximumDistance) * u_visualization_scale;
-    float radius = accumulated.a / thickness;
-
-    if(volumetric_opacity < 0.00001) {
-        discard;
-    }
-
-    float sqr_half_ray = (thickness*thickness)/4;
-    float sqr_radius = radius*radius;
-
-    if(sqr_half_ray > sqr_radius) {
-        o_color = v_color;
-        return;
-    }
-
-    // Min distance the line-cross-section reach when crossing the sphere
-    float r_min = sqrt(sqr_radius - sqr_half_ray);
-
-    // We now convert the dimensions to picometer
-    float radius_pm = radius*pm;
-    float r_min_pm = r_min*pm;
-
-    float k = 1/(4*PI*E0);
-
-    float dM = (g*M)/(r_min_pm*r_min_pm);
-    float dQ = (k*Q)/(r_min_pm*r_min_pm);
-
-    o_color = vec4(vec3(dQ, dM, v_color.b), 1);
-}
-)";
-
-
-static auto electron_field_tex_render_frag = R"(
-#version 150 core
-
-uniform sampler2D u_texture;
-uniform float u_visualization_scale;
-uniform float u_camera_far;
-
-in vec4 v_color;
-in vec2 v_uv;
-
-out vec4 o_color;
-
-// 1 picometer value in meters
-float pm = 1e-12; //[m]
-
-// Pi
-float PI = 3.141592;
-
-// Elementary charge
-float e = 1.602e-19; // [C]
-
-// Nucleus Charge
-float Q = e;
-
-// Electron mass
-float m = 9.10938188e-31;
-
-// Nucleus mass
-float M = 1.00783 * 1.660539e-27;
-
-// Permittivity of free space
-float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
-
-// Atomic unit of length
-float a0 = 5.29177210544e-11; //[m] Borh radius (4\pi*\empsilon_0*\hbar^2) / (e^2 * m_e);
-
-void main() {
-    float maximumDistance = max(u_camera_far, 0.000001);
-
-    vec4 accumulated = texture(u_texture, v_uv);
-    // accumulated.rgb is the line-cross-section of the potential region obtained by the volumetric calculation fragment-shader pass
-    float thickness = length(accumulated.rgb);
-    float volumetric_opacity = (thickness/maximumDistance) * u_visualization_scale;
-    float radius = accumulated.a / thickness;
-
-    if(volumetric_opacity < 0.00001) {
-        discard;
-    }
-
-    float sqr_half_ray = (thickness*thickness)/4;
-    float sqr_radius = radius*radius;
-
-    if(sqr_half_ray > sqr_radius) {
-        o_color = v_color;
-        return;
-    }
-
-    // Min distance the line-cross-section reach when crossing the sphere
-    float r_min = sqrt(sqr_radius - sqr_half_ray);
-
-    // We now convert the dimensions to picometer
-    float radius_pm = radius*pm;
-    float r_min_pm = r_min*pm;
-
-    float dM = m/(r_min_pm*r_min_pm);
-    float dQ = -Q/(r_min_pm*r_min_pm);
-
-    o_color = vec4(vec3(dQ, dM, v_color.b), 1);
-}
-)";
-
-
-static auto fields_divergence_frag = R"(
-#version 150 core
-
-uniform sampler2D u_texture;
-uniform sampler2D u_electron;
-uniform float u_visualization_scale;
-in vec4 v_color;
-in vec2 v_uv;
-out vec4 o_color;
-
-
-
-// 1 picometer value in meters
-float pm = 1e-12; //[m]
-
-// Pi
-float PI = 3.141592;
-
-// Elementary charge
-float e = 1.602e-19; // [C]
-
-// Nucleus Charge
-float Q = e;
-
-// Electron mass
-float m = 9.10938188e-31;
-
-// Nucleus mass
-float M = 1.00783 * 1.660539e-27;
-
-// Permittivity of free space
-float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
-
-// Atomic unit of length
-float a0 = 5.29177210544e-11; //[m] Borh radius (4\pi*\empsilon_0*\hbar^2) / (e^2 * m_e);
-
-// Calculate the constant factors of Coulomb's potential expression.
-float k = 1/(4*PI*E0);
-
-float g = 6.6743e-11; // [m^3/(kg.s^2)]
-
-void main() {
-    vec4 nucleusTex = texture(u_texture, v_uv);
-    vec2 texel = 1.0 / vec2(textureSize(u_texture, 0));
-
-    vec4 left  = texture(u_texture, v_uv - vec2(texel.x, 0.0));
-    vec4 right = texture(u_texture, v_uv + vec2(texel.x, 0.0));
-    vec4 down  = texture(u_texture, v_uv - vec2(0.0, texel.y));
-    vec4 up    = texture(u_texture, v_uv + vec2(0.0, texel.y));
-
-    vec4 upLeft =
-        texture(u_texture, v_uv + vec2(-texel.x, texel.y));
-
-    vec4 upRight =
-        texture(u_texture, v_uv + vec2(texel.x, texel.y));
-
-    vec4 downLeft =
-        texture(u_texture, v_uv + vec2(-texel.x, -texel.y));
-
-    vec4 downRight =
-        texture(u_texture, v_uv + vec2(texel.x, -texel.y));
-
-    vec4 nCenter = nucleusTex;
-
-    vec4 nAxial =
-        left + right + up + down;
-
-    vec4 nDiagonal =
-        upLeft + upRight + downLeft + downRight;
-
-    vec4 divergence1st =
-        (
-            4.0 * nAxial +
-            nDiagonal -
-            20.0 * nCenter
-        ) / 6.0;
-
-    // Charge density divergence plus gravity density divergence
-    float effDivergence1st = k*divergence1st.r + g*divergence1st.g;
-
-    vec4 electronTex = texture(u_electron, v_uv);
-    texel = 1.0 / vec2(textureSize(u_electron, 0));
-
-    left  = texture(u_electron, v_uv - vec2(texel.x, 0.0));
-    right = texture(u_electron, v_uv + vec2(texel.x, 0.0));
-    down  = texture(u_electron, v_uv - vec2(0.0, texel.y));
-    up    = texture(u_electron, v_uv + vec2(0.0, texel.y));
-
-    upLeft =
-        texture(u_electron, v_uv + vec2(-texel.x, texel.y));
-
-    upRight =
-        texture(u_electron, v_uv + vec2(texel.x, texel.y));
-
-    downLeft =
-        texture(u_electron, v_uv + vec2(-texel.x, -texel.y));
-
-    downRight =
-        texture(u_electron, v_uv + vec2(texel.x, -texel.y));
-
-
-    vec4 center = electronTex;
-
-    vec4 axial =
-        left + right + up + down;
-
-    vec4 diagonal =
-        upLeft + upRight + downLeft + downRight;
-
-    vec4 divergence2nd =
-        (
-            4.0 * axial +
-            diagonal -
-            20.0 * center
-        ) / 6.0;
-
-    float effDivergence2nd = k*divergence2nd.r + g*divergence2nd.g;
-
-    vec4 diffusionStep = 0.3*vec4(1, 1, 1, 1);
-
-    o_color =
-        center + center*diffusionStep * effDivergence2nd;
-}
-)";
-
-
-static auto combine_fields_tex_frag = R"(
+static const char *combine_fields_tex_frag = R"(
 #version 150 core
 
 uniform sampler2D u_texture;
@@ -448,6 +168,8 @@ void main() {
         ) / 6.0;
 
 
+
+
     texel = 1.0 / vec2(textureSize(u_electron, 0));
 
     left  = texture(u_electron, v_uv - vec2(texel.x, 0.0)).a;
@@ -493,19 +215,5 @@ void main() {
         center + diffusionStep * (laplacian - nLaplacian);
 
     o_color = vec4(v_color.rgb, finalSample);
-}
-)";
-
-static const char *r_as_alpha = R"(#version 150 core
-uniform sampler2D u_texture;
-uniform float u_visualization_scale;
-in vec4 v_color;
-in vec2 v_uv;
-out vec4 o_color;
-void main() {
-    vec4 texture = texture(u_texture, v_uv);
-    float volumetricOpacityValue = texture.r * u_visualization_scale;
-
-    o_color = v_color * vec4(1, 1, 1, volumetricOpacityValue);
 }
 )";
