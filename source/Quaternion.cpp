@@ -43,6 +43,7 @@ Quaternion::Quaternion(float w, float x, float y, float z) {
     this->y = y;
     this->z = z;
 }
+Quaternion::Quaternion(const float *array) : Quaternion(array[3], array[0], array[1], array[2]) {}
 
 Quaternion operator+(const Quaternion &q1, const Quaternion &q2) {
     Quaternion novo;

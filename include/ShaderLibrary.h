@@ -96,6 +96,7 @@ void main() {
 )";
 
 static const char *vizualize_texture_fragment = R"(#version 150 core
+precision highp float;
 uniform vec4 color;
 in vec2 i_position;
 out vec2 v_uv;
@@ -253,7 +254,7 @@ void main()
 
 static const char *quad_render_vertex = R"(
 #version 150 core
-
+precision highp float;
 uniform vec4 color;
 in vec2 i_position;
 out vec2 v_uv;

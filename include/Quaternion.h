@@ -9,6 +9,7 @@ public:
     explicit Quaternion(const Vector3f &v);
     explicit Quaternion(const Vector2f &v);
     Quaternion(float w, float x, float y, float z);
+    Quaternion(const float* array);
 
     Quaternion(float angle, Vector3f axi);
     Quaternion(float angle, const Vector3<int>& axi);
@@ -34,6 +35,10 @@ public:
     Quaternion normalizado();
 
     Quaternion inverso();
+
+    std::array<float, 4> ToArray() const {
+        return {values[0], values[1], values[2], w};
+    }
 
     //Retorna os angulos de rotação de euler
     Vector3f Euler();

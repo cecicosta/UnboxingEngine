@@ -99,7 +99,7 @@ public:
         const STextureHandle& texture,
         const STextureInspectionOptions& options = {}) const = 0;
 
-    virtual bool PrintTextureStatistics(
+    [[maybe_unused]] virtual bool PrintTextureStatistics(
         const STextureHandle& texture,
         const std::string& label = {},
         const STextureInspectionOptions& options = {}) const = 0;

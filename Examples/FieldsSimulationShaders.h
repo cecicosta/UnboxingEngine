@@ -120,7 +120,7 @@ void main() {
 )";
 
 
-static auto nucleus_field_tex_render_frag = R"(
+static auto positive_field_tex_render_frag = R"(
 #version 150 core
 
 uniform sampler2D u_texture;
@@ -156,6 +156,9 @@ float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential diffe
 // Atomic unit of length
 float a0 = 5.29177210544e-11; //[m] Borh radius (4\pi*\empsilon_0*\hbar^2) / (e^2 * m_e);
 
+// Coulomb's constant
+float k = 1/(4*PI*E0);
+
 // Gravitational constant
 float g = 6.6743e-11; //[m^3/(kg.s^2)]
 
@@ -187,7 +190,7 @@ void main() {
     float radius_pm = radius*pm;
     float r_min_pm = r_min*pm;
 
-    float k = 1/(4*PI*E0);
+
 
     float dM = (g*M)/(r_min_pm*r_min_pm);
     float dQ = (k*Q)/(r_min_pm*r_min_pm);
@@ -271,7 +274,7 @@ void main() {
 
 static auto fields_divergence_frag = R"(
 #version 150 core
-
+precision highp float;
 uniform sampler2D u_texture;
 uniform sampler2D u_electron;
 uniform float u_visualization_scale;
@@ -300,7 +303,7 @@ float m = 9.10938188e-31;
 float M = 1.00783 * 1.660539e-27;
 
 // Permittivity of free space
-float E0 = 8.854e-12; // F/m [Farads per meter] 1C charge per 1V potential difference, every 1 metter
+float E0 = 8.854e-12; // F/m [Farads per meter] [C/(V.m)] 1C charge per 1V potential difference, per 1 metter
 
 // Atomic unit of length
 float a0 = 5.29177210544e-11; //[m] Borh radius (4\pi*\empsilon_0*\hbar^2) / (e^2 * m_e);
@@ -378,19 +381,20 @@ void main() {
     vec4 diagonal =
         upLeft + upRight + downLeft + downRight;
 
-    vec4 divergence2nd =
+    vec4 diffusionStep = vec4(k, g, 1, 1);
+
+    float divergence2nd =
         (
-            4.0 * axial +
-            diagonal -
-            20.0 * center
+            4.0 * axial.r/axial.g +
+            diagonal.r/diagonal.g -
+            20.0 * center.r/center.g
         ) / 6.0;
 
-    float effDivergence2nd = k*divergence2nd.r + g*divergence2nd.g;
-
-    vec4 diffusionStep = 0.3*vec4(1, 1, 1, 1);
+    float q_kg = center.r/center.g;
+    float force = divergence2nd;
 
     o_color =
-        center + center*diffusionStep * effDivergence2nd;
+        center + vec4(center.g*divergence2nd, center.r/divergence2nd , 1, 1);
 }
 )";
 
@@ -497,6 +501,7 @@ void main() {
 )";
 
 static const char *r_as_alpha = R"(#version 150 core
+precision highp float;
 uniform sampler2D u_texture;
 uniform float u_visualization_scale;
 in vec4 v_color;
@@ -504,8 +509,23 @@ in vec2 v_uv;
 out vec4 o_color;
 void main() {
     vec4 texture = texture(u_texture, v_uv);
-    float volumetricOpacityValue = texture.r * u_visualization_scale;
+    float opacity = texture.r * u_visualization_scale;
 
-    o_color = v_color * vec4(1, 1, 1, volumetricOpacityValue);
+    o_color = v_color * vec4(1, 1, 1, opacity);
+}
+)";
+
+
+static const char *g_as_alpha = R"(#version 150 core
+uniform sampler2D u_texture;
+uniform float u_visualization_scale;
+in vec4 v_color;
+in vec2 v_uv;
+out vec4 o_color;
+void main() {
+    vec4 texture = texture(u_texture, v_uv);
+    float opacity = texture.g * u_visualization_scale;
+
+    o_color = v_color * vec4(1, 1, 1, opacity);
 }
 )";

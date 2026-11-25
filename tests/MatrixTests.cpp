@@ -27,6 +27,17 @@ TEST(MatrixTest, intantiate_zeroed) {//NOLINT (gtest static memory warning for t
     ASSERT_EQ(sum, 0);
 }
 
+TEST(MatrixTest, instantiate_quaternion_matrix_zeroed) {//NOLINT (gtest static memory warning for test_info_)
+    Matrix<Quaternion, 2> matrix;
+
+    for (int i = 0; i < matrix.array_size(); ++i) {
+        EXPECT_EQ(matrix.at(i).w, 0);
+        EXPECT_EQ(matrix.at(i).x, 0);
+        EXPECT_EQ(matrix.at(i).y, 0);
+        EXPECT_EQ(matrix.at(i).z, 0);
+    }
+}
+
 TEST(MatrixTest, intantiate_array) {//NOLINT (gtest static memory warning for test_info_)
     auto arr = {1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f};
     Matrix4f matrix4f(arr);

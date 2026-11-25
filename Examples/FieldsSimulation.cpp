@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
         RenderToTexture nucleus2nd(engine, *primitive_utils::Quad());
         nucleus2nd.SetMaterial(whiteMaterial());
         nucleus2nd.SetTexture("u_texture", nucleus1st.GetTexture());
-        nucleus2nd.SetShader(quad_render_vertex, nucleus_field_tex_render_frag);
+        nucleus2nd.SetShader(quad_render_vertex, positive_field_tex_render_frag);
 
         /************
          * ELECTRON *
@@ -263,14 +263,12 @@ int main(int argc, char *argv[]) {
         RenderToTexture electron2nd(engine, *primitive_utils::Quad());
         electron2nd.SetTexture("u_texture", electron1st.GetTexture());
         electron2nd.SetMaterial(whiteMaterial());
-        electron2nd.SetShader(quad_render_vertex, nucleus_field_tex_render_frag);
+        electron2nd.SetShader(quad_render_vertex, positive_field_tex_render_frag);
 
         engine.StepRender();
-
         const auto* texture = electron2nd.GetTexture();
         const auto& debug = engine.GetRenderDebug();
-        debug.PrintTextureStatistics(*texture, "field scale 1", options);
-
+        auto statistics = debug.PrintTextureStatistics(*texture, "electron", options);
 
         /**
          * PING-PONG FIELD FLOW
@@ -293,13 +291,40 @@ int main(int argc, char *argv[]) {
         pong.SetMaterial(redMaterial());
         pong.SetShader(quad_render_vertex, fields_divergence_frag);
 
+        engine.StepRender();
+
+        texture = ping.GetTexture();
+        statistics = debug.PrintTextureStatistics(*texture, "ping scale 1", options);
+
+        texture = pong.GetTexture();
+        statistics = debug.PrintTextureStatistics(*texture, "pong scale 1", options);
+
+        ping.SetTexture("u_electron", pong.GetTexture());
+        pong.SetTexture("u_electron", ping.GetTexture());
+        ping.SetClearRenderTarget(false);
+        pong.SetClearRenderTarget(false);
+
+        engine.StepRender();
+        texture = pong.GetTexture();
+        statistics = debug.PrintTextureStatistics(*texture, "pong scale 1", options);
+
+        engine.StepRender();
+        statistics = debug.PrintTextureStatistics(*texture, "pong scale 2", options);
+        engine.StepRender();
+        statistics = debug.PrintTextureStatistics(*texture, "pong scale 3", options);
+        engine.StepRender();
+        statistics = debug.PrintTextureStatistics(*texture, "pong scale 4", options);
+        engine.StepRender();
+
+
+
         OnMousePressDetector onClickStartPingPongTextureFeedback(engine, &ping, &pong);
 
         RenderToTexture flow(engine, *primitive_utils::Quad());
         flow.SetTexture("u_electron", pong.GetTexture());
         flow.SetMaterial(blueMaterial());
         flow.SetShader(quad_render_vertex, vizualize_flow_fragment_shader);
-        flow.GetRenderComponent().SetRenderColorScale(1e16);
+        //flow.GetRenderComponent().SetRenderColorScale(1e16);
 
 /*
         RenderTexture nucleus(engine, *primitive_utils::Quad());
@@ -310,13 +335,29 @@ int main(int argc, char *argv[]) {
         nucleus.SetShader(vizualize_texture_fragment, signed_texture_debug_fragment_shader_source);
         //nucleus.GetRenderComponent().SetRenderColorScale(1.5e15);
 */
+        RenderTexture electronM(engine, *primitive_utils::Quad());
+        electronM.SetTexture("u_texture", ping.GetTexture());
+        electronM.SetScale(Vector3f(20, 20, 20));
+        electronM.SetPosition(Vector3f(-20, 0, 0));
+        electronM.SetMaterial(whiteMaterial());
+        electronM.SetShader(vizualize_texture_fragment, r_as_alpha);
+        electronM.GetRenderComponent().SetRenderColorScale(1.5e16);
+
+        RenderTexture electronG(engine, *primitive_utils::Quad());
+        electronG.SetTexture("u_texture", pong.GetTexture());
+        electronG.SetScale(Vector3f(20, 20, 20));
+        electronG.SetPosition(Vector3f(-20, -40, 0));
+        electronG.SetMaterial(whiteMaterial());
+        electronG.SetShader(vizualize_texture_fragment, r_as_alpha);
+        electronG.GetRenderComponent().SetRenderColorScale(1.5e16);
+
         RenderTexture electron(engine, *primitive_utils::Quad());
         electron.SetTexture("u_texture", electron2nd.GetTexture());
         electron.SetScale(Vector3f(20, 20, 20));
-        electron.SetPosition(Vector3f(-20, 0, 0));
+        electron.SetPosition(Vector3f(-20, 40, 0));
         electron.SetMaterial(whiteMaterial());
         electron.SetShader(vizualize_texture_fragment, r_as_alpha);
-        //electron.GetRenderComponent().SetRenderColorScale(1.5e15);
+        electron.GetRenderComponent().SetRenderColorScale(1.5e16);
 
         RenderTexture rightSide(engine, *primitive_utils::Quad());
         rightSide.SetTexture("u_texture", flow.GetTexture());

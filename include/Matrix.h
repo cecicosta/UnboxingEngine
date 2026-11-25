@@ -4,8 +4,10 @@
 #include "Quaternion.h"
 #include "UVector.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 
 constexpr float pi = 3.1415926f;
 
@@ -16,13 +18,13 @@ public:
     static Matrix<T, Rows, Columns> INVALID;
 
     Matrix() {
-        std::fill(A, A + Rows * Columns, static_cast<T>(0));
+        std::fill(A, A + Rows * Columns, ZeroValue());
     }
 
     /// Creates a Matrix from a list of values
     /// \param matrix initialization list with size equal to the number of rows x columns the Matrix will have, and of corresponding type
-    Matrix(const std::initializer_list<T> &matrix) {
-        memcpy_s(A, Rows * Columns * sizeof(T), data(matrix), matrix.size() * sizeof(T));
+    Matrix(const std::initializer_list<T> matrix) {
+        std::copy_n(data(matrix), std::min(matrix.size(), array_size()), A);
     }
 
     /// Creates a Matrix from a list of values
@@ -185,6 +187,39 @@ public:
         return trace;
     }
 
+    /// Get the matrix length. By definition the square root of sum of all elements squared.
+    /// \return Matrix length
+    [[nodiscard]] T length() {
+        T length = 0;
+        for (int i = 0; i < Rows; ++i) {
+            for (int j = 0; j < Columns; ++j) {
+                length += std::pow(at(i, j), 2.0) ;
+            }
+        }
+        return std::sqrt(length);
+    }
+
+    [[nodiscard]] T dot(Matrix<T, Rows, Columns> const &m) {
+        T dot = 0;
+        for (int i = 0; i < Rows; ++i) {
+            for (int j = 0; j < Columns; ++j) {
+                dot += at(i, j) * m.at(i, j);
+            }
+        }
+        return dot;
+    }
+
+    [[nodiscard]] Matrix<T, Rows, Columns> normalize() {
+        Matrix<T, Rows, Columns> m;
+        auto len = length();
+        for (int i = 0; i < Rows; ++i) {
+            for (int j = 0; j < Columns; ++j) {
+                m.at(i, j) = at(i, j) / len;
+            }
+        }
+        return m;
+    }
+
     ///
     /// \tparam R Number or rows in the matrix to be merged with the current.
     /// \tparam C Number or columns in the matrix to be merged with the current.
@@ -288,8 +323,7 @@ public:
     template<int R, int C>
     Matrix<T, Rows, Columns> &operator=(const Matrix<T, R, C> &m) {
         static_assert((R < Rows) || (C < Columns), "Unable to assign matrix of higher dimensions to a matrix of lower dimensions.");
-        size_t size = Rows * Columns * sizeof(T);
-        memcpy_s(A, size, m.A, R * C * sizeof(T));
+        std::copy_n(m.A, std::min(m.array_size(), array_size()), A);
         return *this;
     }
 
@@ -370,6 +404,16 @@ public:
     const uint32_t cols = Columns;
 
 private:
+    static T ZeroValue() {
+        if constexpr (std::is_arithmetic_v<T>) {
+            return T{0};
+        } else if constexpr (std::is_constructible_v<T, float, float, float, float>) {
+            return T{0.0f, 0.0f, 0.0f, 0.0f};
+        } else {
+            return T{};
+        }
+    }
+
     T A[Rows * Columns]{};
     /*
         /// Method to complete the Faddeev-Leverrier recursion.
@@ -402,10 +446,15 @@ using Matrix3i = Matrix<int, 3, 3>;
 /// Name alias for square matrix 3x3 of floats.
 using Matrix3f = Matrix<float, 3, 3>;
 
+using Matrix3d = Matrix<double, 3, 3>;
+
+
 /// Name alias for square matrix 4x4 of integers.
 using Matrix4i = Matrix<int, 4, 4>;
 /// Name alias for square matrix 4x4 of floats.
 using Matrix4f = Matrix<float, 4, 4>;
+
+using Matrix4d = Matrix<double, 4, 4>;
 
 /*
 Matrix Matrix::inverse(){

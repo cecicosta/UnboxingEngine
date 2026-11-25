@@ -1,5 +1,7 @@
-/cmake-build-debug/
+cmake-build-*/
 /build/
+/build-legacy-collision/
+.DS_Store
 /debug.txt
 /CMakeFiles/
 /.idea/

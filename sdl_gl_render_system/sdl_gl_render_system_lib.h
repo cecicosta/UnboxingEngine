@@ -35,7 +35,7 @@ public:
     [[nodiscard]] std::optional<STextureStatistics> InspectTexture(
         const STextureHandle &texture,
         const STextureInspectionOptions &options = {}) const override;
-    bool PrintTextureStatistics(
+    [[maybe_unused]] bool PrintTextureStatistics(
         const STextureHandle &texture,
         const std::string &label = {},
         const STextureInspectionOptions &options = {}) const override;

@@ -29,5 +29,8 @@ target_link_libraries(circle_triangle_collision unboxing_engine)
 add_executable(fields_simulation FieldsSimulation.cpp)
 target_link_libraries(fields_simulation unboxing_engine)
 
+add_executable(shader_testing ShaderTesting.cpp)
+target_link_libraries(shader_testing unboxing_engine)
+
 add_executable(render_debug_example RenderDebugExample.cpp)
 target_link_libraries(render_debug_example unboxing_engine)
