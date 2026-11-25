@@ -2,7 +2,7 @@
 set -eu
 cd "$(dirname "$0")"
 
-mkdir -p dist/vendor dist/radiosity dist/voxelization dist/fields
+mkdir -p dist/vendor dist/radiosity dist/voxelization dist/fields dist/samples
 "${EMXX:-em++}" -std=c++17 -O2 -I ../../include \
     OctreeBindings.cpp ../../source/BoundingBox.cpp ../../source/UVector.cpp \
     ../../source/algorithms/LegacyCollisionAlgorithms.cpp \
@@ -23,6 +23,7 @@ mkdir -p dist/vendor dist/radiosity dist/voxelization dist/fields
     -sALLOW_MEMORY_GROWTH=1 -o dist/voxelization/solver.mjs
 
 cp index.html lab.mjs style.css dist/
+cp samples/index.html samples/samples.css samples/*.jpg dist/samples/
 cp ../WebRadiosity/index.html ../WebRadiosity/lab.mjs ../WebRadiosity/worker.mjs \
     ../WebRadiosity/radiosity.css dist/radiosity/
 cp ../WebVoxel/index.html ../WebVoxel/lab.mjs ../WebVoxel/worker.mjs \

@@ -1,6 +1,7 @@
 # Octree Ray Picking Lab (Web)
 
 [Play the demo](https://cecicosta.github.io/UnboxingEngine/).
+[Browse all four interactive samples](https://cecicosta.github.io/UnboxingEngine/samples/).
 
 The browser build generates the same torus as the desktop lab using
 `MeshPrimitivesUtils`, then builds and queries the engine's mesh octree in C++
@@ -20,7 +21,8 @@ npm test
 npm run serve
 ```
 
-Open the [octree](http://127.0.0.1:4173/), [radiosity](http://127.0.0.1:4173/radiosity/),
+Open the [sample overview](http://127.0.0.1:4173/samples/) or the
+[octree](http://127.0.0.1:4173/), [radiosity](http://127.0.0.1:4173/radiosity/),
 [voxelization](http://127.0.0.1:4173/voxelization/), or [fields](http://127.0.0.1:4173/fields/) lab.
 The output is self-contained in
 `dist/`; it must be served over HTTP rather than opened from disk. The build
