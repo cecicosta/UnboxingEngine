@@ -2,7 +2,7 @@
 set -eu
 cd "$(dirname "$0")"
 
-mkdir -p dist/vendor dist/radiosity dist/voxelization
+mkdir -p dist/vendor dist/radiosity dist/voxelization dist/fields
 "${EMXX:-em++}" -std=c++17 -O2 -I ../../include \
     OctreeBindings.cpp ../../source/BoundingBox.cpp ../../source/UVector.cpp \
     ../../source/algorithms/LegacyCollisionAlgorithms.cpp \
@@ -27,6 +27,9 @@ cp ../WebRadiosity/index.html ../WebRadiosity/lab.mjs ../WebRadiosity/worker.mjs
     ../WebRadiosity/radiosity.css dist/radiosity/
 cp ../WebVoxel/index.html ../WebVoxel/lab.mjs ../WebVoxel/worker.mjs \
     ../WebVoxel/voxel.css dist/voxelization/
+cp ../WebFields/index.html ../WebFields/lab.mjs ../WebFields/pipeline.mjs \
+    ../WebFields/fields.css dist/fields/
+node ../WebFields/build-shaders.mjs dist/fields/shaders.mjs
 cp ../../LICENSE.TXT dist/
 cp node_modules/three/build/three.module.js node_modules/three/build/three.core.js \
     node_modules/three/examples/jsm/controls/OrbitControls.js dist/vendor/

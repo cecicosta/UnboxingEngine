@@ -21,7 +21,8 @@ npm run serve
 ```
 
 Open the [octree](http://127.0.0.1:4173/), [radiosity](http://127.0.0.1:4173/radiosity/),
-or [voxelization](http://127.0.0.1:4173/voxelization/) lab. The output is self-contained in
+[voxelization](http://127.0.0.1:4173/voxelization/), or [fields](http://127.0.0.1:4173/fields/) lab.
+The output is self-contained in
 `dist/`; it must be served over HTTP rather than opened from disk. The build
 does not require SDL, GLEW, or any Git submodules.
 

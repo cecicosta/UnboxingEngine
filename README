@@ -14,6 +14,8 @@ Try the [Octree Ray Picking Lab](https://cecicosta.github.io/UnboxingEngine/),
 [Radiosity Lab](https://cecicosta.github.io/UnboxingEngine/radiosity/), or
 [Voxelization Lab](https://cecicosta.github.io/UnboxingEngine/voxelization/) in your browser.
 See the [WebAssembly build instructions](Examples/WebOctree/README.md).
+The [Fields Simulation browser sample](Examples/WebFields/README.md) also runs
+the native field shaders with a configurable render-target resolution.
 
 ## Features
 

@@ -8,6 +8,8 @@ on:
       - 'Examples/WebOctree/**'
       - 'Examples/WebRadiosity/**'
       - 'Examples/WebVoxel/**'
+      - 'Examples/WebFields/**'
+      - 'Examples/FieldsSimulationShaders.h'
       - 'Examples/BresenhamVoxelization*'
       - 'Examples/Radiosity*.cpp'
       - 'Examples/Radiosity*.h'
